@@ -41,16 +41,31 @@ constexpr bool isControl(Color c){
 }
 template<Color c> struct background_t{
 public:
-    static_assert(!isControl(c),"Cannot instantiate background with a control color");
     explicit constexpr background_t()=default;
+};
+template<Color c> struct background_t<std::enable_if_t<isControl(c),std::integral_constant<Color,c>>::value>{
+private:
+	background_t()=delete;
+	background_t(const background_t&)=delete;
+	background_t(background_t&&)=delete;
+	background_t& operator=(const background_t&)=delete;
+	background_t& operator=(background_t&&)=delete;
 };
 
 
 
 template<Color c> struct foreground_t{
 public:
-    static_assert(!isControl(c),"Cannot instantiate background with a control color");
     explicit constexpr foreground_t()=default;
+};
+
+template<Color c> struct foreground_t<std::enable_if_t<isControl(c),std::integral_constant<Color,c>>::value>{
+private:
+	foreground_t()=delete;
+	foreground_t(const foreground_t&)=delete;
+	foreground_t(foreground_t&&)=delete;
+	foreground_t& operator=(const foreground_t&)=delete;
+	foreground_t& operator=(foreground_t&&)=delete;
 };
 
 
@@ -84,9 +99,8 @@ public:
     TextComponent(Version);
     TextComponent(endline_t);
     TextComponent(tab_t);
-    TextComponent(const initializer_list<TextComponent>&);
-    template<Color c> TextComponent(foreground_t<c>):c(c),text(),bg(false),__tab(true),endl(false){}
-    template<Color c> TextComponent(background_t<c>):c(c),text(),bg(true),__tab(true),endl(false){}
+    template<Color __c> TextComponent(foreground_t<__c>):c(__c),text(),bg(false),__tab(true),endl(false){}
+    template<Color __c> TextComponent(background_t<__c>):c(__c),text(),bg(true),__tab(true),endl(false){}
     TextComponent(const TextComponent&)=default;
     TextComponent(TextComponent&&)=default;
     TextComponent(const TextComponent&&)=delete;

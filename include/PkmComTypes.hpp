@@ -55,33 +55,99 @@ namespace pkmcom{
         pkmcom_size getSize()const;
     };
 
-    template<typename E,typename=std::enable_if_t<std::is_enum_v<E>>> struct pkmcom_traits<E>{
+    template<typename E> struct pkmcom_traits<std::enable_if_t<std::is_enum_v<E>,E>>{
     public:
         using underlying_type = std::underlying_type_t<E>;
-        using underlying_traits = pkm_traits<underlying_type>;
-        constexpr pkmcom_hash hashcode(E val){
-            return underlying_traits.hashcode(static_cast<underlying_type>(val));
+        using underlying_traits = pkmcom_traits<underlying_type>;
+        constexpr static pkmcom_hash hashcode(E val){
+            return pkmcom_traits<underlying_type>.hashcode(static_cast<underlying_type>(val));
         }
-        constexpr pkmcom_size size(E val){
-            return underlying_traits.size(static_cast<underlying_type>(val));
+        constexpr static pkmcom_size size(E val){
+            return pkmcom_traits<underlying_type>.size(static_cast<underlying_type>(val));
+        }
+        static void write(E val,PacketBuffer& buff){
+        	pkmcom_traits<underlying_type>.write(static_cast<underlying_type>(val),buff);
+        }
+        static void read(E& v,PacketBuffer& buff){
+        	pkmcom_traits<underlying_type>.read(reinterpret_cast<underlying_type&>(v),buff);
         }
     };
 
     template<> struct pkmcom_traits<pkmcom_bool>{
     public:
-        constexpr pkmcom_hash hashcode(pkmcom_bool b){
+        constexpr static pkmcom_hash hashcode(pkmcom_bool b){
             return b?1337:1331;
         }
-        constexpr pkmcom_size size(pkmcom_bool b){
+        constexpr static pkmcom_size size(pkmcom_bool b){
             return 1;
         }
-        void write(pkmcom_bool b,PacketBuffer& buff){
+        static void write(pkmcom_bool b,PacketBuffer& buff){
             buff.writeByte(b?1:0);
         }
-        void read(pkmcom_bool& b,PacketBuffer& buff){
+        static void read(pkmcom_bool& b,PacketBuffer& buff){
             b = buff.readByte()!=0;
         }
     };
+    template<> struct pkmcom_traits<pkmcom_byte>{
+    public:
+        constexpr static pkmcom_hash hashcode(pkmcom_byte b){
+            return pkmcom_hash(b)&0xff;
+        }
+        constexpr static pkmcom_byte size(pkmcom_byte b){
+            return 1;
+        }
+        static void write(pkmcom_byte b,PacketBuffer& buff){
+            buff.writeByte(b);
+        }
+        static void read(pkmcom_byte& b,PacketBuffer& buff){
+            b = buff.readByte();
+        }
+    };
+    template<> struct pkmcom_traits<pkmcom_sbyte>{
+    public:
+        constexpr static pkmcom_hash hashcode(pkmcom_sbyte s){
+            return pkmcom_hash(s)|(s&0x80!=0?0xffffff00:0);
+        }
+        constexpr static pkmcom_hash size(pkmcom_sbyte s){
+            return 1;
+        }
+    };
 
+    template<typename T,typename=void> struct is_packet:std::false_type{};
+    template<typename T>
+    struct is_packet<T,std::void_t<decltype(std::declval<const T>().size()),
+	decltype(std::declval<const T>().hashCode()),
+			decltype(std::declval<const T>().write(std::declval<PacketBuffer&>()))
+		,decltype(std::declval<T&>().read(std::declval<PacketBuffer&>()))>>:std::true_type{};
+
+   template<typename T> struct is_packet<const T>:is_packet<T>{};
+   template<typename T> struct is_packet<volatile T>:is_packet<T>{};
+   template<typename T> struct is_packet<const volatile T>:is_packet<T>{};
+   template<typename T> constexpr const bool is_packet_v = is_packet<T>::value;
+
+    template<typename T,typename=void> struct is_pkmcom_type:std::false_type{};
+    template<typename T> struct is_pkmcom_type<T,
+	std::void_t<decltype(pkmcom_traits<T>::size(std::declval<const T>())),
+    			decltype(pkmcom_traits<T>::hashcode(std::declval<const T>()))
+				,decltype(pkmcom_traits<T>::write(std::declval<const T>(),std::declval<PacketBuffer&>())),
+				decltype(pkmcom_traits<T>::read(std::declval<T&>(),std::declval<PacketBuffer&>()))>>:std::true_type{};
+    template<typename T> constexpr const bool is_pkmcom_type_v = is_pkmcom_type<T>::value;
+
+    template<typename T> struct pkmcom_traits<std::enable_if_t<is_packet_v<T>,T>>{
+    public:
+    	using packet_type = std::remove_cv_t<T>;
+    	constexpr static pkmcom_hash hashcode(const packet_type& t)noexcept(noexcept(std::declval<const packet_type>().hashCode())){
+    		return t.hashCode();
+    	}
+    	constexpr static pkmcom_size size(const packet_type& t)noexcept(noexcept(std::declval<const packet_type>().size())){
+    		return t.size();
+    	}
+    	void write(const packet_type& t,PacketBuffer& b){
+    		t.write(b);
+    	}
+    	void read(packet_type& t,PacketBuffer& b){
+    		t.read(b);
+    	}
+    };
 }
 #endif

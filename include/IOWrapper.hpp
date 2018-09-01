@@ -77,16 +77,19 @@ public:
 };
 
 class OutputStream{
+private:
     OutputStream(const OutputStream&)=delete;
     OutputStream& operator=(const OutputStream&)=delete;
 public:
     OutputStream()=default;
+    OutputStream(OutputStream&&)=default;
     virtual ~OutputStream()=default;
     virtual size_t write(const void*,size_t)=0;
     virtual void write(uint8_t)=0;
     template<size_t N> size_t write(uint8_t(&arr)[N]){
         return write(arr,N);
     }
+    OutputStream& operator=(OutputStream&&)=default;
 };
 
 class append_t{

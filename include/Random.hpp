@@ -48,6 +48,7 @@ public:
     */
 	Random(seed_t);
     Random(Random&&)=default;
+    virtual ~Random()=default;
     Random& operator=(Random&&)=default;
     /*
         Sets the Seed of the Pseudorandom Number Generator.
@@ -102,7 +103,7 @@ public:
     /*
         Fills an array with its size known at compile time with a bunch of psuedo-random bytes.
     */
-	template<size_t size> void nextBytes(array<uint8_t,size>&){
+	template<size_t size> void nextBytes(array<uint8_t,size>& bytes){
         this->nextBytes(bytes.data(),size);
     }
 	

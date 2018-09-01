@@ -1,6 +1,7 @@
 #ifndef __NBTCompound_hpp_2018_08_26_21_41
 #define __NBTCompound_hpp_2018_08_26_21_41
 #include <nbt/NBTBase.hpp>
+#include <nbt/NBTPrimitive.hpp>
 #include <UUID.hpp>
 #include <Version.hpp>
 namespace nbt{

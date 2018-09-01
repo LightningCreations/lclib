@@ -12,6 +12,7 @@
 class Hashable{
 public:
 	virtual int hashCode()const = 0;
+	virtual ~Hashable()=default;
 };
   
 constexpr int32_t hashcode(int i){

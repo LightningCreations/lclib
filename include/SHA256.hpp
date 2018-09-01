@@ -1,6 +1,6 @@
 #ifndef __SHA256_hpp_2018_05_31_10_18
 #define __SHA256_hpp_2018_05_31_10_18
-#include <cstdlib>
+#include <cstddef>
 /*
   Implementation of SHA256.
   This function will compute the SHA256 hash of a region of bytes.

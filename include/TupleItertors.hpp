@@ -3,7 +3,7 @@
 #include <tuple>
 #include <variant>
 #include <utility>
-#include <type_triats>
+#include <type_traits>
 template<typename T> struct tuple_iterator{
 private:
     tuple_iterator()=delete;
@@ -15,7 +15,7 @@ private:
 
 template<typename... Ts> struct tuple_iterator<std::tuple<Ts...>>{
 private:
-    using value_type = std::variant<std::add_lvalue_reference_t<std::add_const_t<Ts>>...>;
+    using value_type = std::variant<std::reference_wrapper<std::add_const_t<Ts>>...>;
     const static constexpr std::size_t max_pos = sizeof...(Ts);
     const std::tuple<Ts...>& target;
     std::size_t pos;

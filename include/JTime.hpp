@@ -8,7 +8,7 @@ enum class ChronoUnit{
     MINUTES, HOURS
 };
 
-
+constexpr const int NANOS_PER_SECOND = 1000000000;
 
 class Duration;
 class Instant;
@@ -32,6 +32,12 @@ public:
         Constructs an instant with both fields set to zero. Effectively the same as Copy-Constructing with the EPOCH constant.
     */
     Instant();
+    Instant(const Instant&)=default;
+    Instant(Instant&&)=default;
+    Instant(const Instant&&)=delete;
+    Instant& operator=(const Instant&)=default;
+    Instant& operator=(Instant&&)=default;
+    Instant& operator=(const Instant&&)=delete;
     /*
         Obtains an Instant from the current system clock. This method should attempt to produce the most accurate result possible.
         This factory method can produce Inaccurate Instants, depending on the accuracy of the system clock.
@@ -163,15 +169,15 @@ public:
 /*
     Instant Constant Representing the Epoch (January 01, 1970 at 00:00:00 Exactly UTC)
 */
-const Instant EPOCH = Instant::fromEpochSecond(0);
+const Instant EPOCH{};
 /*
     Instant Constant Holding the Effective Max value for an instant (1<<63-1 seconds, 999999999 nanoseconds)
 */
-const Instant MAX = Instant::fromEpochSecond(9223372036854775807LL,999999999);
+const Instant MAX = Instant::fromEpochSecond(31556889864401399LL,999999999);
 /*
     Instant Constant Holding the Effective Minimum value for an instant (-1<<63 seconds)
 */
-const Instant MIN = Instant::fromEpochSecond(-9223372036854775808LL);
+const Instant MIN = Instant::fromEpochSecond(-31556889864401400LL);
 /*
     A class that represents a Duration between 2 Instants.
     This Duration is precise to Nanoseconds and stores 64-bit seconds with 32-bit nanoseconds.
@@ -180,8 +186,17 @@ class Duration:public Hashable{
 private:
     int64_t seconds;
     int nanos;
-    Duration(int64_t seconds,int nanoTime);
+    constexpr Duration(int64_t seconds,int nanoTime):seconds(seconds),nanos(nanoTime){}
 public:
+    constexpr Duration():seconds(0),nanos(0){
+
+    }
+    constexpr Duration(const Duration&)=default;
+    constexpr Duration(Duration&&)=default;
+    Duration(const Duration&&)=delete;
+    constexpr Duration& operator=(const Duration&)=default;
+    constexpr Duration& operator=(Duration&&)=default;
+    constexpr Duration& operator=(const Duration&&)=delete;
     /*
         Returns the Duration that is between 2 Instants
     */
@@ -196,12 +211,24 @@ public:
         The values are adjusted to constrain the number of nanoseconds to between 0 inclusive and 100000000 exclusive,
         similarily to Instant.ofEpochSeconds(seconds,nanoAdjustment);.
     */
-    static Duration ofSeconds(int64_t seconds,int nanoAdjustment);
+    constexpr static Duration ofSeconds(int64_t seconds,int nanoAdjustment){
+    	while(nanoAdjustment<0){
+    		seconds--;
+    		nanoAdjustment+=NANOS_PER_SECOND;
+    	}
+    	while(nanoAdjustment>NANOS_PER_SECOND){
+    		seconds++;
+    		nanoAdjustment-=NANOS_PER_SECOND;
+    	}
+    	return Duration{seconds,nanoAdjustment};
+    }
     /*
         Produces a Duration by a given Number of seconds.
         The Time Elapsed by the Duration is exactly that many seconds
     */
-    static Duration ofSeconds(int64_t seconds);
+    constexpr static Duration ofSeconds(int64_t seconds){
+    	return Duration{seconds,0};
+    }
     /*
         Produces a duration by a given Number of a specific unit.
     */
@@ -324,7 +351,7 @@ public:
 
 
 
-const Duration ZERO = Duration::ofSeconds(0);
-const Duration MAX_DURATION = Duration::ofSeconds(9223372036854775807,999999999);
-const Duration MIN_DURATION = Duration::ofSeconds(-9223372036854775808);
+const Duration ZERO{};
+const Duration MAX_DURATION = Duration::ofSeconds(31556889864401399,999999999);
+const Duration MIN_DURATION = Duration::ofSeconds(-31556889864401400);
 #endif

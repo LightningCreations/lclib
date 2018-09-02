@@ -18,3 +18,4 @@ $(OUTPUT): $(SOURCE_FILES)
 
 install:
 	cp $(OUTPUT) /usr/lib
+	cp /. /usr/include

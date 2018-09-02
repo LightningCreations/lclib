@@ -1,5 +1,6 @@
 #include <IOWrapper.hpp>
 #include <string>
+#include <Vector.hpp>
 
 FileInputStream::FileInputStream(FILE* f):underlying(f){
     if(f==NULL||f==nullptr)
@@ -72,6 +73,14 @@ std::string DataInputStream::readString(){
     delete[] str;
     return std::move(ret);
 }
+float DataInputStream::readFloat(){
+	int i = readInt();
+	return bit_cast<float>(i);
+}
+double DataInputStream::readDouble(){
+	uint64_t l = readLong();
+	return bit_cast<double>(l);
+}
 DataInputStream& DataInputStream::operator>>(uint8_t& u){
     u = this->readUnsignedByte();
     return *this;
@@ -118,6 +127,14 @@ DataInputStream& DataInputStream::operator>>(UUID& u){
     (*this) >> h >> l;
     u = UUID(h,l);
     return *this;
+}
+DataInputStream& DataInputStream::operator>>(float& f){
+	f = readFloat();
+	return *this;
+}
+DataInputStream& DataInputStream::operator>>(double& d){
+	d = readDouble();
+	return *this;
 }
 
 FileOutputStream::FileOutputStream(FILE* f):underlying(f){
@@ -189,6 +206,12 @@ void DataOutputStream::writeLong(int64_t l){
         writeInt(l);
     }
 }
+void DataOutputStream::writeFloat(float f){
+	writeInt(bit_cast<int>(f));
+}
+void DataOutputStream::writeDouble(double d){
+	writeLong(bit_cast<uint64_t>(d));
+}
 void DataOutputStream::writeString(const std::string& s){
     writeShort(s.length());
     for(char c:s)
@@ -235,6 +258,14 @@ DataOutputStream& DataOutputStream::operator<<(const UUID& u){
 }
 DataOutputStream& DataOutputStream::operator<<(Version v){
     return (*this) << uint8_t(v.getMajor()-1) << uint8_t(v.getMinor());
+}
+DataOutputStream& DataOutputStream::operator<<(float f){
+	writeFloat(f);
+	return *this;
+}
+DataOutputStream& DataOutputStream::operator<<(double d){
+	writeDouble(d);
+	return *this;
 }
 
 const char* FileNotFoundException::what()const noexcept(true){

@@ -30,12 +30,10 @@ namespace nbt{
         typedef map_type::mapped_type mapped_type;
         
         NBTTagCompound()=default;
-        NBTTagCompound(const NBTTagCompound&)=default;
+        NBTTagCompound(const NBTTagCompound&)=delete;
         NBTTagCompound(NBTTagCompound&&)=default;
-        NBTTagCompound(const NBTTagCompound&&)=delete;
-        NBTTagCompound& operator=(const NBTTagCompound&)=default;
+        NBTTagCompound& operator=(const NBTTagCompound&)=delete;
         NBTTagCompound& operator=(NBTTagCompound&&)=default;
-        NBTTagCompound& operator=(const NBTTagCompound&&)=delete;
         mapped_type& operator[](const std::string&);
         const mapped_type& operator[](const std::string&)const;
         bool hasTag(const std::string&)const;

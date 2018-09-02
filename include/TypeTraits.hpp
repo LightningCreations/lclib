@@ -4,9 +4,9 @@
 
 
 
-template <typename T,typename=void>
+template <typename T>
 struct is_complete : std::false_type  {};
-template<typename T> struct is_complete<T,std::enable_if_t<sizeof(T)==sizeof(T)>>:std::true_type{};
+template<typename T> struct is_complete<std::enable_if_t<sizeof(T)==sizeof(T),T>>:std::true_type{};
 
 template<typename T> const constexpr bool is_complete_v = is_complete<T>::value;
 
@@ -14,7 +14,6 @@ template<typename T> struct type_identity{
 	using type = T;
 };
 template<typename T> using type_identity_t = typename type_identity<T>::type;
-
 template<typename T> struct remove_cvref{
 	using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };

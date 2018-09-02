@@ -17,7 +17,7 @@ namespace nbt{
             typedef T& reference;
             typedef const T& const_reference;
             typedef T* iterator;
-            typedef const T* const_iterator
+            typedef const T* const_iterator;
             typedef std::reverse_iterator<iterator> reverse_iterator;
             typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
             typedef std::size_t size_type;
@@ -27,13 +27,13 @@ namespace nbt{
             template<std::size_t N> NBTArray(const T(&arr)[N]):arr(new T[N]),_size(N){
                 std::copy(std::begin(arr),std::end(arr),this->arr);
             }
-            template<std::size_t N> NBTArray(const std::array<T,N> arr&):arr(new T[N]),_size(N){
+            template<std::size_t N> NBTArray(const std::array<T,N>& arr):arr(new T[N]),_size(N){
                 std::copy(std::begin(arr),std::end(arr),this->arr);
             }
             template<typename U,std::size_t N,typename=std::enable_if_t<std::is_convertible_v<U,T>>> NBTArray(const U(&arr)[N]):arr(new T[N]),_size(N){
                 std::copy(std::begin(arr),std::end(arr),this->arr);
             }
-            template<typename U,std::size_t N,typename=std::enable_if_t<std::is_convertible_v<U,T>>> NBTArray(const std::array<U,N> arr&):arr(new T[N]),_size(N){
+            template<typename U,std::size_t N,typename=std::enable_if_t<std::is_convertible_v<U,T>>> NBTArray(const std::array<U,N>& arr):arr(new T[N]),_size(N){
                 std::copy(std::begin(arr),std::end(arr),this->arr);
             }
             template<class Iterator,typename=std::enable_if_t<std::is_convertible_v<typename std::iterator_traits<Iterator>::value_type,T>>> 
@@ -44,7 +44,7 @@ namespace nbt{
                 std::copy(std::begin(arr),std::end(arr),this->arr);
             }
             
-            NBTArray(NBTArray&& arr)noexcept(true):arr(std::exchange(arr.arr,nullptr)),size(arr._size){}
+            NBTArray(NBTArray&& arr)noexcept(true):arr(std::exchange(arr.arr,nullptr)),_size(arr._size){}
             NBTArray(const NBTArray&&)=delete;
             NBTArray& operator=(const NBTArray& _arr){
                 if(this==&arr)

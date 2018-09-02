@@ -5,7 +5,8 @@
 const extern int32_t hashPrime;
 
 const int NANO_BOUND = 1000000000;
-const int NANOS_PER_SECOND = 1000000000;
+
+Instant::Instant():seconds{0},nanos{0}{}
 
 Instant::Instant(int64_t seconds,int nano):seconds(seconds),nanos(nano){}
 
@@ -122,6 +123,7 @@ Instant Instant::truncateTo(ChronoUnit c)const{
             return Instant::fromEpochSecond((this->seconds/3600)*3600);
         break;
     }
+    return *this;
 }
 
 int32_t Instant::hashCode()const{
@@ -149,9 +151,9 @@ int64_t Instant::get(ChronoUnit u)const{
             return this->seconds/3600;
         break;
     }
+
 }
 
-Duration::Duration(int64_t seconds,int nanos):seconds(seconds),nanos(nanos){}
 
 Duration Duration::between(const Instant& i,const Instant& j){
     int64_t seconds = i.toEpochSecond()-j.toEpochSecond();
@@ -167,18 +169,6 @@ Duration Duration::fromEpoch(const Instant& i){
     return Duration(i.toEpochSecond(),i.getNanos());
 }
 
-Duration Duration::ofSeconds(int64_t seconds,int nanoAdjustment){
-    if(nanoAdjustment>=NANO_BOUND||nanoAdjustment<0){
-        int modifier = nanoAdjustment/NANO_BOUND;
-        seconds +=modifier;
-        nanoAdjustment-=NANO_BOUND*modifier;
-    }
-    return Duration(seconds,nanoAdjustment);
-}
-
-Duration Duration::ofSeconds(int64_t seconds){
-    return Duration(seconds,0);
-}
 
 Duration Duration::of(int64_t val,ChronoUnit u){
     int64_t seconds;
@@ -209,7 +199,7 @@ Duration Duration::of(int64_t val,ChronoUnit u){
             nanos = 0;
         break;
     }
-    return Duration(seconds,nanos);
+    return Duration{seconds,nanos};
 }
 
 Duration Duration::negate()const{
@@ -219,7 +209,7 @@ Duration Duration::negate()const{
 		seconds++;
 	else
 		nanos = 0;
-	return Duration(seconds,nanos);
+	return Duration{seconds,nanos};
 }
 
 bool Duration::isNegative()const{
@@ -334,9 +324,6 @@ bool Duration::operator!=(const Duration& o)const{
 	return compareTo(o)!=0;
 }
 
-int32_t Duration::hashCode()const{
-	return hashcode(this->seconds)*hashPrime+hashcode(this->nanos);
-}
 
 
 Instant Instant::now(){

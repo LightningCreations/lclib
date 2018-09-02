@@ -41,31 +41,16 @@ constexpr bool isControl(Color c){
 }
 template<Color c> struct background_t{
 public:
+	static_assert(!isControl(c),"Cannot use a control color in background_t");
     explicit constexpr background_t()=default;
-};
-template<Color c> struct background_t<std::enable_if_t<isControl(c),std::integral_constant<Color,c>>::value>{
-private:
-	background_t()=delete;
-	background_t(const background_t&)=delete;
-	background_t(background_t&&)=delete;
-	background_t& operator=(const background_t&)=delete;
-	background_t& operator=(background_t&&)=delete;
 };
 
 
 
 template<Color c> struct foreground_t{
 public:
+	static_assert(!isControl(c),"Cannot use a control color in foreground_t");
     explicit constexpr foreground_t()=default;
-};
-
-template<Color c> struct foreground_t<std::enable_if_t<isControl(c),std::integral_constant<Color,c>>::value>{
-private:
-	foreground_t()=delete;
-	foreground_t(const foreground_t&)=delete;
-	foreground_t(foreground_t&&)=delete;
-	foreground_t& operator=(const foreground_t&)=delete;
-	foreground_t& operator=(foreground_t&&)=delete;
 };
 
 

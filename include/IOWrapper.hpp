@@ -63,6 +63,8 @@ public:
     int readInt();
     int64_t readLong();
     std::string readString();
+    float readFloat();
+    double readDouble();
     DataInputStream& operator>>(uint8_t&);
     DataInputStream& operator>>(int8_t&);
     DataInputStream& operator>>(uint16_t&);
@@ -74,6 +76,8 @@ public:
     DataInputStream& operator>>(std::string&);
     DataInputStream& operator>>(Version&);
     DataInputStream& operator>>(UUID&);
+    DataInputStream& operator>>(float&);
+    DataInputStream& operator>>(double&);
 };
 
 class OutputStream{
@@ -132,6 +136,8 @@ public:
     void writeInt(int);
     void writeLong(int64_t);
     void writeString(const std::string&);
+    void writeFloat(float);
+    void writeDouble(double);
     DataOutputStream& operator<<(uint8_t);
     DataOutputStream& operator<<(int8_t);
     DataOutputStream& operator<<(uint16_t);
@@ -143,6 +149,8 @@ public:
     DataOutputStream& operator<<(const std::string&);
     DataOutputStream& operator<<(const UUID&);
     DataOutputStream& operator<<(Version);
+    DataOutputStream& operator<<(float);
+    DataOutputStream& operator<<(double);
 };
 
 #endif

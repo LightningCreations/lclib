@@ -182,7 +182,7 @@ const Instant MIN = Instant::fromEpochSecond(-31556889864401400LL);
     A class that represents a Duration between 2 Instants.
     This Duration is precise to Nanoseconds and stores 64-bit seconds with 32-bit nanoseconds.
 */
-class Duration:public Hashable{
+class Duration{
 private:
     int64_t seconds;
     int nanos;
@@ -197,6 +197,7 @@ public:
     constexpr Duration& operator=(const Duration&)=default;
     constexpr Duration& operator=(Duration&&)=default;
     constexpr Duration& operator=(const Duration&&)=delete;
+    ~Duration()=default;
     /*
         Returns the Duration that is between 2 Instants
     */
@@ -339,13 +340,20 @@ public:
         Computes the hashcode of this Instant.
         This hashcode is computed from the hashcode of its seconds field and its nanoseconds field
     */
-    int hashCode()const;
+    constexpr int hashCode()const{
+    	return hashcode(seconds)*31+hashcode(nanos);
+    }
     template<typename T> static T&& wait(const Duration& d,T&& t){
         Instant start = Instant::now();
         while(start+d<Instant::now());
         return std::forward<T>(t);
     }
 };
+
+constexpr int hashcode(const Duration& d){
+	return d.hashCode();
+}
+
 
 
 

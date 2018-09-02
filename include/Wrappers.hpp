@@ -11,7 +11,7 @@ private:
     PolymorphicWrapper& operator=(const PolymorphicWrapper&)=delete;
 public:
     PolymorphicWrapper():val(nullptr){}
-    PolymorphicWrapper(PolymorphicWrapper&& r):val(std::exhcange(r.val,nullptr)){}
+    PolymorphicWrapper(PolymorphicWrapper&& r):val(std::exchange(r.val,nullptr)){}
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>> 
         PolymorphicWrapper(PolymorphicWrapper<U>&& r):val(std::exchange(r.val,nullptr)){}
     ~PolymorphicWrapper(){
@@ -105,49 +105,24 @@ public:
     PolymorphicWrapper& operator=(PolymorphicWrapper&& r){
         if(val!=nullptr)
             delete val;
-        val = std::exchange(r.val);
+        val = std::exchange(r.val,nullptr);
         return *this;
     }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
     PolymorphicWrapper& operator=(PolymorphicWrapper<U>&& r){
         if(val!=nullptr)
             delete val;
-        val = std::exchange(r.val);
+        val = std::exchange(r.val,nullptr);
         return *this;
     }
     
 };
 
-template<typename T> class PolymorphicWrapper<std::enable_if_t<std::is_scalar_v<T>,T>>{
-private:
-    PolymorphicWrapper()=delete;
-    PolymorphicWrapper(const PolymorphicWrapper&)=delete;
-    PolymorphicWrapper(PolymorphicWrapper&&)=delete;
-    PolymorphicWrapper& operator=(const PolymorphicWrapper&)=delete;
-    PolymorphicWrapper& operator=(PolymorphicWrapper&&)=delete;
-};
-template<typename T> class PolymorphicWrapper<std::enable_if_t<std::is_enum_v<T>,T>>{
-private:
-    PolymorphicWrapper()=delete;
-    PolymorphicWrapper(const PolymorphicWrapper&)=delete;
-    PolymorphicWrapper(PolymorphicWrapper&&)=delete;
-    PolymorphicWrapper& operator=(const PolymorphicWrapper&)=delete;
-    PolymorphicWrapper& operator=(PolymorphicWrapper&&)=delete;
-};
 
-template<typename T> class PolymorphicWrapper<std::enable_if_t<std::is_union_v<T>,T>>{
-private:
-    PolymorphicWrapper()=delete;
-    PolymorphicWrapper(const PolymorphicWrapper&)=delete;
-    PolymorphicWrapper(PolymorphicWrapper&&)=delete;
-    PolymorphicWrapper& operator=(const PolymorphicWrapper&)=delete;
-    PolymorphicWrapper& operator=(PolymorphicWrapper&&)=delete;
-};
-
-template<typename T> explicit PolymorphicWrapper(T&&) ->PolymorphicWrapper<T>;
-template<typename T> explicit PolymorphicWrapper(const T&) -> PolymorphicWrapper<T>;
-template<typename T> explicit PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicWrapper<T>;
-template<typename T,typename... Args> explicit PolymorphicWrapper(std::in_place_type_t<T>,Args&&...) -> PolymorphicWrapper<T>;
+template<typename T> PolymorphicWrapper(T&&) ->PolymorphicWrapper<T>;
+template<typename T> PolymorphicWrapper(const T&) -> PolymorphicWrapper<T>;
+template<typename T> PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicWrapper<T>;
+template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>,Args&&...) -> PolymorphicWrapper<T>;
 
 
 

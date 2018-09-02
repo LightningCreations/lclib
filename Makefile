@@ -17,5 +17,4 @@ $(OUTPUT): $(SOURCE_FILES)
 	$(CXX) $(FLAGS) $(INCLUDE) -o $(OUTPUT) $(SOURCE_FILES) $(LIBS)
 
 install:
-	cp $(OUTPUT) /usr/lib
-	cp /. /usr/include
+	install $(OUTPUT) /usr/lib

@@ -11,10 +11,10 @@ NBTTagString::NBTTagString(const char* c):value(c){}
 NBTTagString::NBTTagString(const std::string& s):value(s){}
 NBTTagString::NBTTagString(std::string&& s):value(s){}
 
-NBTTagString::operator const std::string&()const{
+NBTTagString::operator const std::string&()const noexcept(true){
     return value;
 }
-NBTTagString::operator std::string&&()&&{
+NBTTagString::operator std::string&&()&& noexcept(true){
     return std::move(value);
 }
 

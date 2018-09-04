@@ -11,7 +11,7 @@ namespace nbt{
         virtual ~NBTTagBase()=default;
         virtual void write(DataOutputStream&)const=0;
         virtual void read(DataInputStream&)=0;
-        virtual int32_t getTagType()const=0;
+        virtual int32_t getTagType()const noexcept(true)=0;
         int32_t hashCode()const;
     };
     
@@ -24,14 +24,14 @@ namespace nbt{
         NBTTagString(const std::string&);
         NBTTagString(std::string&&);
         NBTTagString()=default;
-        operator const std::string&()const;
-        operator std::string&&()&&;
-        const std::string& getValue()const&;
-        std::string&& getValue()&&;
+        operator const std::string&()const noexcept(true);
+        operator std::string&&()&& noexcept(true);
+        const std::string& getValue()const& noexcept(true);
+        std::string&& getValue()&& noexcept(true);
         void write(DataOutputStream&)const;
         void read(DataInputStream&);
         int32_t hashCode()const;
-        int32_t getTagType()const;
+        int32_t getTagType()const noexcept(true);
     };
     
     constexpr const uint8_t TAG_END{0};

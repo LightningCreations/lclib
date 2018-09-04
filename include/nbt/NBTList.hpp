@@ -55,8 +55,8 @@ namespace nbt{
         const_reference at(size_type i)const;
         size_type size()const;
         void clear();
-        uint8_t getListTagType()const;
-        int32_t getTagType()const;
+        uint8_t getListTagType()const noexcept(true);
+        int32_t getTagType()const noexcept(true);
         int32_t hashCode()const;
         void write(DataOutputStream&)const;
         void read(DataInputStream&);

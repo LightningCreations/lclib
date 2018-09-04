@@ -15,9 +15,9 @@ private:
 	uint64_t low;
 public:
 	
-	static UUID fromString(string);
+	static UUID fromString(const string&);
 	static UUID randomUUID();
-	static UUID uuidFromNamespace(string);
+	static UUID uuidFromNamespace(const string)&;
 	static UUID ofNow();
 	constexpr static UUID nilUUID(){
 		return UUID{};

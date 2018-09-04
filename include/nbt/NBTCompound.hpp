@@ -71,7 +71,7 @@ namespace nbt{
         void setUUID(const std::string&,UUID);
         void setString(const std::string&,const std::string&);
         void setString(const std::string&,std::string&&);
-        int32_t getTagType()const;
+        int32_t getTagType()const noexcept(true);
         int32_t hashCode()const;
         void read(DataInputStream&);
         void write(DataOutputStream&)const;

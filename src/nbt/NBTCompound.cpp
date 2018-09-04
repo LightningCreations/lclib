@@ -9,7 +9,7 @@ using namespace std::string_literals;
 const std::string empty{};
 void NBTTagEnd::write(DataOutputStream&)const{}
 void NBTTagEnd::read(DataInputStream&){}
-int32_t NBTTagEnd::getTagType()const{
+int32_t NBTTagEnd::getTagType()const noexcept(true){
     return TAG_END;
 }
 

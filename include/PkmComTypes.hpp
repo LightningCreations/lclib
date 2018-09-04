@@ -59,26 +59,26 @@ namespace pkmcom{
     public:
         using underlying_type = std::underlying_type_t<E>;
         using underlying_traits = pkmcom_traits<underlying_type>;
-        constexpr static pkmcom_hash hashcode(E val){
-            return pkmcom_traits<underlying_type>.hashcode(static_cast<underlying_type>(val));
+        constexpr static pkmcom_hash hashcode(E val) noexcept(noexcept(underlying_traits::hashcode(std::declval<underlying_type>()))){
+            return pkmcom_traits<underlying_type>::hashcode(static_cast<underlying_type>(val));
         }
-        constexpr static pkmcom_size size(E val){
-            return pkmcom_traits<underlying_type>.size(static_cast<underlying_type>(val));
+        constexpr static pkmcom_size size(E val) noexcept(noexcept(underlying_traits::size(std::declval<underlying_type>()))){
+            return pkmcom_traits<underlying_type>::size(static_cast<underlying_type>(val));
         }
         static void write(E val,PacketBuffer& buff){
-        	pkmcom_traits<underlying_type>.write(static_cast<underlying_type>(val),buff);
+        	pkmcom_traits<underlying_type>::write(static_cast<underlying_type>(val),buff);
         }
         static void read(E& v,PacketBuffer& buff){
-        	pkmcom_traits<underlying_type>.read(reinterpret_cast<underlying_type&>(v),buff);
+        	pkmcom_traits<underlying_type>::read(reinterpret_cast<underlying_type&>(v),buff);
         }
     };
 
     template<> struct pkmcom_traits<pkmcom_bool>{
     public:
-        constexpr static pkmcom_hash hashcode(pkmcom_bool b){
+        constexpr static pkmcom_hash hashcode(pkmcom_bool b)noexcept(true){
             return b?1337:1331;
         }
-        constexpr static pkmcom_size size(pkmcom_bool b){
+        constexpr static pkmcom_size size(pkmcom_bool b)noexcept(true){
             return 1;
         }
         static void write(pkmcom_bool b,PacketBuffer& buff){
@@ -90,10 +90,10 @@ namespace pkmcom{
     };
     template<> struct pkmcom_traits<pkmcom_byte>{
     public:
-        constexpr static pkmcom_hash hashcode(pkmcom_byte b){
+        constexpr static pkmcom_hash hashcode(pkmcom_byte b)noexcept(true){
             return pkmcom_hash(b)&0xff;
         }
-        constexpr static pkmcom_byte size(pkmcom_byte b){
+        constexpr static pkmcom_byte size(pkmcom_byte b)noexcept(true){
             return 1;
         }
         static void write(pkmcom_byte b,PacketBuffer& buff){
@@ -105,10 +105,10 @@ namespace pkmcom{
     };
     template<> struct pkmcom_traits<pkmcom_sbyte>{
     public:
-        constexpr static pkmcom_hash hashcode(pkmcom_sbyte s){
+        constexpr static pkmcom_hash hashcode(pkmcom_sbyte s)noexcept(true){
             return pkmcom_hash(s)|(s&0x80!=0?0xffffff00:0);
         }
-        constexpr static pkmcom_hash size(pkmcom_sbyte s){
+        constexpr static pkmcom_hash size(pkmcom_sbyte s)noexcept(true){
             return 1;
         }
     };

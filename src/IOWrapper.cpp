@@ -1,6 +1,28 @@
 #include <IOWrapper.hpp>
 #include <string>
 #include <Vector.hpp>
+#include <reflect/ReflectionInfo.hpp>
+
+export_type(InputStream)
+export_constructor(InputStream)
+export_constructor(InputStream,const InputStream&)
+export_constructor(InputStream,InputStream&&)
+export_type(append_t)
+export_constructor(append_t)
+export_constructor(append_t,const append_t&)
+export_constructor(append_t,append_t&&)
+export_field(append)
+export_type(little_endian_t)
+export_constructor(little_endian_t)
+export_constructor(little_endian_t,const little_endian_t&)
+export_constructor(little_endian_t,little_endian_t&&)
+export_field(little_endian)
+export_type(FileInputStream)
+export_constructor(FileInputStream,const FileInputStream&)
+export_constructor(FileInputStream,FileInputStream&&)
+export_constructor(FileInputStream,FILE*)
+export_constructor(FileInputStream,const char*)
+export_constructor(FileInputStream,const std::string&)
 
 FileInputStream::FileInputStream(FILE* f):underlying(f){
     if(f==NULL||f==nullptr)
@@ -41,24 +63,36 @@ int DataInputStream::read(){
     return underlying->read();
 }
 
+int DataInputStream::readSingle(){
+	int ret = underlying->read();
+	if(ret<0)
+		throw EOFException();
+	return ret;
+}
+
+void DataInputStream::readFully(void* ptr,size_t size){
+	if(read(ptr,size)!=size)
+		throw EOFException();
+}
+
 uint8_t DataInputStream::readUnsignedByte(){
-    return read();
+	return readSingle();
 }
 int8_t DataInputStream::readSignedByte(){
-    return read();
+    return readUnsignedByte();
 }
 uint16_t DataInputStream::readUnsignedShort(){
     if(little)
-        return read()|read()<<8;
-    return read()<<8|read();
+        return readSingle()|readSingle()<<8;
+    return readSingle()<<8|readSingle();
 }
 int16_t DataInputStream::readSignedShort(){
     return readUnsignedShort();
 }
 int DataInputStream::readInt(){
     if(little)
-        return read()|read()<<8|read()<<16|read()<<24;
-    return read()<<24|read()<<16|read()<<8|read();
+        return readSingle()|readSingle()<<8|readSingle()<<16|readSingle()<<24;
+    return readSingle()<<24|readSingle()<<16|readSingle()<<8|readSingle();
 }
 int64_t DataInputStream::readLong(){
     if(little)
@@ -118,8 +152,9 @@ DataInputStream& DataInputStream::operator>>(std::string& u){
     return *this;
 }
 DataInputStream& DataInputStream::operator>>(Version& v){
-    uint16_t a = readUnsignedShort();
-    v = a;
+    uint8_t M,m;
+    *this >> M >> m;
+    v = Version(int(M)+1,m);
     return *this;
 }
 DataInputStream& DataInputStream::operator>>(UUID& u){
@@ -270,4 +305,8 @@ DataOutputStream& DataOutputStream::operator<<(double d){
 
 const char* FileNotFoundException::what()const noexcept(true){
     return "File could not be found or opened";
+}
+
+const char* EOFException::what()const noexcept(true){
+	return "End Of File Reached before completing read";
 }

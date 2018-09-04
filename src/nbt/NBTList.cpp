@@ -67,7 +67,7 @@ void NBTTagList::clear(){
 uint8_t NBTTagList::getListTagType()const{
     return listTagType;
 }
-int32_t NBTTagList::getTagType()const{
+int32_t NBTTagList::getTagType()const noexcept(true){
     return TAG_LIST;
 }
 int32_t NBTTagList::hashCode()const{

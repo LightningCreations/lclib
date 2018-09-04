@@ -10,29 +10,29 @@ private:
     PolymorphicWrapper(const PolymorphicWrapper&)=delete;
     PolymorphicWrapper& operator=(const PolymorphicWrapper&)=delete;
 public:
-    PolymorphicWrapper():val(nullptr){}
-    PolymorphicWrapper(PolymorphicWrapper&& r):val(std::exchange(r.val,nullptr)){}
+    PolymorphicWrapper()noexcept(true):val(nullptr){}
+    PolymorphicWrapper(PolymorphicWrapper&& r)noexcept(true):val(std::exchange(r.val,nullptr)){}
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>> 
-        PolymorphicWrapper(PolymorphicWrapper<U>&& r):val(std::exchange(r.val,nullptr)){}
+        PolymorphicWrapper(PolymorphicWrapper<U>&& r)noexcept(true):val(std::exchange(r.val,nullptr)){}
     ~PolymorphicWrapper(){
         if(val!=nullptr)
             delete val;
     }
-    PolymorphicWrapper(const T& t):val(new T(t)){}
-    PolymorphicWrapper(T&& t):val(new T(t)){}
+    PolymorphicWrapper(const T& t)noexcept(std::is_nothrow_copy_constructible_v<T>):val(new T(t)){}
+    PolymorphicWrapper(T&& t)noexcept(std::is_nothrow_move_constructible_v<T>):val(new T(t)){}
     PolymorphicWrapper(const T&&)=delete;
     template<typename U,
     typename=typename std::enable_if<std::conjunction<std::is_base_of<T,U>,
     std::is_default_constructible<U>>::value>::type> 
-        PolymorphicWrapper(std::in_place_type_t<U>):val(new U){}
+        PolymorphicWrapper(std::in_place_type_t<U>)noexcept(std::is_nothrow_default_constructible_v<T>):val(new U){}
     template<typename U,typename... Args,
         typename=std::enable_if_t<std::is_base_of_v<T,U>>> 
-        PolymorphicWrapper(std::in_place_type_t<U>,Args&&... args):
+        PolymorphicWrapper(std::in_place_type_t<U>,Args&&... args)noexcept(std::is_nothrow_constructible_v<T,Args&&...>):
         val(new U(std::forward<Args>(args)...)){}
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>> 
-        PolymorphicWrapper(const U& u):val(new U(u)){}
+        PolymorphicWrapper(const U& u)noexcept(std::is_nothrow_copy_constructible_v<U>):val(new U(u)){}
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
-        PolymorphicWrapper(U&& u):val(new U(u)){}
+        PolymorphicWrapper(U&& u)noexcept(std::is_nothrow_move_constructible_v<U>):val(new U(u)){}
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
         PolymorphicWrapper(const U&&)=delete;
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
@@ -56,11 +56,11 @@ public:
     operator T&&()&&{
         return std::move(*val);
     }
-    const std::type_info& type()const{
-        return typeid(*val);
+    const std::type_info& type()const noexcept(true){
+        return val==nullptr?typeid(*val):typeid(nullptr_t);
     }
     template<typename U,typename= std::enable_if_t<std::is_base_of_v<T,U>>>
-        bool instanceof()const{
+        bool instanceof()const noexcept(true){
             return dynamic_cast<U*>(val)!=nullptr;
         }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
@@ -76,40 +76,40 @@ public:
             return std::move(dynamic_cast<U&>(*val));
         }
     
-    T* operator->(){
+    T* operator->()noexcept(true){
         return val;
     }
-    const T* operator->()const{
+    const T* operator->()const noexcept(true){
         return val;
     }
-    T& operator*(){
+    T& operator*()noexcept(true){
         return *val;
     }
-    const T& operator*()const{
+    const T& operator*()const noexcept(true){
         return *val;
     }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
-        PolymorphicWrapper<T>& operator=(const U& u){
+        PolymorphicWrapper<T>& operator=(const U& u)noexcept(std::is_nothrow_copy_constructible_v<U>){
             if(val!=nullptr)
                 delete val;
             val = new U(u);
             return *this;
         }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
-        PolymorphicWrapper<T>& operator=(U&& u){
+        PolymorphicWrapper<T>& operator=(U&& u)noexcept(std::is_nothrow_move_constructible_v<U>){
             if(val!=nullptr)
                 delete val;
             val = new U(u);
             return *this;
     }
-    PolymorphicWrapper& operator=(PolymorphicWrapper&& r){
+    PolymorphicWrapper& operator=(PolymorphicWrapper&& r)noexcept(true){
         if(val!=nullptr)
             delete val;
         val = std::exchange(r.val,nullptr);
         return *this;
     }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
-    PolymorphicWrapper& operator=(PolymorphicWrapper<U>&& r){
+    PolymorphicWrapper& operator=(PolymorphicWrapper<U>&& r)noexcept(true){
         if(val!=nullptr)
             delete val;
         val = std::exchange(r.val,nullptr);

@@ -47,15 +47,6 @@ struct Vec2{
     constexpr int operator*(const Vec2& v)const{
         return x*v.x+y*v.y;
     }
-    constexpr double magnetude()const{
-        return sqrt(x*x+y*y);
-    }
-    constexpr double angle()const{
-        return atan(double(x)/y);
-    }
-    constexpr static Vec2 fromMagnetudeDirection(double magnetude,double angle){
-        return {int(magnetude*sin(angle)),int(magnetude*cos(angle))};
-    }
     constexpr int32_t hashCode()const{
         return x*31+y;
     }

@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include "Hash.hpp"
+#include <Config.hpp>
 
 #define VERSION_CONSTEXPR constexpr
 #define VERSION_DELETE =delete
@@ -66,7 +67,7 @@ public:
 	 * Parses a given string in the form <Mj>.<mi> and produces a version given those 2 inputs.
 	 * Both Mj and mi must be valid integers, with Mj being between 1 and 256 and Mi being between 0 and 255
 	 */
-	Version(string);
+ 	LIBLCFUNC Version(string);
 	/*
 	 * Obtains a version based on a given Major and minor version.
 	 * Major must be between 1 and 256 and minor must be between 0 and 255
@@ -110,7 +111,7 @@ public:
 	 * Returns this Version as a string.
 	 * The Resultant String is in the form <major>.<minor>
 	 */
-	string toString()const;
+	LIBLCFUNC string toString()const;
 	/*
 	 * Computes the hashcode of this Version.
 	 * This is effectively major*31+minor
@@ -163,13 +164,13 @@ public:
  * and Constructing the associated version.
  *
  */
-istream& operator>>(istream&,Version&);
+LIBLCFUNC istream& operator>>(istream&,Version&);
 /*
  * Writes this string to a text stream.
  * The output text is will be in the fomr <Mj>.<mi>
  * This is effecitvely the same as writing that version's toString()
  */
-ostream& operator<<(ostream&,const Version&);
+LIBLCFUNC ostream& operator<<(ostream&,const Version&);
 
 
 

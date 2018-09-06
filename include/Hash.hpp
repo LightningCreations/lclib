@@ -1,6 +1,7 @@
 #ifndef __Hash_hpp_2018_03_23_09_48
 #define __Hash_hpp_2018_03_23_09_48
 #pragma once
+#include <Config.hpp>
 #include <cstdint>
 #include <type_traits>
 #include <typeinfo>
@@ -9,6 +10,7 @@
 #include <utility>
 #include <map>
 #include <array>
+
 class Hashable{
 public:
 	virtual int hashCode()const = 0;
@@ -59,9 +61,9 @@ constexpr int32_t hashcode(void* v){
 constexpr int32_t hashcode(nullptr_t n){
 	return 0;
 }
-int32_t hashcode(const char*);
-int32_t hashcode(const std::string&);
-int32_t hashcode(const std::type_info&);
+int32_t LIBLCFUNC hashcode(const char*);
+int32_t LIBLCFUNC hashcode(const std::string&);
+int32_t LIBLCFUNC hashcode(const std::type_info&);
 
 using std::vector;
 

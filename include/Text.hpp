@@ -8,6 +8,7 @@
 #include <UUID.hpp>
 #include <Version.hpp>
 #include <mutex>
+#include <Config.cpp>
 
 using std::initializer_list;
 using std::vector;
@@ -72,18 +73,18 @@ private:
     bool bg:1;
     bool __tab:1;
 public:
-    TextComponent();
-    TextComponent(const string&);
-    TextComponent(string&&);
-    TextComponent(const char*);
-    TextComponent(Color);
-    TextComponent(int);
-    TextComponent(double);
-    TextComponent(bool);
-    TextComponent(const UUID&);
-    TextComponent(Version);
-    TextComponent(endline_t);
-    TextComponent(tab_t);
+    LIBLCFUNC TextComponent();
+    LIBLCFUNC TextComponent(const string&);
+    LIBLCFUNC TextComponent(string&&);
+    LIBLCFUNC TextComponent(const char*);
+    LIBLCFUNC TextComponent(Color);
+    LIBLCFUNC TextComponent(int);
+    LIBLCFUNC TextComponent(double);
+    LIBLCFUNC TextComponent(bool);
+    LIBLCFUNC TextComponent(const UUID&);
+    LIBLCFUNC TextComponent(Version);
+    LIBLCFUNC TextComponent(endline_t);
+    LIBLCFUNC TextComponent(tab_t);
     template<Color __c> TextComponent(foreground_t<__c>):c(__c),text(),bg(false),__tab(true),endl(false){}
     template<Color __c> TextComponent(background_t<__c>):c(__c),text(),bg(true),__tab(true),endl(false){}
     TextComponent(const TextComponent&)=default;
@@ -92,11 +93,11 @@ public:
     TextComponent& operator=(const TextComponent&)=default;
     TextComponent& operator=(TextComponent&&)=default;
     TextComponent& operator=(const TextComponent&&)=delete;
-    Color getColor()const;
-    const string& getText()const;
-    bool isEndl()const;
-    bool isBGColor()const;
-    bool isTab()const;
+    LIBLCFUNC Color getColor()const;
+    LIBLCFUNC const string& getText()const;
+    LIBLCFUNC bool isEndl()const;
+    LIBLCFUNC bool isBGColor()const;
+    LIBLCFUNC bool isTab()const;
 };
 
 /**
@@ -116,13 +117,13 @@ public:
      * are acquired. The terminal is also cleared and the formatting is reset.
      * If another terminal object exists at the time this constructor is used, the behavior is undefined.
      */
-    Terminal();
+    LIBLCFUNC Terminal();
     /**
      * Destroys the Terminal.
      * The terminal is cleared and the formatting is reset,
      * then any resources acquired by the constructor of Terminal are freed.
      */
-    ~Terminal();
+    LIBLCFUNC ~Terminal();
     
     /**
      * Displays a Given Text Component to the screen.
@@ -130,7 +131,7 @@ public:
      * \Returns: the current object, for chaining
      * \Exception Guarantee: this method will not throw an exception
      */
-    Terminal& print(const TextComponent&)noexcept(true);
+    LIBLCFUNC Terminal& print(const TextComponent&)noexcept(true);
     /**
      * Prints a Variable number of Text Components or convertible objects.
      * The effects of displaying any given text component depends on the content.
@@ -147,19 +148,19 @@ public:
      * \Returns: the current object, for chaining
      * \Exception Guarantee: this method will not throw an exception
      */
-    Terminal& clear()noexcept(true);
+    LIBLCFUNC Terminal& clear()noexcept(true);
     /**
      * Blocks until the user inputs any key. (the key is not echoed to the screen)
      * \Returns: the current object, for chaining
      * \Exception Guarantee: this method will not throw an exception
      */
-    Terminal& wait()noexcept(true);
+    LIBLCFUNC Terminal& wait()noexcept(true);
     /**
      * Blocks until the user inputs any key, and returns the value of that key (the key is not echoed to the screen)
      * \Returns: the code of the key pressed
      * \Exception Guarantee: this method will not throw an exception
      */
-    int get()noexcept(true);
+    LIBLCFUNC int get()noexcept(true);
 };
 
 #endif

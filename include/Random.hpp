@@ -8,6 +8,7 @@
 #include <mutex>
 #include <thread>
 #include <array>
+#include <Config.hpp>
 typedef uint64_t seed_t;
 
 using std::recursive_mutex;
@@ -33,7 +34,7 @@ private:
     Random(const Random&)=delete;
     Random& operator=(const Random&)=delete;
 protected:
-	virtual uint32_t next(int bits);
+    LIBLCFUNC virtual uint32_t next(int bits);
     recursive_mutex lock;
 public:
 	/*
@@ -41,12 +42,12 @@ public:
         This generate seeds the generator with a seed that is almost guarenteed to be unique from other 
         invocations of this constructor
 	*/
-	Random();
+    LIBLCFUNC Random();
     /*
         Constructs a Pseudorandom Number Generator with a given seed.
         The Pseudorandom Number Generator is initialized with the seed as though it was passed to setSeed.
     */
-	Random(seed_t);
+    LIBLCFUNC Random(seed_t);
     Random(Random&&)=default;
     virtual ~Random()=default;
     Random& operator=(Random&&)=default;
@@ -57,20 +58,20 @@ public:
         the outputs are the same. (This guarentee also applies to Pseudorandom Number generators using the java implementation:
         java.util.Random)
     */
-	virtual void setSeed(seed_t);
+    LIBLCFUNC virtual void setSeed(seed_t);
     
     /*
         Obtains the next int in the pseudorandom number generator
         The output of the generator is a value from 0 to 2147483647.
     */
-	int nextInt();
+    LIBLCFUNC int nextInt();
     
     /*
         Obtains the next int in the pseudorandom number generator
         The output of this function is a value from 0 inclusive to the bound exclusive.
         If bound is negative or 0, then the method throws an exception.
     */
-	int nextInt(int);
+    LIBLCFUNC int nextInt(int);
     /*
         Obtains a double from the pseudorandom number generator using Guassian/Normal distribution.
         The distribution has mean 0 and standard deviation 1. The numbers generated are extremely like to be close to 0,
@@ -78,28 +79,28 @@ public:
         If the generated numbers need (approximately) uniform distribution, the nextDouble() function is more
         appropriate for use.
     */
-	double nextGuassian();
+    LIBLCFUNC double nextGuassian();
     /*
         Obtains the next Long produced from this psuedorandom number generator.
         Note that because the generator only uses a 48-bit seed, the function may not
         produce all possible long values.
     */
-	int64_t nextLong();
+    LIBLCFUNC int64_t nextLong();
     /*
         Obtains a pseudorandom floating-point number from 0 inclusive to 1 exclusive.
         Approximately every real number(that can be represented by the float type) in this range is generated with equal probability
     */
-	float nextFloat();
+    LIBLCFUNC float nextFloat();
     /*
         Obtains a pseudorandom floating-point number from 0 inclusive to 1 exclusive
         Approximately every real number(that can be represented by the double type) in this range are generated with equal probability.
         If Normal Distribution doubles are required the nextGuassian() function is more appropriate for use.
     */
-	double nextDouble();
+    LIBLCFUNC double nextDouble();
     /*
         Obtains a number of psuedorandom bytes and fills the passed buffer with them.
     */
-	virtual void nextBytes(uint8_t*,size_t);
+    LIBLCFUNC virtual void nextBytes(uint8_t*,size_t);
     /*
         Fills an array with its size known at compile time with a bunch of psuedo-random bytes.
     */

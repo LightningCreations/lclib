@@ -8,14 +8,15 @@
 #include <stdexcept>
 #include <cstddef>
 #include <Vector.hpp>
+#include <Config.hpp>
 class FileNotFoundException:public std::exception{
 public:
-    const char* what()const noexcept(true) override;
+	LIBLCFUNC const char* what()const noexcept(true) override;
 };
 
 class EOFException:public std::exception{
 public:
-	const char* what()const noexcept(true) override;
+	LIBLCFUNC const char* what()const noexcept(true) override;
 };
 
 struct little_endian_t{
@@ -108,36 +109,36 @@ public:
      * binary read mode (fopen(<name>,"rb")). Note that omitting the b in the specifier may be undefined behavior, but also may not (implementation defined).
      * \Exceptions: This constructor throws a FileNotFoundException if the passed FILE is a null pointer
      */
-    FileInputStream(FILE*);
+    LIBLCFUNC FileInputStream(FILE*);
 
     /**
      * Constructs a FileInputStream from a c string
      * The stream is constructed as if by FileInputStream(fopen(str,"rb"))
      * \Exceptions: This constructor throws a FileNotFoundException if the file cannot be found or opened for any reason.
      */
-    FileInputStream(const char*);
+    LIBLCFUNC FileInputStream(const char*);
     /**
      * Constructs a FileInputStream from a std::string.
      * The stream is constructed as if by FileInputStream(fopen(str.c_str(),"rb")
      * \Exceptions: This constructor throws a FileNotFoundException if the file cannot be found or opened for any reason.
      */
-    FileInputStream(const std::string&);
+    LIBLCFUNC FileInputStream(const std::string&);
     /**
      * Constructs a new FileInputStream from a moved from object.
      * The moved from object will not have an underlying file after this call
      */
-    FileInputStream(FileInputStream&&);
+    LIBLCFUNC FileInputStream(FileInputStream&&);
     /**
      * Closes the underlying file then moves the given object to this one.
      * If there is no underlying file (the object has been moved from),
      * the underlying file is not closed.
      * The moved from object will not have an underlying file after this call
      */
-    FileInputStream& operator=(FileInputStream&&);
+    LIBLCFUNC FileInputStream& operator=(FileInputStream&&);
     /**
      * Closes the underlying file if it exists. Otherwise does nothing
      */
-    ~FileInputStream();
+    LIBLCFUNC ~FileInputStream();
     /**
      * Reads bytes from the underlying file into the given array.
      * The Requirements and Restrictions are the same as in InputStream.
@@ -145,13 +146,13 @@ public:
      * except with the requirements and restrictions for the pointed to object from InputStream.read
      * \Exception Guarantee: This method will not throw an exception
      */
-    size_t read(void*,size_t);
+    LIBLCFUNC size_t read(void*,size_t);
     /**
      * Reads a single byte from the stream.
      * This method acts as if a byte is read using read, and returned if the size is 1,
      * or -1 if no bytes are available.
      */
-    int read();
+    LIBLCFUNC int read();
 };
 
 /**
@@ -171,13 +172,13 @@ public:
      * Constructs a new DataInputStream which reads from a given stream.
      * Multibyte datatypes are written in Big Endian (network) Byte Order.
      */
-    DataInputStream(InputStream&);
+    LIBLCFUNC DataInputStream(InputStream&);
     /**
      * Tag Disambiguation Constructor which constructs a DataInputStream
      * that reads from a given stream.
      * Multibyte datatype are written in Little Endian (native) Byte Order
      */
-    DataInputStream(InputStream&,little_endian_t);
+    LIBLCFUNC DataInputStream(InputStream&,little_endian_t);
     /*
      * Reads from this stream.
      * Requirements are detailed by InputStream::read(void*,size_t).
@@ -187,7 +188,7 @@ public:
   	 * are written with this function
      * \Exceptions: If the underlying stream's read method throws an exception, it is propagated through this call
      */
-    size_t read(void*,size_t);
+    LIBLCFUNC size_t read(void*,size_t);
     /**
      * Reads a single byte from the stream.
      * If there is bytes remaining in the stream, this acts as int(readUnsignedByte()),
@@ -195,7 +196,7 @@ public:
      * This call is forwarded to the underlying stream.
      * \Exceptions: If the underlying stream's read method throws an exception, it is propagated through this call
      */
-    int read();
+    LIBLCFUNC int read();
     /**
      * Attempts to read n bytes into the provided pointer.
      * This call is guaranteed to read that many bytes. If the end of the stream is reached before reading bytes,
@@ -203,7 +204,7 @@ public:
      * If an EOFException is thrown, the object read is invalidated. Using that object is undefined behavior.
      *\Exceptions: If the End-Of-Stream is reached an EOFException is thrown. If the underlying stream's read method throws an exception, it is propagated through this call
      */
-    void readFully(void*,size_t);
+    LIBLCFUNC void readFully(void*,size_t);
     /**
      * Reads a single byte from the stream and treats it as a uint8_t.
      * If no bytes are available on the stream, an EOFException is thrown.
@@ -212,7 +213,7 @@ public:
      * (For example, the writeByte method of DataOutputStream)
      * \Exceptions: Same as readFully
      */
-    uint8_t readUnsignedByte();
+    LIBLCFUNC uint8_t readUnsignedByte();
     /**
      * Reads a single byte from the stream and treats it as an int8_t
      * If no bytes are available on the stream, an EOFException is thrown
@@ -221,7 +222,7 @@ public:
      * (For example, the writeByte method of DataOutputStream)
      * \Exceptions: Same as readFully
      */
-    int8_t readSignedByte();
+    LIBLCFUNC int8_t readSignedByte();
     /**
      * Reads 2 bytes from the stream and converts them to a uint16_t, using the byte order this DataInputStream is constructed with.
      * If there is not at least 2 bytes available, an EOFException is thrown.
@@ -229,7 +230,7 @@ public:
      * it is undefined behavior unless both bytes were written with the same utility, and the write function used
      * is suitable for writing 2 byte numbers (signed or unsigned)
      */
-    uint16_t readUnsignedShort();
+    LIBLCFUNC uint16_t readUnsignedShort();
     /**
 	 * Reads 2 bytes from the stream and converts them to an int16_t, using the byte order this DataInputStream is constructed with.
 	 * If there is not at least 2 bytes available, an EOFException is thrown.
@@ -239,7 +240,7 @@ public:
 	 * It is also undefined behavior unless the byte order of the writing utility is the same as the byte order if this stream.
 	 * (By default DataOutputStream using Big Endian byte order)
 	 */
-    int16_t readSignedShort();
+    LIBLCFUNC int16_t readSignedShort();
     /**
 	 * Reads 4 bytes from the stream and converts them to an int, using the byte order this DataInputStream is constructed with.
 	 * If there is not at least 4 bytes available, an EOFException is thrown.
@@ -249,7 +250,7 @@ public:
 	 * It is also undefined behavior unless the byte order of the writing utility is the same as the byte order if this stream.
 	 * (By default DataOutputStream using Big Endian byte order)
 	 */
-    int readInt();
+    LIBLCFUNC int readInt();
     /**
 	 * Reads 8 bytes from the stream and converts them to a int64_t, using the byte order this DataInputStream is constructed with.
 	 * If there is not at least 8 bytes available, an EOFException is thrown.
@@ -259,7 +260,7 @@ public:
 	 * It is also undefined behavior unless the byte order of the writing utility is the same as the byte order if this stream.
 	 * (By default DataOutputStream using Big Endian byte order)
 	 */
-    int64_t readLong();
+    LIBLCFUNC int64_t readLong();
     /**
      * Reads a string from the stream.
      * An Unsigned short length prefix is read first, as if by readUnsignedShort
@@ -272,7 +273,7 @@ public:
      * an EOFException is thrown.
      * \Exceptions: Same as readFully
      */
-    std::string readString();
+    LIBLCFUNC std::string readString();
     /**
      * Reads a 4-byte value, as if by readInt(), from the stream which is then interpreted as a float.
      * The behavior is undefined unless the value was written by the writeFloat method of DataOutputStream,
@@ -283,7 +284,7 @@ public:
      * \Exceptions: Same as readFully
      * \Other Errors: If the read value is a Signaling NaN the method may raise an FP_ENV error and quiet the NaN (Implementation defined)
      */
-    float readFloat();
+    LIBLCFUNC float readFloat();
     /**
      * Reads an 8-byte value, as if by readLong(), from the stream which is then interpreted as a double.
      * The behavior is undefined unless the value was written by the writeDouble method of DataOutputStream,
@@ -294,7 +295,7 @@ public:
      * \Exceptions: Same as readFully
      * \Other Errors: If the read value is a Signaling NaN the method may raise an FP_ENV error and quiet the NaN (Implementation defined)
      */
-    double readDouble();
+    LIBLCFUNC double readDouble();
     /**
      * Reads an Enum from the stream, by reading the underlying value and then converting it to the Enum Type.
      * It is undefined behavior unless the bytes were written by the corresponding writeEnum method
@@ -313,55 +314,55 @@ public:
      * This function acts as if b = readUnsignedByte()
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(uint8_t&);
+    LIBLCFUNC DataInputStream& operator>>(uint8_t&);
     /**
      * Overload of the Read-from-Stream operator for int8_t.
      * This function acts as if b = readSignedByte()
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(int8_t&);
+    LIBLCFUNC DataInputStream& operator>>(int8_t&);
     /**
      * Overload of the Read-From-Stream operator for uint16_t.
      * This function acts as if s = readUnsignedShort()
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(uint16_t&);
+    LIBLCFUNC DataInputStream& operator>>(uint16_t&);
     /**
      * Overload of the Read-From-Stream operator for int16_t.
      * This function acts as if s = readSignedShort()
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(int16_t&);
+    LIBLCFUNC DataInputStream& operator>>(int16_t&);
     /**
      * Overload of the Read-From-Stream operator for uint32_t
      * This function acts as if i = uint32_t(readInt());
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(uint32_t&);
+    LIBLCFUNC DataInputStream& operator>>(uint32_t&);
     /**
      * Overload of the Read-From-Stream operator for int32_t.
      * This function acts as if i = readInt();
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(int32_t&);
+    LIBLCFUNC DataInputStream& operator>>(int32_t&);
     /**
      * Overload of the Read-From-Stream operator for uint64_t.
      * This function acts as if l = uint64_t(readLong())
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(uint64_t&);
+    LIBLCFUNC DataInputStream& operator>>(uint64_t&);
     /**
      * Overload of the Read-From-Stream operator for int64_t.
      * This function acts as if l = readLong()
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(int64_t&);
+    LIBLCFUNC DataInputStream& operator>>(int64_t&);
     /**
      * Overload of the Read-From-Stream operator
      * This function acts as if s = readString()
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(std::string&);
+    LIBLCFUNC DataInputStream& operator>>(std::string&);
     /**
      * Overload of the Read-From-Stream operator for Verison
      * This function acts as if the version is initialized with a 2-byte value read in big-endian byte order as though by readUnsignedShort()
@@ -369,25 +370,25 @@ public:
      * This method is byte-order insensitive.
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(Version&);
+    LIBLCFUNC DataInputStream& operator>>(Version&);
     /**
      * Overload of the Read-From-Stream operator for UUID.
      * This function acts as if 2 longs are read via readLong() and are used to initialize the UUID.
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(UUID&);
+    LIBLCFUNC DataInputStream& operator>>(UUID&);
     /**
      * Overload of Read-From-Stream operator for float.
      * This function acts as if by f = readFloat();
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(float&);
+    LIBLCFUNC DataInputStream& operator>>(float&);
     /**
      * Overload of Read-From-Stream operator for double.
      * This function acts as if by d = readDouble();
      * \Exceptions: Same as readFully
      */
-    DataInputStream& operator>>(double&);
+    LIBLCFUNC DataInputStream& operator>>(double&);
     /**
      * Overload of Read-From-Stream operator for enum types.
      * This function acts as if by e = readEnum<E>();
@@ -469,7 +470,7 @@ public:
      * to the point where the buffer was last committed.
      * The state of the underlying buffer after an exception is thrown is unspecified.
      */
-    virtual void flush();
+    LIBLCFUNC virtual void flush();
 
 };
 
@@ -498,66 +499,66 @@ public:
      * or was opened in read-only mode.
      * \Exceptions: If the passed file is a null pointer, then a FileNotFoundException is thrown.
      */
-    FileOutputStream(FILE*);
+    LIBLCFUNC FileOutputStream(FILE*);
     /**
      * Constructs a new stream from a file with the given name.
      * The Stream is constructed as if by FileOutputStream(fopen(str,"wb"))
      * The behavior is undefined if the pointer is null
      * \Exceptions: If the passed file cannot be opened or does not exist and cannot be created, a FileNotFoundException is thrown
      */
-    FileOutputStream(const char*);
+    LIBLCFUNC FileOutputStream(const char*);
     /**
      * Constructs a new stream from a file with the given name.
      * The stream is constructed as if by FileOutputStream(fopen(str.c_str(),"wb"))
      * \Exceptions: If the passed file cannot be opened or does not exist and cannot be created, a FileNotFoundException is thrown
      */
-    FileOutputStream(const std::string&);
+    LIBLCFUNC FileOutputStream(const std::string&);
     /**
      * Constructs a new output stream with the given name, in append mode.
      * The Stream is constructed as if by FileOutputStream(fopen(str,"ab"))
      * \Exceptions: If the passed file cannot be opened or does not exist and cannot be created, a FileNotFoundException is thrown
      */
-    FileOutputStream(const char*,append_t);
+    LIBLCFUNC FileOutputStream(const char*,append_t);
     /**
      * Constructs a new stream from a file with the given name, in append mode
      * The stream is constructed as if by FileOutputStream(fopen(str.c_str(),"ab"))
      * \Exceptions: If the passed file cannot be opened or does not exist and cannot be created, a FileNotFoundException is thrown
      */
-    FileOutputStream(const std::string&,append_t);
+    LIBLCFUNC FileOutputStream(const std::string&,append_t);
     /**
      * Moves an existing FileOutputStream to this.
      * The underlying file of the moved-from object is reused by this object.
      * The old stream no longer has an underlying file after this call.
      */
-    FileOutputStream(FileOutputStream&&);
+    LIBLCFUNC FileOutputStream(FileOutputStream&&);
     /**
      * Destroys this stream.
      * If this has an underlying file, that file is closed
      */
-    ~FileOutputStream();
+    LIBLCFUNC ~FileOutputStream();
     /**
      * Moves an existing FileOutputStream.
      * If this has an underlying file, that file is closed.
      * Then this acts as though a new FileOutputStream is created via the move constructor
      */
-    FileOutputStream& operator=(FileOutputStream&&);
+    LIBLCFUNC FileOutputStream& operator=(FileOutputStream&&);
     /**
      * Writes to the file.
      * This is implemented as if by fwrite(ptr,1,size,underlying);
      * \Exception Guarantee: This method will not throw an exception
      */
-    size_t write(const void*,size_t);
+    LIBLCFUNC size_t write(const void*,size_t);
     /**
      * Writes a single byte to the file.
      * This acts as if implemented as write(&b,1);
      * \Exception Guarantee: This method will not throw an exception
      */
-    void write(uint8_t);
+    LIBLCFUNC void write(uint8_t);
 
     /**
      * Flushes the bytes written to the stream.
      */
-    void flush();
+    LIBLCFUNC void flush();
 };
 
 /**
@@ -580,12 +581,12 @@ public:
      * Constructs a new DataOutputStream wrapping the given OutputStream.
      * Multibyte types are written in Big Endian (network) byte order
      */
-    DataOutputStream(OutputStream&);
+    LIBLCFUNC DataOutputStream(OutputStream&);
     /**
      * Constructs a new DataOutputStream wrapping the given OutputStream, in little endian mode.
      * Multibyte types are written in Little Endian (native) byte order
      */
-    DataOutputStream(OutputStream&,little_endian_t);
+    LIBLCFUNC DataOutputStream(OutputStream&,little_endian_t);
     /**
      * Writes a given pointer to the stream.
      * This call is forwarded to the underlying stream.
@@ -593,37 +594,37 @@ public:
      * In addition using this method to write values of any multibyte scalar types is undefined behavior.
      * \Exceptions: If the underlying write method throws an exception, that exception is propagated through this call
      */
-    size_t write(const void*,size_t);
+    LIBLCFUNC size_t write(const void*,size_t);
     /**
      * Writes a single byte to the stream.
      * This call is forwarded to the underlying stream.
      * \Exceptions: If the underlying write method throws an exception, that exception is propagated through this call
      */
-    void write(uint8_t);
+    LIBLCFUNC void write(uint8_t);
     /**
      * Writes a single byte to the stream.
      * The byte written here is suitable to be read by any readSignedByte or readUnsignedByte call in a DataInputStream (or similar utility)
      * \Exceptions: same as write
      */
-    void writeByte(int8_t);
+    LIBLCFUNC void writeByte(int8_t);
     /**
 	 * Writes a 2-byte short to the stream.
 	 * The bytes written here are suitable to be read by any readSignedShort or readUnsignedShort call in a DataInputStream in the same byte-order mode
 	 * \Exceptions: same as write
 	 */
-    void writeShort(int16_t);
+    LIBLCFUNC void writeShort(int16_t);
     /**
 	 * Writes a 4-byte int to the stream.
 	 * The bytes written here are suitable to be read by any readInt call in a DataInputStream in the same byte-order mode
 	 * \Exceptions: same as write
 	 */
-    void writeInt(int);
+    LIBLCFUNC void writeInt(int);
     /**
 	 * Writes a 8-byte long to the stream.
 	 * The bytes written here are suitable to be read by any readLong call in a DataInputStream in the same byte-order mode
 	 * \Exceptions: same as write
 	 */
-    void writeLong(int64_t);
+    LIBLCFUNC void writeLong(int64_t);
     /**
 	 * Writes a string to the stream. The length prefix is written as an unsigned short as if by writeShort,
 	 * then that many bytes starting from std::begin(str) are written.
@@ -631,21 +632,21 @@ public:
 	 * or the string contains embedded nul bytes.
 	 * \Exceptions: same as write
 	 */
-    void writeString(const std::string&);
+    LIBLCFUNC void writeString(const std::string&);
     /**
      * Writes a 4-byte float to the stream.
      * The float is interpreted as a 4-byte value, then written as if by writeInt, except that it cannot be read by readInt.
      * If the default float on the implementation is not IEEE binary32, the behavior is undefined.
      * If the written value is NaN it is implementation defined if the bit representation of the NaN is preserved.
      */
-    void writeFloat(float);
+    LIBLCFUNC void writeFloat(float);
     /**
 	 * Writes a 8-byte double to the stream.
 	 * The double is interpreted as a 8-byte value, then written as if by writeLong, except that it cannot be read by readLong.
 	 * If the default float on the implementation is not IEEE binary64, the behavior is undefined.
 	 * If the written value is NaN it is implementation defined if the bit representation of the NaN is preserved.
 	 */
-    void writeDouble(double);
+    LIBLCFUNC void writeDouble(double);
     /**
      * Writes an enum to the stream, as if by invoking the correct write<T> for the underlying type of E,
      * This enum is only suitable to be read by an equivalent readEnum call
@@ -655,25 +656,25 @@ public:
     template<typename E> std::enable_if_t<std::is_enum_v<E>> writeEnum(E e){
     	*this << static_cast<std::underlying_type_t<E>>(e);
     }
-    DataOutputStream& operator<<(uint8_t);
-    DataOutputStream& operator<<(int8_t);
-    DataOutputStream& operator<<(uint16_t);
-    DataOutputStream& operator<<(int16_t);
-    DataOutputStream& operator<<(uint32_t);
-    DataOutputStream& operator<<(int32_t);
-    DataOutputStream& operator<<(uint64_t);
-    DataOutputStream& operator<<(int64_t);
-    DataOutputStream& operator<<(const std::string&);
+    LIBLCFUNC DataOutputStream& operator<<(uint8_t);
+    LIBLCFUNC DataOutputStream& operator<<(int8_t);
+    LIBLCFUNC DataOutputStream& operator<<(uint16_t);
+    LIBLCFUNC DataOutputStream& operator<<(int16_t);
+    LIBLCFUNC DataOutputStream& operator<<(uint32_t);
+    LIBLCFUNC DataOutputStream& operator<<(int32_t);
+    LIBLCFUNC DataOutputStream& operator<<(uint64_t);
+    LIBLCFUNC DataOutputStream& operator<<(int64_t);
+    LIBLCFUNC DataOutputStream& operator<<(const std::string&);
     /**
      * Writes a given UUID to the stream, by writing the high then the low bits as if by writeLong
      */
-    DataOutputStream& operator<<(const UUID&);
+    LIBLCFUNC DataOutputStream& operator<<(const UUID&);
     /**
      * Writes a given Version to the stream, as if by writing the encoded form of the version with writeShort in big-endian byte order
      */
-    DataOutputStream& operator<<(Version);
-    DataOutputStream& operator<<(float);
-    DataOutputStream& operator<<(double);
+    LIBLCFUNC DataOutputStream& operator<<(Version);
+    LIBLCFUNC DataOutputStream& operator<<(float);
+    LIBLCFUNC DataOutputStream& operator<<(double);
     template<typename E> DataOutputStream& operator<<(E e){
     	return *this << static_cast<std::underlying_type_t<E>>(e);
     }
@@ -682,7 +683,7 @@ public:
      * Flushes the underlying stream buffer if it is buffered. Otherwise has no effect
      * \Exceptions: if the flush method of the underlying stream throws an exception, it is propagated through this call
      */
-    void flush();
+    LIBLCFUNC void flush();
 };
 
 #endif

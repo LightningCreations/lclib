@@ -5,19 +5,19 @@ namespace nbt{
     class NBTPrimitive:public NBTTagBase{
     public:
         virtual int32_t getInt()const noexcept(true)=0;
-        virtual int64_t getLong()const noexcept(true);
-        int16_t getShort()const noexcept(true);
-        int8_t getByte()const noexcept(true);
-        bool getBoolean()const noexcept(true);
-        virtual float getFloat()const noexcept(true);
-        virtual double getDouble()const noexcept(true);
-        operator int()const noexcept(true);
-        operator int64_t()const noexcept(true);
-        operator int16_t()const noexcept(true);
-        operator int8_t()const noexcept(true);
-        explicit operator bool()const noexcept(true);
-        operator float()const noexcept(true);
-        operator double()const noexcept(true);
+        LIBLCFUNC virtual int64_t getLong()const noexcept(true);
+        LIBLCFUNC int16_t getShort()const noexcept(true);
+        LIBLCFUNC int8_t getByte()const noexcept(true);
+        LIBLCFUNC bool getBoolean()const noexcept(true);
+        LIBLCFUNC virtual float getFloat()const noexcept(true);
+        LIBLCFUNC virtual double getDouble()const noexcept(true);
+        LIBLCFUNC operator int()const noexcept(true);
+        LIBLCFUNC operator int64_t()const noexcept(true);
+        LIBLCFUNC operator int16_t()const noexcept(true);
+        LIBLCFUNC operator int8_t()const noexcept(true);
+        LIBLCFUNC explicit operator bool()const noexcept(true);
+        LIBLCFUNC operator float()const noexcept(true);
+        LIBLCFUNC operator double()const noexcept(true);
     };
     namespace detail{
         template<typename T,uint8_t tag_type> class NBTTagPrimitive:public NBTPrimitive{

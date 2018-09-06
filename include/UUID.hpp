@@ -15,17 +15,17 @@ private:
 	uint64_t low;
 public:
 	
-	static UUID fromString(const string&);
-	static UUID randomUUID();
-	static UUID uuidFromNamespace(const string)&;
-	static UUID ofNow();
+	LIBLCFUNC static UUID fromString(const string&);
+	LIBLCFUNC static UUID randomUUID();
+	LIBLCFUNC static UUID uuidFromNamespace(const string)&;
+	LIBLCFUNC static UUID ofNow();
 	constexpr static UUID nilUUID(){
 		return UUID{};
 	}
 	constexpr UUID(uint64_t h,uint64_t l):high(h),low(l){}
 	constexpr UUID():high(0),low(0){}
-	UUID(string);
-	UUID(const char*);
+	LIBLCFUNC UUID(string);
+	LIBLCFUNC UUID(const char*);
 	constexpr UUID(const UUID&)=default;
 	constexpr UUID(UUID&&)=default;
 	UUID(const UUID&&)=delete;
@@ -41,8 +41,8 @@ public:
 	constexpr int32_t hashCode()const{
 		return hashcode(high)*31+hashcode(low);
 	}
-	string toString()const;
-	operator string()const;
+	LIBLCFUNC string toString()const;
+	LIBLCFUNC operator string()const;
 	constexpr bool operator==(const UUID& u)const{
 		return high==u.high&&low==u.low;
 	}
@@ -64,9 +64,9 @@ public:
 	
 };
 
-ostream& operator<<(ostream&,const UUID&);
-istream& operator>>(istream&,UUID&);
-string  operator+(const string&,const UUID&);
+LIBLCFUNC ostream& operator<<(ostream&,const UUID&);
+LIBLCFUNC istream& operator>>(istream&,UUID&);
+LIBLCFUNC string  operator+(const string&,const UUID&);
 
 constexpr int32_t hashcode(const UUID& u){
 	return u.hashCode();

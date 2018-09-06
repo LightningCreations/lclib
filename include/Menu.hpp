@@ -28,15 +28,15 @@ private:
 	MenuItem& operator=(const MenuItem&)=delete;
 public:
 	virtual ~MenuItem()=default;
-	MenuItem(const string&,int);
-	MenuItem(const string&,Color,int);
-	MenuItem(string&&,int);
-	MenuItem(string&&,Color,int);
+	LIBLCFUNC MenuItem(const string&,int);
+	LIBLCFUNC MenuItem(const string&,Color,int);
+	LIBLCFUNC MenuItem(string&&,int);
+	LIBLCFUNC MenuItem(string&&,Color,int);
 	MenuItem(MenuItem&&)=default;
 	MenuItem& operator=(MenuItem&&)=default;
-	Color getColor()const;
-	const string& getName()const;
-	int getCode()const;
+	LIBLCFUNC Color getColor()const;
+	LIBLCFUNC const string& getName()const;
+	LIBLCFUNC int getCode()const;
 };
 
 class Menu{
@@ -55,16 +55,16 @@ private:
 	Menu(const Menu&)=delete;
 	Menu& operator=(const Menu&)=delete;
 public:
-	Menu();
-	Menu(const string&);
-	Menu(const string&,Color);
-	Menu(string&&);
-	Menu(string&&,Color);
+	LIBLCFUNC Menu();
+	LIBLCFUNC Menu(const string&);
+	LIBLCFUNC Menu(const string&,Color);
+	LIBLCFUNC Menu(string&&);
+	LIBLCFUNC Menu(string&&,Color);
 	Menu(Menu&&)=default;
 	Menu& operator=(Menu&&)=default;
-	Menu& addItem(MenuItem&);
-	int select(Terminal&);
-	void handleKey(int,function<int()>);
+	LIBLCFUNC Menu& addItem(MenuItem&);
+	LIBLCFUNC int select(Terminal&);
+	LIBLCFUNC void handleKey(int,function<int()>);
 };
 
 

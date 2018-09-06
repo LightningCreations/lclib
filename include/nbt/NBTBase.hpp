@@ -12,7 +12,7 @@ namespace nbt{
         virtual void write(DataOutputStream&)const=0;
         virtual void read(DataInputStream&)=0;
         virtual int32_t getTagType()const noexcept(true)=0;
-        int32_t hashCode()const;
+        LIBLCFUNC int32_t hashCode()const;
     };
     
 
@@ -20,18 +20,18 @@ namespace nbt{
     private:
         std::string value;
     public:
-        NBTTagString(const char*);
-        NBTTagString(const std::string&);
-        NBTTagString(std::string&&);
+        LIBLCFUNC NBTTagString(const char*);
+        LIBLCFUNC NBTTagString(const std::string&);
+        LIBLCFUNC NBTTagString(std::string&&);
         NBTTagString()=default;
-        operator const std::string&()const noexcept(true);
-        operator std::string&&()&& noexcept(true);
-        const std::string& getValue()const& noexcept(true);
-        std::string&& getValue()&& noexcept(true);
-        void write(DataOutputStream&)const;
-        void read(DataInputStream&);
-        int32_t hashCode()const;
-        int32_t getTagType()const noexcept(true);
+        LIBLCFUNC operator const std::string&()const noexcept(true);
+        LIBLCFUNC operator std::string&&()&& noexcept(true);
+        LIBLCFUNC const std::string& getValue()const& noexcept(true);
+        LIBLCFUNC std::string&& getValue()&& noexcept(true);
+        LIBLCFUNC void write(DataOutputStream&)const;
+        LIBLCFUNC void read(DataInputStream&);
+        LIBLCFUNC int32_t hashCode()const;
+        LIBLCFUNC int32_t getTagType()const noexcept(true);
     };
     
     constexpr const uint8_t TAG_END{0};
@@ -50,7 +50,7 @@ namespace nbt{
     constexpr const uint8_t TAG_ANY_NEUMERIC{99};
     using NbtWrapper = PolymorphicWrapper<NBTTagBase>;
 
-    NbtWrapper readListTag(DataInputStream&,uint8_t);
-    NbtWrapper readCompoundTag(DataInputStream&,std::string&);
+    LIBLCFUNC NbtWrapper readListTag(DataInputStream&,uint8_t);
+    LIBLCFUNC NbtWrapper readCompoundTag(DataInputStream&,std::string&);
 }
 #endif

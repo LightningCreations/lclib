@@ -65,6 +65,10 @@ public:
      * Note that if the object is an array of char which models a C-style string,
      * and the full string is not read, then passing the string to any string sensitive operations
      * (strlen, strcpy, or std::string(const char*)) is undefined behavior.
+     * Subclasses may impose further restrictions on what may be read to.
+     * These subclasses are required to detail what results in undefined behavior and what may cause an exception to be thrown.
+     * If an exception is thrown, the stream is left in an unspecified state.
+     * All objects being read to are invalidated in this case.
      * \Exception Guarantee: Implementations may throw an exception from this function
      */
     virtual size_t read(void*,size_t)=0;
@@ -400,8 +404,14 @@ public:
 /**
  * Base class for Binary Output Streams.
  * The class uses the RAII model for streams (and is therefore Move-only),
- * that is, any resources used by the stream are aquired at construction,
+ * that is, any resources used by the stream are acquired at construction,
  * and released at destruction.
+ * Subclasses are allowed to implement this interface in any manor which satisfies the requirements.
+ * In particular, subclasses are allowed to buffer written stream data until flush is called or it is destroyed
+ * If automatically committed writes are required, consult the specific subclass.
+ * If the specific subclass is unknown, then flush should be called when the timing of write is mandated.
+ * If a subclass of OutputStream does buffer data, then it is unspecified when this data is written
+ * except if flush is called or stream is destroyed. (In which case any buffered data must be immediately written).
  */
 class OutputStream{
 private:
@@ -410,6 +420,14 @@ private:
 public:
     OutputStream()=default;
     OutputStream(OutputStream&&)=default;
+    /**
+     * Destroys the OutputStream.
+     * This should free any resources used, and if the stream is buffered, the buffer must be flushed.
+     * If this causes an exception to be thrown, it may not propagate outside of the destructor.
+     * If this occurs the stream must be placed in a valid but unspecified state as described by flush,
+     * the buffer may or may not be flushed if this occurs however. It is unspecified how or if
+     * it is noted that such an error occurred.
+     */
     virtual ~OutputStream()=default;
     /**
      * Writes an object to the stream, then returns the number of byte written.
@@ -419,7 +437,13 @@ public:
      * There is also addition restrictions on reading objects (See InputStream#read)
      * If multibyte scalar types are written it is implementation defined whether they are written in Big-Endian or Little-Endian byte order.
      * If byte order is necessary, these types should be written using the equivalent method in DataOuputStream
-     * If there is not a complete object of any type at the given pointer the behavior is undefined
+     * If there is not a complete object of any type at the given pointer the behavior is undefined.
+     * Subclasses may impose additional restrictions on what can be written,
+     * including what causes undefined behavior and what throws an exception.
+     * If an exception is thrown by the subclass, and stream buffering is used,
+     * it is guaranteed that the stream will be reversed to the point where the buffer was last written,
+     * (Possibly to where the buffer was before the call to write).
+     * If the subclass does not use stream buffering, what data has been written after an exception is thrown is unspecified.
      */
     virtual size_t write(const void*,size_t)=0;
     /*
@@ -434,6 +458,19 @@ public:
         return write(arr,N);
     }
     OutputStream& operator=(OutputStream&&)=default;
+
+    /**
+     * Flushes the stream's buffer if it exists. Otherwise has no effect.
+     * If subclasses buffer output data, it is required that this function be implemented
+     * to write all data that was buffered.
+     * In addition, subclasses which buffer output data are required to flush the
+     * buffer as though by this method when the stream is closed (by the destructor)
+     * If the implementation throws an exception the stream is guaranteed to be reversed,
+     * to the point where the buffer was last committed.
+     * The state of the underlying buffer after an exception is thrown is unspecified.
+     */
+    virtual void flush();
+
 };
 
 class append_t{
@@ -445,6 +482,11 @@ const append_t append{};
 
 /**
  * An OutputStream which wraps (and manages) a FILE*.
+ * FileOutputStream is a buffered stream, that is, when bytes are written,
+ * they are not committed to the underlying file descriptor immediately.
+ * Instead they are placed in an internal buffer of an unspecified size.
+ * Written bytes are committed when the buffer fills, flush is called,
+ * or the stream is destroyed.
  */
 class FileOutputStream:public OutputStream{
 private:
@@ -511,6 +553,11 @@ public:
      * \Exception Guarantee: This method will not throw an exception
      */
     void write(uint8_t);
+
+    /**
+     * Flushes the bytes written to the stream.
+     */
+    void flush();
 };
 
 /**
@@ -520,6 +567,9 @@ public:
  * Data written by such a stream can be read by Java's DataInputStream.
  * The behavior is undefined if the wrapped OutputStream's lifetime ends
  * before this object's, even if no write methods are called.
+ * DataOutputStream does not buffer it's writes, though the underlying stream may.
+ * flush is overridden as a convenience method for underlying->close();
+ * The destructor of DataOutputStream will NOT flush the underlying stream.
  */
 class DataOutputStream:public OutputStream{
 private:
@@ -627,6 +677,12 @@ public:
     template<typename E> DataOutputStream& operator<<(E e){
     	return *this << static_cast<std::underlying_type_t<E>>(e);
     }
+
+    /**
+     * Flushes the underlying stream buffer if it is buffered. Otherwise has no effect
+     * \Exceptions: if the flush method of the underlying stream throws an exception, it is propagated through this call
+     */
+    void flush();
 };
 
 #endif

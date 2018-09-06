@@ -14,7 +14,11 @@ using std::vector;
 using std::map;
 using std::recursive_mutex;
 
-
+/**
+ * Defines an Entry in a menu.
+ * The Entry has a code, a Color (Which applies in the foreground),
+ * and a name.
+ */
 class MenuItem{
 private:
 	Color c;

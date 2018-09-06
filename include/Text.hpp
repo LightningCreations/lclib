@@ -99,6 +99,10 @@ public:
     bool isTab()const;
 };
 
+/**
+ * Terminal is the top level class of the Terminal Graphics Interface,
+ * it bridges the High Level TGI system with the lower level implementation
+ */
 class Terminal{
 private:
     std::recursive_mutex lock;
@@ -107,17 +111,55 @@ private:
     Terminal& operator=(const Terminal&)=delete;
     Terminal& operator=(Terminal&&)=delete;
 public:
+    /**
+     * Constructs a new Terminal. Any resources necessary to utilize the terminal graphics interface
+     * are acquired. The terminal is also cleared and the formatting is reset.
+     * If another terminal object exists at the time this constructor is used, the behavior is undefined.
+     */
     Terminal();
+    /**
+     * Destroys the Terminal.
+     * The terminal is cleared and the formatting is reset,
+     * then any resources acquired by the constructor of Terminal are freed.
+     */
     ~Terminal();
     
-    Terminal& print(const TextComponent&);
-    template<typename... Args> Terminal& print(const TextComponent& first,const TextComponent& second,Args&&... rest){
-        print(first);
+    /**
+     * Displays a Given Text Component to the screen.
+     * The effects of displaying the component depends on the content
+     * \Returns: the current object, for chaining
+     * \Exception Guarantee: this method will not throw an exception
+     */
+    Terminal& print(const TextComponent&)noexcept(true);
+    /**
+     * Prints a Variable number of Text Components or convertible objects.
+     * The effects of displaying any given text component depends on the content.
+     * \Returns: the current object, for chaining
+     * \Exception Guarantee: this method will not throw an exception
+     */
+    template<typename... Args> Terminal& print(const TextComponent& first,const TextComponent& second,Args&&... rest)noexcept(true){
+        std::lock_guard<std::recursive_mutex> sync(lock);
+    	print(first);
         return print(second,rest...);
     }
-    Terminal& clear();
-    Terminal& wait();
-    int get();
+    /**
+     * Clears the terminal and resets the formatting.
+     * \Returns: the current object, for chaining
+     * \Exception Guarantee: this method will not throw an exception
+     */
+    Terminal& clear()noexcept(true);
+    /**
+     * Blocks until the user inputs any key. (the key is not echoed to the screen)
+     * \Returns: the current object, for chaining
+     * \Exception Guarantee: this method will not throw an exception
+     */
+    Terminal& wait()noexcept(true);
+    /**
+     * Blocks until the user inputs any key, and returns the value of that key (the key is not echoed to the screen)
+     * \Returns: the code of the key pressed
+     * \Exception Guarantee: this method will not throw an exception
+     */
+    int get()noexcept(true);
 };
 
 #endif

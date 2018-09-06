@@ -172,6 +172,8 @@ DataInputStream& DataInputStream::operator>>(double& d){
 	return *this;
 }
 
+void OutputStream::flush(){}
+
 FileOutputStream::FileOutputStream(FILE* f):underlying(f){
     if(underlying==NULL||underlying==nullptr)
         throw FileNotFoundException();
@@ -196,6 +198,10 @@ size_t FileOutputStream::write(const void* ptr,size_t size){
 }
 void FileOutputStream::write(uint8_t u){
     write(&u,1);
+}
+
+void FileOutputStream::flush(){
+	fflush(underlying);
 }
 
 DataOutputStream::DataOutputStream(OutputStream& o):underlying(&o),little(false){}
@@ -301,6 +307,10 @@ DataOutputStream& DataOutputStream::operator<<(float f){
 DataOutputStream& DataOutputStream::operator<<(double d){
 	writeDouble(d);
 	return *this;
+}
+
+void DataOutputStream::flush(){
+	underlying->flush();
 }
 
 const char* FileNotFoundException::what()const noexcept(true){

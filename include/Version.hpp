@@ -46,7 +46,7 @@ using std::ostream;
  * The Version class provides both the read from (istream >>) and the write to (ostream <<) operators
  * To write in string form.
  */
-class Version{
+LIBLCAPI class Version{
 private:
 	unsigned char major;
 	unsigned char minor;
@@ -68,7 +68,7 @@ public:
 	 * Parses a given string in the form <Mj>.<mi> and produces a version given those 2 inputs.
 	 * Both Mj and mi must be valid integers, with Mj being between 1 and 256 and Mi being between 0 and 255
 	 */
- 	LIBLCFUNC Version(string);
+ 	Version(string);
 	/*
 	 * Obtains a version based on a given Major and minor version.
 	 * Major must be between 1 and 256 and minor must be between 0 and 255
@@ -112,7 +112,7 @@ public:
 	 * Returns this Version as a string.
 	 * The Resultant String is in the form <major>.<minor>
 	 */
-	LIBLCFUNC string toString()const;
+	string toString()const;
 	/*
 	 * Computes the hashcode of this Version.
 	 * This is effectively major*31+minor
@@ -165,13 +165,13 @@ public:
  * and Constructing the associated version.
  *
  */
-LIBLCFUNC istream& operator>>(istream&,Version&);
+LIBLCAPI istream& operator>>(istream&,Version&);
 /*
  * Writes this string to a text stream.
  * The output text is will be in the fomr <Mj>.<mi>
  * This is effecitvely the same as writing that version's toString()
  */
-LIBLCFUNC ostream& operator<<(ostream&,const Version&);
+LIBLCAPI ostream& operator<<(ostream&,const Version&);
 
 
 

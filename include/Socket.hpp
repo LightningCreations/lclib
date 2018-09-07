@@ -25,19 +25,19 @@ using std::function;
  * Some general exceptions are provided but implementations may also define
  * custom subclasses to indicate implementation specific errors.
  */
-class SocketException:public std::exception{};
+LIBLCAPI class SocketException:public std::exception{};
 /**
  * Indicates that a General error regarding connecting to a server
  * (or binding) occurred
  */
-class ConnectionException:public SocketException{
+LIBLCAPI class ConnectionException:public SocketException{
 public:
 	const char* what()const noexcept(true) override;
 };
 /**
  * Indicates that it is impossible to bind to a given address and port for some reason.
  */
-class AddressBindException:public ConnectionException{
+LIBLCAPI class AddressBindException:public ConnectionException{
 public:
 	const char* what()const noexcept(true) override;
 };
@@ -45,40 +45,40 @@ public:
  * Indicates that the connection failed because an implementation defined time limit
  * expired before the connection completed.
  */
-class TimedOutException:public ConnectionException{
+LIBLCAPI class TimedOutException:public ConnectionException{
 public:
-	LIBLCFUNC const char* what()const noexcept(true) override;
+	const char* what()const noexcept(true) override;
 };
 /**
  * Indicates that the connection failed because the address cannot be found, or connected to
  */
-class UnknownHostException:public SocketException{
+LIBLCAPI class UnknownHostException:public SocketException{
 public:
-	LIBLCFUNC const char* what()const noexcept(true) override;
+	const char* what()const noexcept(true) override;
 };
 /**
  * Indicates that some concurrency error occurred in a socket implementation
  */
-class SocketConcurrencyException:public SocketException{
+LIBLCAPI class SocketConcurrencyException:public SocketException{
 public:
-	LIBLCFUNC const char* what()const noexcept(true) override;
+	const char* what()const noexcept(true) override;
 };
 
 /**
  * Indicates that an operation being performed is unsupported
  */
-class SocketOperationUnsupportedException:public SocketException{
+LIBLCAPI class SocketOperationUnsupportedException:public SocketException{
 public:
-	LIBLCFUNC const char* what()const noexcept(true) override;
+	const char* what()const noexcept(true) override;
 };
 
 /**
  * Thrown in threads which are currently processing active IO Requests for a socket that was abruptly closed
  * (except by timing out).
  */
-class SocketStreamClosedException:public SocketException{
+LIBLCAPI class SocketStreamClosedException:public SocketException{
 public:
-	LIBLCFUNC const char* what()const noexcept(true) override;
+	const char* what()const noexcept(true) override;
 };
 
 
@@ -106,7 +106,7 @@ public:
  * if they block. Default conforming implementations are required to support blocking IO, but not to support
  * other blocking functions.
  */
-class SocketImpl{
+LIBLCAPI class SocketImpl{
 public:
 	/**
 	 * Attempts to connect to a server (see the documentation of Socket::connect for details an exceptions).
@@ -175,7 +175,7 @@ public:
  * Server Socket Handles may be used in a multithreaded context.
  * Implementations are responsible for ensuring thread-safety.
  */
-class ServerSocketImpl{
+LIBLCAPI class ServerSocketImpl{
 public:
 	/**
 	 * Binds this server socket to a specified address
@@ -211,7 +211,7 @@ public:
 
 };
 
-class Socket{
+LIBLCAPI class Socket{
 private:
 	std::unique_ptr<SocketImpl> impl;
 	Socket(const Socket&)=delete;
@@ -222,31 +222,31 @@ public:
 	 * If the handle is connected already the socket can be used as if it had been connected,
 	 * otherwise it must be connected before it can be used.
 	 */
-	LIBLCFUNC explicit Socket(std::unique_ptr<SocketImpl>&&);
+	explicit Socket(std::unique_ptr<SocketImpl>&&);
 	/**
 	 * Default constructs a Socket. The underlying implementation is constructed in
 	 * an implementation defined manor. The socket cannot be used until connect is called.
 	 */
-	LIBLCFUNC Socket();
+	Socket();
 	/**
 	 * Constructs a Socket with the implementation default Handler for socket functions,
 	 * and connects the socket to the server.
 	 * This constructor acts as if it default constructs the socket,
 	 * then calls the connect function with the arguments.
 	 */
-	LIBLCFUNC Socket(const std::string&,uint16_t);
+	Socket(const std::string&,uint16_t);
 	Socket(Socket&&)=default;
 	Socket& operator=(Socket&&)=default;
 	/**
 	 * Gets the input stream of this socket.
 	 * The behavior is undefined if the socket is not connected.
 	 */
-	LIBLCFUNC InputStream& getInputStream();
+	InputStream& getInputStream();
 	/**
 	 * Gets the output stream of this socket.
 	 * The behavior is undefined if the socket is not connected.
 	 */
-	LIBLCFUNC OutputStream& getOutputStream();
+	OutputStream& getOutputStream();
 	/**
 	 * Attempts to connect to a server.
 	 * The Socket first checks if it can find a server with the given hostname
@@ -262,34 +262,34 @@ public:
 	 * If the implementation throws any exception not detailed above, the behavior is undefined
 	 * \Exception Safety: If an exception occurs, the socket is left in an valid but unspecified state, which is not connected to any server.
 	 */
-	LIBLCFUNC void connect(const std::string&,uint16_t);
+	void connect(const std::string&,uint16_t);
 	/**
 	 * Checks if the Socket is connected to a server already.
 	 * Returns true if it has successfully connected to a server,
 	 * false otherwise.
 	 * \Exception Guarantee: This function will not throw any exceptions
 	 */
-	LIBLCFUNC bool isConnected()const noexcept(true);
+	bool isConnected()const noexcept(true);
 	/**
 	 * Gets the hostname that the Socket is bound to. (If the socket is a local socket, this is almost always localhost)
 	 * The behavior is unspecified (and may be undefined) if the socket is not connected and is not using the default Socket Implementation.
 	 */
-	LIBLCFUNC const std::string& getHostname()const;
+	const std::string& getHostname()const;
 	/**
 	 * Gets the hostname of the Server that the socket is connected to.
 	 * The behavior is undefined if the socket is not connected to a server.
 	 * The behavior is unspecified (and may be undefined) if the socket is not using the default Socket Implemenation.
 	 */
-	LIBLCFUNC const std::string& getConnectedName()const;
+	const std::string& getConnectedName()const;
 	/**
 	 * Gets the port which the server is connected to.
 	 * The behavior is undefined if the socket is not connected to a server.
 	 * The behavior is unspecified (and may be undefined) if the socket is not using the default Socket Implemenation.
 	 */
-	LIBLCFUNC uint16_t getConnectedPort()const;
+	uint16_t getConnectedPort()const;
 };
 
-class ServerSocket{
+LIBLCAPI class ServerSocket{
 private:
 	std::unique_ptr<ServerSocketImpl> impl;
 	ServerSocket(const ServerSocket&)=delete;
@@ -300,16 +300,16 @@ public:
 	 * The Handle is constructed in an implementation defined manor, and is not bound.
 	 * The server must be bound to a host before it can be used.
 	 */
-	LIBLCFUNC ServerSocket();
+	ServerSocket();
 	/**
 	 * Constructs a ServerSocket, as if by the Default Constructor,
 	 * and binds it to the given hostname and port.
 	 */
-	LIBLCFUNC ServerSocket(const std::string&,uint16_t);
+	ServerSocket(const std::string&,uint16_t);
 	/**
 	 * Constructs a new ServerSocket with a given implemenation.
 	 */
-	LIBLCFUNC explicit ServerSocket(std::unique_ptr<ServerSocketImpl>&&);
+	explicit ServerSocket(std::unique_ptr<ServerSocketImpl>&&);
 	ServerSocket(ServerSocket&&)=default;
 	ServerSocket& operator=(ServerSocket&&)=default;
 	/**
@@ -317,7 +317,7 @@ public:
 	 * If the server is not bound the behavior is undefined.
 	 * If there is no pending connection, the call may block. This may throw a SocketConcurrencyException as per ServerSocketImpl::accept
 	 */
-	LIBLCFUNC Socket accept();
+	Socket accept();
 	/**
 	 * Binds the server socket to a given hostname and port.
 	 * If the current host cannot open a server at the given hostname (as it is an external ip address, or a domain which resolves to such an ip address,
@@ -333,13 +333,13 @@ public:
 	 * The behavior is undefined if the server is not bound.
 	 * Server Wide IO is not mandated, and thus this method may throw a SocketOperationUnsupportedException
 	 */
-	LIBLCFUNC InputStream& getInputStream();
+	InputStream& getInputStream();
 	/**
 	 * Obtains an implemenation defined reference to an OutputStream which writes to all open connections.
 	 * The behavior is undefined if the server is not bound.
 	 * Server Wide IO is not mandated, and thus this method may throw a SocketOperationUnssuportedException
 	 */
-	LIBLCFUNC OutputStream& getOutputStream();
+	OutputStream& getOutputStream();
 };
 
 /**
@@ -349,26 +349,26 @@ public:
  * The behavior is undefined unless the function returns a unique instance of a consistent subclass of SocketImpl,
  * which is default conforming.
  */
-LIBLCFUNC void setDefaultSocketHandleConstructor(function<std::unique_ptr<SocketImpl>()>);
+LIBLCAPI void setDefaultSocketHandleConstructor(function<std::unique_ptr<SocketImpl>()>);
 /**
  * Attempts to set the default supplier for creating server socket handles.
  * The library implementation is not required to acknowledge this request.
  * If the implementation does not want to update the default handler, a SocketOperationUnsupportedException is thrown.
  * The behavior is undefined unless the function returns a unique instance of a consistent subclass of ServerSocketImpl.
  */
-LIBLCFUNC void setDefaultServerSocketHandleConstructor(function<std::unique_ptr<ServerSocketImpl>()>);
+LIBLCAPI void setDefaultServerSocketHandleConstructor(function<std::unique_ptr<ServerSocketImpl>()>);
 /**
  * Constructs a new socket handle. If the default Socket Handle constructor is set,
  * it obtains a new instance from that and returns it.
  * Otherwise the handle is constructed in an implementation defined way.
  */
-LIBLCFUNC std::unique_ptr<SocketImpl> newSocketHandle();
+LIBLCAPI std::unique_ptr<SocketImpl> newSocketHandle();
 /**
  * Constructs a new server socket handle. If the default Server Socket Handle constructor is set,
  * it obtains a new instance from that and returns it.
  * Otherwise the handle is constructed in an implementation defined way.
  */
-LIBLCFUNC std::unique_ptr<ServerSocketImpl> newServerSocketHandle();
+LIBLCAPI std::unique_ptr<ServerSocketImpl> newServerSocketHandle();
 
 namespace types{
 	template<> struct TypeHash<SocketImpl>{

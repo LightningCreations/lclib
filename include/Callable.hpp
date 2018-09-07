@@ -31,7 +31,7 @@
  * A Callable Satisfies ForwardingFunctionObject if, by design, all of the above conditions are satisfied
  */
 template<typename Callable> constexpr auto forwardCall(Callable& c){
-	return [&c](auto&&... args)noexcept(noexcept(std::invoke(c,std::forward(args)...)))->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
+	return  [&c](auto&&... args)mutable noexcept(noexcept(std::invoke(c,std::forward(args)...)))->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
 		return std::invoke(c,std::forward(args)...);
 	};
 }
@@ -47,9 +47,9 @@ template<typename Callable> constexpr auto forwardCall(Callable& c){
  * Only the actually invocation of the Invocable is guaranteed to be thread-safe
  */
 template<typename Mutex,typename Callable> constexpr auto forwardThreadSafe(Mutex& m,Callable& c){
-	return [&m,&c](auto&&... args)->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
+	return [&m,c](auto&&... args)mutable->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
 		std::lock_guard<Mutex> lock(m);
-		return std::invoke(c,std::forward(args)...);
+		return std::invoke<c,std::forward(args)...);
 	};
 }
 

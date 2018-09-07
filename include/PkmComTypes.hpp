@@ -36,7 +36,7 @@ namespace pkmcom{
     typedef float pkmcom_float;
     typedef double pkmcom_double;
 
-    class PacketBuffer{
+    LIBLCAPI class PacketBuffer{
     private:
         vector<char> buffer;
         int pos=0;

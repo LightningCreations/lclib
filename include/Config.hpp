@@ -13,11 +13,11 @@
 #define LCLIBIMPORT [[dllimport]]
 
 #ifdef LCLIB_CXX_DEFINITION
-#define LIBLCFUNC LCLIBEXPORT
+#define LIBLCAPI LCLIBEXPORT
 #else
-#define LIBLCFUNC LCLIBIMPORT
+#define LIBLCAPI LCLIBIMPORT
 #endif
-
-
+#define LIBLCFUNC LIBLCAPI
+#define LIBLCHIDE [[visibility("hidden")]]
 
 #endif /* INCLUDE_CONFIG_HPP_ */

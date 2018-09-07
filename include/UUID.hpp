@@ -10,23 +10,23 @@ using std::string;
 using std::ostream;
 using std::istream;
 
-class UUID{
+LIBLCAPI class UUID{
 private:
 	uint64_t high;
 	uint64_t low;
 public:
 	
-	LIBLCFUNC static UUID fromString(const string&);
-	LIBLCFUNC static UUID randomUUID();
-	LIBLCFUNC static UUID uuidFromNamespace(const string)&;
-	LIBLCFUNC static UUID ofNow();
+	static UUID fromString(const string&);
+	static UUID randomUUID();
+	static UUID uuidFromNamespace(const string)&;
+	static UUID ofNow();
 	constexpr static UUID nilUUID(){
 		return UUID{};
 	}
 	constexpr UUID(uint64_t h,uint64_t l):high(h),low(l){}
 	constexpr UUID():high(0),low(0){}
-	LIBLCFUNC UUID(string);
-	LIBLCFUNC UUID(const char*);
+	UUID(string);
+	UUID(const char*);
 	constexpr UUID(const UUID&)=default;
 	constexpr UUID(UUID&&)=default;
 	UUID(const UUID&&)=delete;
@@ -42,8 +42,8 @@ public:
 	constexpr int32_t hashCode()const{
 		return hashcode(high)*31+hashcode(low);
 	}
-	LIBLCFUNC string toString()const;
-	LIBLCFUNC operator string()const;
+	string toString()const;
+	operator string()const;
 	constexpr bool operator==(const UUID& u)const{
 		return high==u.high&&low==u.low;
 	}
@@ -65,9 +65,9 @@ public:
 	
 };
 
-LIBLCFUNC ostream& operator<<(ostream&,const UUID&);
-LIBLCFUNC istream& operator>>(istream&,UUID&);
-LIBLCFUNC string  operator+(const string&,const UUID&);
+LIBLCAPI ostream& operator<<(ostream&,const UUID&);
+LIBLCAPI istream& operator>>(istream&,UUID&);
+LIBLCAPI string  operator+(const string&,const UUID&);
 
 constexpr int32_t hashcode(const UUID& u){
 	return u.hashCode();

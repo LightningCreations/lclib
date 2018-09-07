@@ -5,19 +5,19 @@
 
 using std::string;
 
-LIBLCFUNC string tokenize(string&,string);
+LIBLCAPI string tokenize(string&,string);
 
-LIBLCFUNC void replace(string&,string,string);
+LIBLCAPI void replace(string&,string,string);
 
-LIBLCFUNC int count(string,string);
+LIBLCAPI int count(string,string);
 
-LIBLCFUNC string toLowerCase(string&);
-LIBLCFUNC string toUpperCase(string&);
+LIBLCAPI string toLowerCase(string&);
+LIBLCAPI string toUpperCase(string&);
 
 /**
  * Given a pointer to a c-style string, returns a pointer to the end of that c-style string (which points to the Null terminator).
  * The behavior is undefined if there is not a valid c-style string at the given pointer.
  */
-LIBLCFUNC const char* strend(const char*);
+LIBLCAPI const char* strend(const char*);
 
 #endif

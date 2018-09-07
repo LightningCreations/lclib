@@ -7,7 +7,7 @@
   This function will compute the SHA256 hash of a region of bytes.
   See https://en.wikipedia.org/wiki/SHA-2
 */
-LIBLCFUNC void SHA256(const char*,size_t,char (&)[32]);
+LIBLCAPI void SHA256(const char*,size_t,char (&)[32]);
 
 
 #endif

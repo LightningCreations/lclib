@@ -12,7 +12,7 @@
 #include <array>
 
 
-class Hashable{
+LIBLCAPI class Hashable{
 public:
 	virtual int hashCode()const = 0;
 	virtual ~Hashable()=default;
@@ -64,9 +64,9 @@ constexpr int32_t hashcode(void* v){
 constexpr int32_t hashcode(nullptr_t n){
 	return 0;
 }
-int32_t LIBLCFUNC hashcode(const char*);
-int32_t LIBLCFUNC hashcode(const std::string&);
-int32_t LIBLCFUNC hashcode(const std::type_info&);
+int32_t LIBLCAPI hashcode(const char*);
+int32_t LIBLCAPI hashcode(const std::string&);
+int32_t LIBLCAPI hashcode(const std::type_info&);
 
 using std::vector;
 

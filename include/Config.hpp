@@ -10,7 +10,7 @@
 
 
 #define LCLIBEXPORT [[visibility("default"),dllexport]]
-#define LCLIBIMPORT [[visibility("hidden"),dllimport]]
+#define LCLIBIMPORT [[dllimport]]
 
 #ifdef LCLIB_CXX_DEFINITION
 #define LIBLCFUNC LCLIBEXPORT

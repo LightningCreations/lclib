@@ -693,7 +693,7 @@ namespace types{
 	template<> struct TypeHash<FileInputStream>{
 	public:
 		using base_type = InputStream;
-		using base_hash = TypeHash<base_hash>;
+		using base_hash = TypeHash<base_type>;
 		constexpr TypeHash()=default;
 		constexpr TypeHash(const TypeHash&)=default;
 		constexpr TypeHash(TypeHash&&)=default;
@@ -708,7 +708,7 @@ namespace types{
 	template<> struct TypeHash<FilterInputStream>{
 	public:
 		using base_type = InputStream;
-		using base_hash = TypeHash<base_hash>;
+		using base_hash = TypeHash<base_type>;
 		constexpr TypeHash()=default;
 		constexpr TypeHash(const TypeHash&)=default;
 		constexpr TypeHash(TypeHash&&)=default;
@@ -723,7 +723,7 @@ namespace types{
 	template<> struct TypeHash<DataInputStream>{
 	public:
 		using base_type = FilterInputStream;
-		using base_hash = TypeHash<base_hash>;
+		using base_hash = TypeHash<base_type>;
 		constexpr TypeHash()=default;
 		constexpr TypeHash(const TypeHash&)=default;
 		constexpr TypeHash(TypeHash&&)=default;
@@ -732,7 +732,7 @@ namespace types{
 		constexpr TypeHash& operator=(TypeHash&&)=default;
 		TypeHash& operator=(const TypeHash&&)=delete;
 		constexpr TypeCode operator()(){
-			return TypeHash<base_type>{}()^TypenameHash("DataInputStream");
+			return TypeHash<base_type>{}()^nameHash("DataInputStream");
 		}
 	};
 	template<> struct TypeHash<OutputStream>{
@@ -751,7 +751,7 @@ namespace types{
 	template<> struct TypeHash<FileOutputStream>{
 	public:
 		using base_type = FilterInputStream;
-		using base_hash = TypeHash<base_hash>;
+		using base_hash = TypeHash<base_type>;
 		constexpr TypeHash()=default;
 		constexpr TypeHash(const TypeHash&)=default;
 		constexpr TypeHash(TypeHash&&)=default;
@@ -766,7 +766,7 @@ namespace types{
 	template<> struct TypeHash<FilterOutputStream>{
 	public:
 		using base_type = OutputStream;
-		using base_hash = TypeHash<base_hash>;
+		using base_hash = TypeHash<base_type>;
 		constexpr TypeHash()=default;
 		constexpr TypeHash(const TypeHash&)=default;
 		constexpr TypeHash(TypeHash&&)=default;
@@ -781,7 +781,7 @@ namespace types{
 	template<> struct TypeHash<DataOutputStream>{
 	public:
 		using base_type = FilterOutputStream;
-		using base_hash = TypeHash<base_hash>;
+		using base_hash = TypeHash<base_type>;
 		constexpr TypeHash()=default;
 		constexpr TypeHash(const TypeHash&)=default;
 		constexpr TypeHash(TypeHash&&)=default;

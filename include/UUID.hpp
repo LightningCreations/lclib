@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "Hash.hpp"
 #include <iostream>
+#include <TypeInfo.hpp>
 
 using std::string;
 using std::ostream;
@@ -76,6 +77,20 @@ namespace std{
 	template<> struct hash<UUID>{
 		size_t operator()(const UUID& u){
 			return u.hashCode();
+		}
+	};
+}
+namespace types{
+	template<> struct TypeHash<UUID>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("UUID")^TypeHash<uint64_t>{}();
 		}
 	};
 }

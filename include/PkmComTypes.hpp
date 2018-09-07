@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <vector>
 #include <TypeTraits.hpp>
+#include <TypeInfo.hpp>
 
 using std::void_t;
 

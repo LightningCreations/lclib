@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <functional>
 #include <Config.hpp>
+#include <TypeInfo.hpp>
 using std::function;
 
 /**
@@ -369,5 +370,175 @@ LIBLCFUNC std::unique_ptr<SocketImpl> newSocketHandle();
  */
 LIBLCFUNC std::unique_ptr<ServerSocketImpl> newServerSocketHandle();
 
+namespace types{
+	template<> struct TypeHash<SocketImpl>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("SocketImpl");
+		}
+	};
+	template<> struct TypeHash<ServerSocketImpl>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("ServerSocketImpl");
+		}
+	};
+	template<> struct TypeHash<Socket>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Socket");
+		}
+	};
+	template<> struct TypeHash<ServerSocket>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("ServerSocketImpl");
+		}
+	};
+	template<> struct TypeHash<SocketException>{
+	public:
+		using base_type = std::exception;
+		using base_hash = TypeHash<std::exception>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<std::exception>{}()^nameHash("SocketException");
+		}
+	};
+	template<> struct TypeHash<ConnectionException>{
+	public:
+		using base_type = SocketException;
+		using base_hash = TypeHash<base_type>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("ConnectionException");
+		}
+	};
+	template<> struct TypeHash<AddressBindException>{
+	public:
+		using base_type = ConnectionException;
+		using base_hash = TypeHash<base_type>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("AddressBindException");
+		}
+	};
+	template<> struct TypeHash<TimedOutException>{
+	public:
+		using base_type = ConnectionException;
+		using base_hash = TypeHash<base_type>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("TimedOutException");
+		}
+	};
+	template<> struct TypeHash<UnknownHostException>{
+	public:
+		using base_type = ConnectionException;
+		using base_hash = TypeHash<base_type>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("UnknownHostException");
+		}
+	};
+	template<> struct TypeHash<SocketConcurrencyException>{
+	public:
+		using base_type = SocketException;
+		using base_hash = TypeHash<base_type>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("SocketConcurrencyException");
+		}
+	};
+	template<> struct TypeHash<SocketOperationUnsupportedException>{
+	public:
+		using base_type = SocketException;
+		using base_hash = TypeHash<base_type>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("SocketOperationUnsupportedException");
+		}
+	};
+	template<> struct TypeHash<SocketStreamClosedException>{
+	public:
+		using base_type = SocketException;
+		using base_hash = TypeHash<base_type>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("SocketStreamClosedException");
+		}
+	};
+}
 
 #endif /* INCLUDE_SOCKET_HPP_ */

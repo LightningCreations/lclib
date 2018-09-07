@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <Config.hpp>
+#include <TypeInfo.hpp>
 
 
 class ShadowRandom final:public Random{
@@ -23,6 +24,23 @@ public:
     LIBLCFUNC void seed();
     LIBLCFUNC void nextBytes(uint8_t*,size_t)override;
 };
+
+namespace types{
+	template<> struct TypeHash<ShadowRandom>{
+	public:
+		using base_type = Random;
+		using base_hash = TypeHash<Random>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("ShadowRandom");
+		}
+	};
+}
 
 
 #endif

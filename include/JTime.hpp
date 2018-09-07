@@ -2,6 +2,7 @@
 #define __JTime_hpp_2018_05_16_08_23
 #include "Hash.hpp"
 #include <stdint.h>
+#include <TypeInfo.hpp>
 
 enum class ChronoUnit{
     NANOSECONDS, MICROSECONDS, MILISECONDS, SECONDS,
@@ -362,4 +363,32 @@ constexpr int hashcode(const Duration& d){
 const Duration ZERO{};
 const Duration MAX_DURATION = Duration::ofSeconds(31556889864401399,999999999);
 const Duration MIN_DURATION = Duration::ofSeconds(-31556889864401400);
+
+namespace types{
+	template<> struct TypeHash<Duration>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Duration");
+		}
+	};
+	template<> struct TypeHash<Instant>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Instant");
+		}
+	};
+};
+
 #endif

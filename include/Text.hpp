@@ -8,7 +8,8 @@
 #include <UUID.hpp>
 #include <Version.hpp>
 #include <mutex>
-#include <Config.cpp>
+#include <Config.hpp>
+#include <TypeInfo.hpp>
 
 using std::initializer_list;
 using std::vector;
@@ -162,5 +163,32 @@ public:
      */
     LIBLCFUNC int get()noexcept(true);
 };
+
+namespace types{
+	template<> struct TypeHash<TextComponent>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("TextComponent");
+		}
+	};
+	template<> struct TypeHash<Terminal>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Terminal");
+		}
+	};
+}
 
 #endif

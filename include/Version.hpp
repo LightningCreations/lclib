@@ -12,6 +12,7 @@
 #include <iostream>
 #include "Hash.hpp"
 #include <Config.hpp>
+#include <TypeInfo.hpp>
 
 #define VERSION_CONSTEXPR constexpr
 #define VERSION_DELETE =delete
@@ -182,6 +183,21 @@ namespace std{
 	template<> struct hash<Version>{
 		size_t operator()(Version v){
 			return v.hashCode();
+		}
+	};
+}
+
+namespace types{
+	template<> struct TypeHash<Version>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Version")^TypeHash<uint8_t>{}();
 		}
 	};
 }

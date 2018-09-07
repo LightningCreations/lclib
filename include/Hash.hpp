@@ -11,11 +11,14 @@
 #include <map>
 #include <array>
 
+
 class Hashable{
 public:
 	virtual int hashCode()const = 0;
 	virtual ~Hashable()=default;
 };
+
+
   
 constexpr int32_t hashcode(int i){
 	return i;
@@ -87,7 +90,7 @@ template<typename T,size_t size>  int32_t hashcode(const array<T,size>& a){
 	return h;
 } 
 
-template<typename T,size_t size> int32_t hashcode(const T(&a)[size]){
+template<typename T,size_t size> constexpr int32_t hashcode(const T(&a)[size]){
 	int32_t h = 0;
 	for(const T& val:a){
 		h*=31;
@@ -143,5 +146,7 @@ template<typename E> constexpr int32_t hashcode(typename std::enable_if<std::is_
 	}u = {e};
 	return hashcode(u.bits);
 }
+
+
 
 #endif

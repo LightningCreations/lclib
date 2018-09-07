@@ -9,6 +9,7 @@
 #include <thread>
 #include <array>
 #include <Config.hpp>
+#include <TypeInfo.hpp>
 typedef uint64_t seed_t;
 
 using std::recursive_mutex;
@@ -110,6 +111,20 @@ public:
 	
 };
 
+namespace types{
+	template<> struct TypeHash<Random>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Random");
+		}
+	};
+}
 
 
 #endif

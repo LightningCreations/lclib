@@ -9,10 +9,14 @@
 #include <cstddef>
 #include <Vector.hpp>
 #include <Config.hpp>
+#include <TypeInfo.hpp>
+#include <STLTypeInfo.hpp>
 class FileNotFoundException:public std::exception{
 public:
 	LIBLCFUNC const char* what()const noexcept(true) override;
 };
+
+
 
 class EOFException:public std::exception{
 public:
@@ -92,6 +96,8 @@ public:
     }
 };
 
+
+
 /**
  * An Input Stream which reads from (and wraps) a FILE*
  * This class can be constructed from an existing file, a c-style string, or a
@@ -155,6 +161,16 @@ public:
     LIBLCFUNC int read();
 };
 
+class FilterInputStream:public InputStream{
+private:
+	InputStream* underlying;
+public:
+	LIBLCFUNC FilterInputStream(InputStream&);
+	LIBLCFUNC ~FilterInputStream()=0;//Force Abstract
+	LIBLCFUNC size_t read(void*,size_t);
+	LIBLCFUNC int read();
+};
+
 /**
  * A InputStream Wrapper which can write primitive data types to
  * an underlying stream.
@@ -162,9 +178,8 @@ public:
  * The behavior is undefined if the Target InputStream's lifetime ends before
  * this object's (even if no read methods are used between those points)
  */
-class DataInputStream:public InputStream{
+class DataInputStream:public FilterInputStream{
 private:
-    InputStream* underlying;
     bool little;
     int readSingle();
 public:
@@ -179,24 +194,7 @@ public:
      * Multibyte datatype are written in Little Endian (native) Byte Order
      */
     LIBLCFUNC DataInputStream(InputStream&,little_endian_t);
-    /*
-     * Reads from this stream.
-     * Requirements are detailed by InputStream::read(void*,size_t).
-     * This call is forwarded to the underlying stream.
-  	 * In addition to the requirements and restrictions of InputStream::read,
-  	 * it is undefined behavior if any scalar types (except for char, unsigned char, signed char, and std::byte),
-  	 * are written with this function
-     * \Exceptions: If the underlying stream's read method throws an exception, it is propagated through this call
-     */
-    LIBLCFUNC size_t read(void*,size_t);
-    /**
-     * Reads a single byte from the stream.
-     * If there is bytes remaining in the stream, this acts as int(readUnsignedByte()),
-     * Otherwise -1 is returned.
-     * This call is forwarded to the underlying stream.
-     * \Exceptions: If the underlying stream's read method throws an exception, it is propagated through this call
-     */
-    LIBLCFUNC int read();
+
     /**
      * Attempts to read n bytes into the provided pointer.
      * This call is guaranteed to read that many bytes. If the end of the stream is reached before reading bytes,
@@ -474,6 +472,17 @@ public:
 
 };
 
+class FilterOutputStream:public OutputStream{
+private:
+	OutputStream* underlying;
+public:
+	LIBLCFUNC FilterOutputStream(OutputStream&);
+	LIBLCFUNC ~FilterOutputStream()=0;
+	LIBLCFUNC size_t write(const void*,size_t);
+	LIBLCFUNC void write(uint8_t);
+	LIBLCFUNC void flush();
+};
+
 class append_t{
 public:
     constexpr explicit append_t()=default;
@@ -572,9 +581,8 @@ public:
  * flush is overridden as a convenience method for underlying->close();
  * The destructor of DataOutputStream will NOT flush the underlying stream.
  */
-class DataOutputStream:public OutputStream{
+class DataOutputStream:public FilterOutputStream{
 private:
-    OutputStream* underlying;
     bool little;
 public:
     /**
@@ -587,20 +595,7 @@ public:
      * Multibyte types are written in Little Endian (native) byte order
      */
     LIBLCFUNC DataOutputStream(OutputStream&,little_endian_t);
-    /**
-     * Writes a given pointer to the stream.
-     * This call is forwarded to the underlying stream.
-     * All restrictions and Requirements of OutputStream.write apply.
-     * In addition using this method to write values of any multibyte scalar types is undefined behavior.
-     * \Exceptions: If the underlying write method throws an exception, that exception is propagated through this call
-     */
-    LIBLCFUNC size_t write(const void*,size_t);
-    /**
-     * Writes a single byte to the stream.
-     * This call is forwarded to the underlying stream.
-     * \Exceptions: If the underlying write method throws an exception, that exception is propagated through this call
-     */
-    LIBLCFUNC void write(uint8_t);
+
     /**
      * Writes a single byte to the stream.
      * The byte written here is suitable to be read by any readSignedByte or readUnsignedByte call in a DataInputStream (or similar utility)
@@ -679,11 +674,155 @@ public:
     	return *this << static_cast<std::underlying_type_t<E>>(e);
     }
 
-    /**
-     * Flushes the underlying stream buffer if it is buffered. Otherwise has no effect
-     * \Exceptions: if the flush method of the underlying stream throws an exception, it is propagated through this call
-     */
-    LIBLCFUNC void flush();
+};
+
+namespace types{
+	template<> struct TypeHash<InputStream>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return nameHash("InputStream");
+		}
+	};
+	template<> struct TypeHash<FileInputStream>{
+	public:
+		using base_type = InputStream;
+		using base_hash = TypeHash<base_hash>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("FileInputStream");
+		}
+	};
+	template<> struct TypeHash<FilterInputStream>{
+	public:
+		using base_type = InputStream;
+		using base_hash = TypeHash<base_hash>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("FilterInputStream");
+		}
+	};
+	template<> struct TypeHash<DataInputStream>{
+	public:
+		using base_type = FilterInputStream;
+		using base_hash = TypeHash<base_hash>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^TypenameHash("DataInputStream");
+		}
+	};
+	template<> struct TypeHash<OutputStream>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return nameHash("OutputStream");
+		}
+	};
+	template<> struct TypeHash<FileOutputStream>{
+	public:
+		using base_type = FilterInputStream;
+		using base_hash = TypeHash<base_hash>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("FileOutputStream");
+		}
+	};
+	template<> struct TypeHash<FilterOutputStream>{
+	public:
+		using base_type = OutputStream;
+		using base_hash = TypeHash<base_hash>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("FilterOutputStream");
+		}
+	};
+	template<> struct TypeHash<DataOutputStream>{
+	public:
+		using base_type = FilterOutputStream;
+		using base_hash = TypeHash<base_hash>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<base_type>{}()^nameHash("DataOutputStream");
+		}
+	};
+	template<> struct TypeHash<FileNotFoundException>{
+	public:
+		using base_type = std::exception;
+		using base_hash = TypeHash<std::exception>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<std::exception>{}()^nameHash("FileNotFoundException");
+		}
+	};
+	template<> struct TypeHash<EOFException>{
+	public:
+		using base_type = std::exception;
+		using base_hash = TypeHash<std::exception>;
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()(){
+			return TypeHash<std::exception>{}()^nameHash("EOFException");
+		}
+	};
 };
 
 #endif

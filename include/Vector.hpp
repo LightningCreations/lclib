@@ -5,6 +5,7 @@
 #include <Hash.hpp>
 #include <utility>
 #include <type_traits>
+#include <Types.hpp>
 
 template<typename To,typename From> constexpr std::enable_if_t<std::is_trivially_copyable_v<To>&&std::is_trivially_copyable_v<From>&&(sizeof(To)<=sizeof(From)),To> bit_cast(const From& f){
     union{
@@ -69,5 +70,19 @@ namespace std{
     };
 };
 
+namespace types{
+	template<> struct TypeHash<Vec2>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Vec2");
+		}
+	};
+}
 
 #endif

@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <typeinfo>
 #include <typeindex>
+#include <TypeInfo.hpp>
+
 template<typename T> class PolymorphicWrapper{
 private:
     T* val;
@@ -125,7 +127,20 @@ template<typename T> PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicW
 template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>,Args&&...) -> PolymorphicWrapper<T>;
 
 
-
+namespace types{
+	template<typename T> struct TypeHash<enable_specialization_t<PolymorphicWrapper<T>,T>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		constexpr TypeCode operator()(){
+			return nameHash("Vec2");
+		}
+	};
+}
 
 
 

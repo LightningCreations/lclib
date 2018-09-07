@@ -8,13 +8,10 @@
 #ifndef _INCLUDE_CONFIG_HPP__2018_09_06_16_35
 #define _INCLUDE_CONFIG_HPP__2018_09_06_16_35
 
-#ifdef _WIN32
-#define LCLIBEXPORT __declspec(dllexport)
-#define LCLIBIMPORT __declspec(dllimport)
-#else
-#define LCLIBEXPORT __attribute((visibility("default")))
-#define LCLIBIMPORT __attribute((visibility("hidden")))
-#endif
+
+#define LCLIBEXPORT [[visibility("default"),dllexport]]
+#define LCLIBIMPORT [[visibility("hidden"),dllimport]]
+
 #ifdef LCLIB_CXX_DEFINITION
 #define LIBLCFUNC LCLIBEXPORT
 #else

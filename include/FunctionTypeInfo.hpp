@@ -324,317 +324,375 @@ namespace types{
 
 	//noexcept starts from here
 	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CONST*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CONST*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)volatile noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return TypeHash<Ret>{}()*Level::FUNCTION^LevelModifier::VOLATILE*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)volatile noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return TypeHash<Ret>{}()*Level::FUNCTION^LevelModifier::VOLATILE*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const volatile noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CV*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const volatile noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CV*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::REFERENCE^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::REFERENCE^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::REFERENCE^LevelModifier::CONST*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::REFERENCE^LevelModifier::CONST)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)volatile&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return TypeHash<Ret>{}()*Level::FUNCTION^(Level::REFERENCE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)volatile&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return TypeHash<Ret>{}()*Level::FUNCTION^(Level::REFERENCE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const volatile&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::REFERENCE^LevelModifier::CV)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const volatile&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*(Level::REFERENCE^LevelModifier::CV)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::XVALUE^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::XVALUE^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::XVALUE^LevelModifier::CONST)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::XVALUE^LevelModifier::CONST)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)volatile&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return TypeHash<Ret>{}()*Level::FUNCTION^(Level::XVALUE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)volatile&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return TypeHash<Ret>{}()*Level::FUNCTION^(Level::XVALUE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const volatile&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::XVALUE^LevelModifier::CV)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
-		template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const volatile&&noexcept,Ret,Args...>>{
-		public:
-			constexpr TypeHash()=default;
-			constexpr TypeHash(const TypeHash&)=default;
-			constexpr TypeHash(TypeHash&&)=default;
-			TypeHash(const TypeHash&&)=delete;
-			constexpr TypeHash& operator=(const TypeHash&)=default;
-			constexpr TypeHash& operator=(TypeHash&&)=default;
-			TypeHash& operator=(const TypeHash&&)=delete;
-			constexpr TypeCode operator()()const{
-				return (TypeHash<Ret>{}()^Level::FUNCTION)*(Level::XVALUE^LevelModifier::CV)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
-			}
-		};
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CONST*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CONST*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)volatile noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return TypeHash<Ret>{}()*Level::FUNCTION^LevelModifier::VOLATILE*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)volatile noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return TypeHash<Ret>{}()*Level::FUNCTION^LevelModifier::VOLATILE*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const volatile noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CV*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const volatile noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^LevelModifier::CV*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::REFERENCE^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::REFERENCE^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::REFERENCE^LevelModifier::CONST*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::REFERENCE^LevelModifier::CONST)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)volatile&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return TypeHash<Ret>{}()*Level::FUNCTION^(Level::REFERENCE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)volatile&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return TypeHash<Ret>{}()*Level::FUNCTION^(Level::REFERENCE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const volatile&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::REFERENCE^LevelModifier::CV)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const volatile&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*(Level::REFERENCE^LevelModifier::CV)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::XVALUE^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^Level::XVALUE^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::XVALUE^LevelModifier::CONST)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::XVALUE^LevelModifier::CONST)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)volatile&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return TypeHash<Ret>{}()*Level::FUNCTION^(Level::XVALUE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)volatile&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return TypeHash<Ret>{}()*Level::FUNCTION^(Level::XVALUE^LevelModifier::VOLATILE)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args...)const volatile&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(Level::XVALUE^LevelModifier::CV)*(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<Ret(Args......)const volatile&&noexcept,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*(Level::XVALUE^LevelModifier::CV)*(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	namespace detail{
+		extern "C" template<typename Ret,typename... Args> using clinkage = Ret(Args...);
+		extern "C" template<typename Ret,typename... Args> using varargs_clinkage = Ret(Args......);
+		extern "C" template<typename Ret,typename... Args> using noexcept_clinkage = Ret(Args...)noexcept;
+		extern "C" template<typename Ret,typename... Args> using varargs_noexcept_clinkage = Ret(Args......)noexcept;
+	}
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<detail::clinkage<Ret,Args...>>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<detail::noexcept_clinkage<Ret,Args...>>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...);//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<detail::varargs_clinkage<Ret,Args...>,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
+	template<typename Ret,typename... Args> struct TypeHash<enable_specialization_t<detail::varargs_noexcept_clinkage<Ret,Args...>,Ret,Args...>>{
+	public:
+		constexpr TypeHash()=default;
+		constexpr TypeHash(const TypeHash&)=default;
+		constexpr TypeHash(TypeHash&&)=default;
+		TypeHash(const TypeHash&&)=delete;
+		constexpr TypeHash& operator=(const TypeHash&)=default;
+		constexpr TypeHash& operator=(TypeHash&&)=default;
+		TypeHash& operator=(const TypeHash&&)=delete;
+		constexpr TypeCode operator()()const{
+			return (TypeHash<Ret>{}()^Level::FUNCTION)*TypeCode::LEVEL^(TypeHash<Args>(){} + ...)^TypeCode::VARARGS;//Ignore This, valid code (C++17 Fold Expression)
+		}
+	};
 }
 
 

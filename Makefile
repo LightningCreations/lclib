@@ -6,7 +6,7 @@ SOURCE_FILES += src/StringHelper.cpp src/Version.cpp
 #SOURCE_FILES += src/nbt/NBTBase.cpp src/nbt/NBTCompound.cpp
 #SOURCE_FILES += src/nbt/NBTList.cpp src/nbt/NBTLoad.cpp
 #SOURCE_FILES += src/nbt/NBTPrimitive.cpp
-FLAGS = -fpic -std=c++1z -fpermissive -shared
+FLAGS = -fpic -std=c++1z -fvisibility=hidden -fpermissive -shared
 LIBS = -lssl
 OUTPUT = liblc-cxx.so
 INCLUDE = -I./ -I./include

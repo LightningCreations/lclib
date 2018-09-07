@@ -13,6 +13,7 @@
 #include "Hash.hpp"
 #include <Config.hpp>
 #include <TypeInfo.hpp>
+#include <cmath>
 
 #define VERSION_CONSTEXPR constexpr
 #define VERSION_DELETE =delete
@@ -173,6 +174,14 @@ LIBLCAPI istream& operator>>(istream&,Version&);
  */
 LIBLCAPI ostream& operator<<(ostream&,const Version&);
 
+constexpr Version operator ""v(long double d){
+	int Mj;
+	double in = d;
+	double f;
+	Mj = modf(in,&f);
+	in*=1000;
+	return Version{Mj,int(in*1000)};
+}
 
 
 constexpr int32_t hashcode(Version v){

@@ -20,4 +20,10 @@
 #define LIBLCFUNC LIBLCAPI
 #define LIBLCHIDE [[visibility("hidden")]]
 
+#if defined(__OAPI_MACROS)&&defined(__HAS_IMPORT_UNIQUE)
+#pragma macros import("__UNIQUE__") define("__UNIQUE__")
+#elif !defined(__UNIQUE__)
+#define __UNIQUE__ UID##__COUNTER__##__LINE__##QJJ
+#endif
+
 #endif /* INCLUDE_CONFIG_HPP_ */

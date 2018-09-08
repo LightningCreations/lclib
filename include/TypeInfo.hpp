@@ -704,8 +704,8 @@ template<typename T> struct is_hashable_type<std::enable_if_t<std::is_invocable_
 template<typename T> constexpr const bool is_hashable_type_v = is_hashable_type<T>::value;
 
 template<typename T,typename=void> struct is_polymorphic_hashable:std::false_type{};
-template<typename T> struct is_polymorphic_hashable<T,void_t<std::enable_if_t<is_hashable_v<T>>,typename TypeHash<T>::base_type,
-	typename TypeHash<T>::base_hash,std::enable_if_t<is_hashable_v<typename types::TypeHash<T>::base_type>>>:std::true_type{};
+template<typename T> struct is_polymorphic_hashable<T,std::void_t<std::enable_if_t<is_hashable_type_v<T>>,typename types::TypeHash<T>::base_type,
+	typename types::TypeHash<T>::base_hash>>:std::true_type{};
 template<typename T> constexpr const bool is_polymorphic_hashable_v = is_polymorphic_hashable<T>::value;
 
 /**
@@ -719,6 +719,39 @@ template<typename T> using base_type_t = typename types::TypeHash<T>::base_type;
  */
 template<typename T> using base_hash_t = typename types::TypeHash<T>::base_hash;
 
-
+#define NameHash(cl) \
+	namespace types{\
+		template<> struct TypeHash<cl>{\
+		public:\
+			constexpr TypeHash()=default;\
+			constexpr TypeHash(const TypeHash&)=default;\
+			constexpr TypeHash(TypeHash&&)=default;\
+			TypeHash(const TypeHash&&)=delete;\
+			constexpr TypeHash& operator=(const TypeHash&)=default;\
+			constexpr TypeHash& operator=(TypeHash&&)=default;\
+			TypeHash& operator=(const TypeHash&&)=delete;\
+			constexpr TypeCode operator()(){\
+				return nameHash(#cl);\
+			}\
+		};\
+	}
+#define NameBaseClassHash(cl,base)\
+	namespace types{\
+		template<> struct TypeHash<cl>{\
+		public:\
+			using base_class = base;\
+			using base_hash = TypeHash<base_class>;\
+			constexpr TypeHash()=default;\
+			constexpr TypeHash(const TypeHash&)=default;\
+			constexpr TypeHash(TypeHash&&)=default;\
+			TypeHash(const TypeHash&&)=delete;\
+			constexpr TypeHash& operator=(const TypeHash&)=default;\
+			constexpr TypeHash& operator=(TypeHash&&)=default;\
+			TypeHash& operator=(const TypeHash&&)=delete;\
+			constexpr TypeCode operator()(){\
+				return TypeHash<base_class>{}()^nameHash(#cl);\
+			}\
+		};\
+	}
 
 #endif /* __INCLUDE_TYPEINFO_HPP__2018_09_07_08_55 */

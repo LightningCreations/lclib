@@ -42,6 +42,7 @@ namespace reflect{
 	};
 	LCLIBAPI void registerReflectionKey(const reflection_info_base*,types::TypeCode,ReflectionKeyType);
 	LCLIBAPI const reflection_info_base* getReflectionKey(types::TypeCode);
+	LCLIBAPI void registerTypeAlias(types::TypeCode,const reflection_info_base*);
 	template<typename T,T& field> struct field_reflection_info:reflection_info_base{
 		types::TypeCode decltypeCode;
 		T* address;
@@ -68,21 +69,25 @@ namespace reflect{
 			types::TypeCode argsTypeCodes[sizeof...(Args)]={types::TypeHash<Args>{}()...};
 			types::TypeCode retTypeCode = types::TypeHash<Ret>{}();
 			uint8_t flags =0;
+			using decayed_function_type = std::decay_t<Ret>(std::decay_t<Ret>...);
 		};
 		template<typename Ret,typename... Args> struct extended_function_info<Ret(Args...)noexcept>:reflection_info_base{
 			types::TypeCode argsTypeCodes[sizeof...(Args)]={types::TypeHash<Args>{}()...};
 			types::TypeCode retTypeCode = types::TypeHash<Ret>{}();
 			uint8_t flags =1;
+			using decayed_function_type = std::decay_t<Ret>(std::decay_t<Ret>...)noexcept;
 		};
 		template<typename Ret,typename... Args> struct extended_function_info<cfunction<Ret,Args...>>:reflection_info_base{
 			types::TypeCode argsTypeCodes[sizeof...(Args)]={types::TypeHash<Args>{}()...};
 			types::TypeCode retTypeCode = types::TypeHash<Ret>{}();
 			uint8_t flags =2;
+			extern"C" using decayed_function_type = std::decay_t<Ret>(std::decay_t<Ret>...);
 		};
 		template<typename Ret,typename... Args> struct extended_function_info<noexcept_cfunction<Ret,Args...>>:reflection_info_base{
 			types::TypeCode argsTypeCodes[sizeof...(Args)]={types::TypeHash<Args>{}()...};
 			types::TypeCode retTypeCode = types::TypeHash<Ret>{}();
 			uint8_t flags =3;
+			extern"C" using decayed_function_type = std::decay_t<Ret>(std::decay_t<Ret>...)noexcept;
 		};
 	};
 	template<typename T,T& method> struct function_reflection_info:detail::extended_function_info<T>{
@@ -91,7 +96,7 @@ namespace reflect{
 		const char* name;
 		types::TypeCode hashKey;
 		template<size_t N> function_reflection_info(const char(&name)[N]):
-			decltypeCode(types::TypeHash<T>()),
+			decltypeCode(types::TypeHash<typename decayed_function_type>()),
 			address(&method),
 			name(name),
 			hashKey(types::nameHash(name)^types::TypeHash<T>{}()){
@@ -119,18 +124,14 @@ namespace reflect{
 			fieldOffsets[1] = offsetof(type_reflection_info,typeCode);
 			fieldOffsets[2] = offsetof(type_reflection_info,baseClass);
 			registerReflectionKey(this,hashKey,TYPE);
+			registerTypeAlias(types::nameHashcode(name),this);
 		}
 
 	};
 	template<typename E,E val> struct enumerator_reflection_info{
-		//TODO add some sort of export of reflection information
-		//UB if the target is not an enum type
+
 	};
-	template<class target,typename... Args> struct constructor_reflection_info{
-		//TODO export reflection info
-		//UB if the class does not have a constructor with the give args types
-		//(Note that if its defined but defined as defaulted its not UB)
-	};
+
 
 	template<typename T> struct reflected_field{
 		const reflection_info_base* inf;
@@ -151,9 +152,11 @@ namespace reflect{
 	};
 	template<typename F> struct reflected_method{
 		const reflection_info_base* inf;
+		using decay_signature = typename detail::extended_function_info<F>::decay_signature_type;
 	public:
-		template<size_t N> reflected_method(const char(&name)[N]):inf(getReflectionKey(types::nameHash(name)^types::TypeHash<F>{}())){
-			if(getTypeCode()!=types::TypeHash<T>{}())
+		template<size_t N> reflected_method(const char(&name)[N]):
+		inf(getReflectionKey(types::nameHash(name)^types::TypeHash<decay_signature>{}())){
+			if(getTypeCode()!=types::TypeHash<decay_signature>{}())
 				throw BadReflectionTypeException();
 		}
 		const char* getName()const{
@@ -180,7 +183,7 @@ namespace reflect{
 		bool isNoexcept()const{
 			return getFlags()&1;
 		}
-		template<typename... Args> auto operator()(Args&&... args)const->decltype(std::declval<F>()(std::forward(args)...)){
+		template<typename... Args> auto operator()(Args&&... args)const noexcept(noexcept(std::declval<F>()(std::forward(args)...)))->decltype(std::declval<F>()(std::forward(args)...)){
 			F& ref = **((F*const*))(inf+inf->fieldOffsets[3]));
 			return ref(std::forward<Args>(args)...);
 		};

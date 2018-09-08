@@ -1,9 +1,12 @@
 #include "Random.hpp"
 #include "JTime.hpp"
 #include <algorithm>
+#include <reflect/ReflectionInfo.hpp>
 using std::min;
 seed_t number(32);
 const seed_t cprime = 4989641;
+
+export_type(Random)
 
 seed_t highResTime(){
 	Instant i = Instant::now();

@@ -7,6 +7,18 @@
 #include <Socket.hpp>
 #include <IOWrapper.hpp>
 #include <memory>
+#include <reflect/ReflectionInfo.hpp>
+
+export_type(ConnectionException)
+export_type(AddressBindException)
+export_type(TimedOutException)
+export_type(UnknownHostException)
+export_type(SocketConcurrencyException)
+export_type(SocketOperationUnsupportedException)
+export_type(Socket)
+export_type(SocketImpl)
+export_type(ServerSocket)
+export_type(ServerSocketImpl)
 
 const char* ConnectionException::what()const noexcept(true){
 	return "Connection Error: No other information";

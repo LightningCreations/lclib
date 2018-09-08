@@ -8,6 +8,7 @@
 #include "StringHelper.hpp"
 #include <string>
 #include <stdexcept>
+#include <reflect/ReflectionInfo.hpp>
 #define CURR_MAJOR 1
 #define CURR_MINOR 0
 #define MIN_MAJOR  1
@@ -18,6 +19,7 @@ using std::to_string;
 using std::stoi;
 using std::invalid_argument;
 
+export_type(Version)
 
 
 Version::Version(string ver){

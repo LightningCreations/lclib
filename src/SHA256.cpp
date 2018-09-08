@@ -90,3 +90,4 @@ void SHA256(const char* in,size_t size,char (&out)[32]){
 	}
 }
 
+

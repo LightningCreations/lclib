@@ -28,12 +28,19 @@ namespace reflect{
 		//Required offsets:
 		//0 is hashEntry
 		//1 is name
-		//2 is decltypeCode (if supported), otherwise TypeHash of the class
+		//2 is decltypeCode (if supported), or Type Hash of the base-class/underlying-type (types)
 		//3 is address (fields and methods only), or value (enumerators)
 	protected:
 		~reflection_info_base()=default;
 	};
-	LCLIBAPI void registerReflectionKey(const reflection_info_base*,types::TypeCode);
+	enum ReflectionKeyType{
+		TYPE = 1,
+		FIELD,
+		METHOD,
+		ENUMERATOR,
+		MEMBER
+	};
+	LCLIBAPI void registerReflectionKey(const reflection_info_base*,types::TypeCode,ReflectionKeyType);
 	LCLIBAPI const reflection_info_base* getReflectionKey(types::TypeCode);
 	template<typename T,T& field> struct field_reflection_info:reflection_info_base{
 		types::TypeCode decltypeCode;
@@ -49,6 +56,7 @@ namespace reflect{
 			fieldOffsets[3] = (&address)-this;
 			fieldOffsets[1] = (&name)-this;
 			fieldOffsets[0] = (&hashEntry)-this;
+			registerReflectionKey(this,hashEntry,FIELD);
 		}
 	};
 	namespace detail{
@@ -81,24 +89,38 @@ namespace reflect{
 		types::TypeCode decltypeCode;
 		T* address;
 		const char* name;
-		types::TypeCode hashCode;
+		types::TypeCode hashKey;
 		template<size_t N> function_reflection_info(const char(&name)[N]):
 			decltypeCode(types::TypeHash<T>()),
 			address(&method),
 			name(name),
-			hashCode(types::nameHash(name)^types::TypeHash<T>{}()){
-			fieldOffsets[0] = (&name)-this;
-			fieldOffsets[1] = (&hashCode)-this;
-			fieldOffsets[2] = (&decltypeCode)-this;
-			fieldOffsets[3] = (&address)-this;
+			hashKey(types::nameHash(name)^types::TypeHash<T>{}()){
+			fieldOffsets[0] = offsetof(function_reflection_info,name);
+			fieldOffsets[1] = offsetof(function_reflection_info,hashKey);
+			fieldOffsets[2] = offsetof(function_reflection_info,decltypeCode);
+			fieldOffsets[3] = offsetof(function_reflection_info,address);
 			fieldOffsets[4] = (&argsTypeCodes[0])-this;
-			fieldOffsets[5] = (&retTypeCode)-this;
-			fieldOffsets[6] = (&flags)-this;
+			fieldOffsets[5] = offsetof(function_reflection_info,retTypeCode);
+			fieldOffsets[6] = offsetof(function_reflection_info,flags);
+			registerReflectionKey(this,hash,FUNCTION);
 		}
 	};
 
-	template<typename T> struct type_reflection_info{
-		//TODO add some sort of export to the binary for reflection information
+	template<typename T> struct type_reflection_info:reflection_info_base{
+		types::TypeCode hashKey;
+		const char* name;
+		types::TypeCode baseClass;
+		template<size_t N> type_reflection_info(const char(&name)[N]):
+				hashKey(types::TypeHash<T>{}()),
+				name(name),
+				baseClass(std::is_enum_v<T>?types::TypeHash<std::underlying_type_t<T>>:
+						(is_polymorphic_hashable_v<T>?types::TypeHash<base_type_t<T>>{}():TypeCode::NONE)){
+			fieldOffsets[0] = offsetof(type_reflection_info,name);
+			fieldOffsets[1] = offsetof(type_reflection_info,typeCode);
+			fieldOffsets[2] = offsetof(type_reflection_info,baseClass);
+			registerReflectionKey(this,hashKey,TYPE);
+		}
+
 	};
 	template<typename E,E val> struct enumerator_reflection_info{
 		//TODO add some sort of export of reflection information
@@ -167,8 +189,17 @@ namespace reflect{
 		}
 	};
 };
-#define export_field(field) reflect::field_reflection_info<decltype(field),field> __reflect__f##__UNIQUE__;
-#define export_function(function) reflect::function_reflection_info<decltype(function),function> __reflect__m##__UNIQUE__;
-
-
+#define BIND(cl,name) cl::name
+#ifndef __NOREFLECTION
+#define export_field(field) extern const reflect::field_reflection_info<decltype(field),field> UNIQUEID(__reflect__f##field){#field};
+#define export_function(function) extern const reflect::function_reflection_info<decltype(function),function> UNIQUEID(__reflect__m##function){#function};
+#define export_type(type) extern const reflect::type_reflection_info<type> UNIQUEID(__reflect__t##type){#type};
+#define export_function_overload(function,ret,...) extern const reflect::function_reflection_info<ret(__VA_ARGS__),function> UNIQUEID(__reflect__m){#function};
+#define export_static_function(cl,function) extern const reflect::function_reflection_info<decltype(BIND(cl,function)),BIND(cl,function)> UNIQUEID(__reflect__m##cl##_1##function){STRINGIFY(BIND(cl,function))};
+#else
+#define export_field(field)
+#define export_function(function)
+#define export_type(type)
+#define export_function_overload(name,ret,...)
+#endif
 #endif /* INCLUDE_REFLECT_REFLECTIONINFO_HPP_ */

@@ -22,6 +22,7 @@ extern "C"{
 #include <cstring>
 #include <cstdlib>
 #include <Callable.hpp>
+#include <reflect/ReflectionInfo.hpp>
 extern int errno;
 using namespace std::chrono_literals;
 typedef decltype(socket(0,0,0)) socket_t;
@@ -235,5 +236,11 @@ std::unique_ptr<SocketImpl> newSocketHandle(){
 std::unique_ptr<ServerSocketImpl> newServerSocketHandle(){
 	return serverGeneratorFunction();
 }
+
+export_function(setDefaultSocketHandlerConstructor)
+export_function(setDefaultServerSocketHandlerConstructor)
+export_function(newSocketHandle)
+export_function(newServerSocketHandle)
+
 
 

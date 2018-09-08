@@ -1,5 +1,6 @@
 #include <ShadowRandom.hpp>
 #include <random>
+#include <reflect/ReflectionInfo.hpp>
 
 uint64_t lrotate(uint64_t t,size_t s){
     s &=0x3f;
@@ -10,7 +11,8 @@ uint64_t rrotate(uint64_t t,size_t s){
     return t>>s|(t<<(64-s));
 }
 
-
+export_type(ShadowRandom)
+export_static_function(ShadowRandom,transform)
 
 const uint64_t ctable[] ={
     0x6a09e667f3bcc908,0xbb67ae8584caa73b,

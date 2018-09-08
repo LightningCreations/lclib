@@ -4,25 +4,19 @@
 #include <reflect/ReflectionInfo.hpp>
 
 export_type(InputStream)
-export_constructor(InputStream)
-export_constructor(InputStream,const InputStream&)
-export_constructor(InputStream,InputStream&&)
-export_type(append_t)
-export_constructor(append_t)
-export_constructor(append_t,const append_t&)
-export_constructor(append_t,append_t&&)
-export_field(append)
-export_type(little_endian_t)
-export_constructor(little_endian_t)
-export_constructor(little_endian_t,const little_endian_t&)
-export_constructor(little_endian_t,little_endian_t&&)
-export_field(little_endian)
 export_type(FileInputStream)
-export_constructor(FileInputStream,const FileInputStream&)
-export_constructor(FileInputStream,FileInputStream&&)
-export_constructor(FileInputStream,FILE*)
-export_constructor(FileInputStream,const char*)
-export_constructor(FileInputStream,const std::string&)
+export_type(FilterInputStream)
+export_type(DataInputStream)
+export_type(OutputStream)
+export_type(FileOutputStream)
+export_type(FilterOutputStream)
+export_type(DataOutputStream)
+export_type(little_endian_t)
+export_type(append_t)
+export_type(FileNotFoundException)
+export_type(EOFException)
+export_field(little_endian)
+export_field(append)
 
 FileInputStream::FileInputStream(FILE* f):underlying(f){
     if(f==NULL||f==nullptr)
@@ -52,16 +46,20 @@ size_t FileInputStream::read(void* ptr,size_t size){
     return fwrite(ptr,1,size,underlying);
 }
 
-DataInputStream::DataInputStream(InputStream& i):little(false),underlying(&i){}
-DataInputStream::DataInputStream(InputStream& i,little_endian_t):little(true),underlying(&i){}
+FilterInputStream::FilterInputStream(InputStream& i):underlying(&i){}
+FilterInputStream::~FilterInputStream(){}
 
-size_t DataInputStream::read(void* ptr,size_t size){
-    return underlying->read(ptr,size);
+size_t FilterInputStream::read(void* ptr,size_t size){
+	return underlying->read(ptr,size);
+}
+int FilterInputStream::read(){
+	return underlying->read();
 }
 
-int DataInputStream::read(){
-    return underlying->read();
-}
+DataInputStream::DataInputStream(InputStream& i):FilterInputStream(i),little(false){}
+DataInputStream::DataInputStream(InputStream& i,little_endian_t):FilterInputStream(i),little(true){}
+
+
 
 int DataInputStream::readSingle(){
 	int ret = underlying->read();
@@ -204,14 +202,21 @@ void FileOutputStream::flush(){
 	fflush(underlying);
 }
 
-DataOutputStream::DataOutputStream(OutputStream& o):underlying(&o),little(false){}
-DataOutputStream::DataOutputStream(OutputStream& o,little_endian_t):underlying(&o),little(true){}
-size_t DataOutputStream::write(const void* v,size_t s){
-    return underlying->write(v,s);
+FilterOutputStream::FilterOutputStream(OutputStream& o):underlying(&o){}
+FilterOutputStream::~FilterOutputStream(){}
+size_t FilterOutputStream::write(const void* ptr,size_t size){
+	return underlying->write(ptr,size);
 }
-void DataOutputStream::write(uint8_t u){
-    underlying->write(u);
+void FilterOutputStream::write(uint8_t val){
+	underlying->write(val);
 }
+void FilterOutputStream::flush(){
+	underlying->flush();
+}
+
+DataOutputStream::DataOutputStream(OutputStream& o):FilterOutputStream(o),little(false){}
+DataOutputStream::DataOutputStream(OutputStream& o,little_endian_t):FilterOutputStream(o),little(true){}
+
 void DataOutputStream::writeByte(int8_t i){
     write(i);
 }
@@ -307,10 +312,6 @@ DataOutputStream& DataOutputStream::operator<<(float f){
 DataOutputStream& DataOutputStream::operator<<(double d){
 	writeDouble(d);
 	return *this;
-}
-
-void DataOutputStream::flush(){
-	underlying->flush();
 }
 
 const char* FileNotFoundException::what()const noexcept(true){

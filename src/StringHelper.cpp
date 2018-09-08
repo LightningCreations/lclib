@@ -1,4 +1,11 @@
 #include "StringHelper.hpp"
+#include <reflect/ReflectionInfo.hpp>
+
+export_function(tokenize)
+export_function(replace)
+export_function(count)
+export_function(toLowerCase)
+export_function(toUpperCase)
 
 string tokenize(string& str,string sep){
 	int pos = str.find(sep);

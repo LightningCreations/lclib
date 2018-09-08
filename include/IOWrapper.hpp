@@ -824,5 +824,7 @@ namespace types{
 		}
 	};
 };
+NameHash(little_endian_t)
+NameHash(append_t)
 
 #endif

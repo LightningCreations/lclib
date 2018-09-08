@@ -20,14 +20,14 @@ using std::to_string;
 #endif
 
 #include <cstdlib>
+#include <reflect/ReflectionInfo.hpp>
 
 using std::cout;
 using std::endl;
 
 using namespace std::string_literals;
 
-
-
+export_type(Terminal)
 
 string toFColorCode(Color c){
     string target = "\x1b[38;2;"s;

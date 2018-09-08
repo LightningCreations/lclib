@@ -1,10 +1,19 @@
 #include <chrono>
 #include "JTime.hpp"
+#include <reflect/ReflectionInfo.hpp>
 
 
 const extern int32_t hashPrime;
 
 const int NANO_BOUND = 1000000000;
+
+export_field(NANO_BOUND)
+export_type(Instant)
+export_type(Duration)
+export_static_function(Instant,fromEpochMilisecond)
+export_static_function(Instant,now)
+export_static_function(Duration,fromEpoch)
+export_static_function(Duration,between)
 
 Instant::Instant():seconds{0},nanos{0}{}
 

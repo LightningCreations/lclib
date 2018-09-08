@@ -9,10 +9,13 @@
 #include <cstdint>
 #include <memory>
 #include <chrono>
+#include <ReflectionInfo.hpp>
 
 
 extern const int hashPrime(31);
 
+export_field(hashPrime)
+export_type(Hashable)
 
 
 

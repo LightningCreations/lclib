@@ -1,8 +1,15 @@
 #include <Text.hpp>
 #include <string>
+#include <reflect/ReflectionInfo.hpp>
 
 using std::string;
 using std::to_string;
+
+
+export_type(Color)
+export_type(endline_t)
+export_type(tab_t)
+export_type(TextComponent)
 
     TextComponent::TextComponent():__tab(false),text(),c(Color::NONE),endl(false),bg(false){}
     TextComponent::TextComponent(const string& text):__tab(false),text(text),c(Color::NONE),endl(false),bg(false){}

@@ -7,12 +7,17 @@
 #include <cstdlib>
 #include "ShadowRandom.hpp"
 #include "JTime.hpp"
+#include <reflect/ReflectionInfo.hpp>
 
 #include <SHA256.hpp>
 
 extern const int32_t hashPrime;
 
-
+export_type(UUID)
+export_static_function(UUID,nilUUID)
+export_static_function(UUID,fromString)
+export_static_function(UUID,ofNow)
+export_static_function(UUID,randomUUID)
 ShadowRandom uuidRandom;
 
 
@@ -47,7 +52,7 @@ UUID::UUID(string str){
 UUID::UUID(const char* str):UUID(string(str)){}
 
 
-UUID UUID::fromString(string str){
+UUID UUID::fromString(const string& str){
 	return UUID(str);
 }
 

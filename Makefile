@@ -6,7 +6,7 @@ SOURCE_FILES += src/StringHelper.cpp src/Version.cpp
 #SOURCE_FILES += src/nbt/NBTBase.cpp src/nbt/NBTCompound.cpp
 #SOURCE_FILES += src/nbt/NBTList.cpp src/nbt/NBTLoad.cpp
 #SOURCE_FILES += src/nbt/NBTPrimitive.cpp
-FLAGS = -fpic -std=c++1z -fvisibility=hidden -fpermissive -shared
+FLAGS = -fpic -pthread -std=c++1z -fpermissive -fvisibility=hidden -shared -DLCLIB_CXX_DEFINITION
 LIBS = -lssl
 OUTPUT = liblc-cxx.so
 INCLUDE = -I./ -I./include
@@ -17,4 +17,5 @@ $(OUTPUT): $(SOURCE_FILES)
 	$(CXX) $(FLAGS) $(INCLUDE) -o $(OUTPUT) $(SOURCE_FILES) $(LIBS)
 
 install:
-	install $(OUTPUT) /usr/lib
+	cp $(OUTPUT) /usr/lib
+	cp /. /usr/include/

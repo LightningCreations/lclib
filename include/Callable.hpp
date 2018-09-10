@@ -47,11 +47,17 @@ template<typename Callable> constexpr auto forwardCall(Callable& c){
  * Only the actually invocation of the Invocable is guaranteed to be thread-safe
  */
 template<typename Mutex,typename Callable> constexpr auto forwardThreadSafe(Mutex& m,Callable& c){
-	return [&m,c](auto&&... args)mutable->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
+	return [&m,&c](auto&&... args)mutable->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
 		std::lock_guard<Mutex> lock(m);
-		return std::invoke<c,std::forward(args)...);
+		return std::invoke(c,std::forward(args)...);
 	};
 }
 
+class identity{
+public:
+	template<typename T> constexpr T&& operator()(T&& t)const noexcept(true){
+		return std::forward(t);
+	}
+};
 
 #endif /* INCLUDE_CALLABLE_HPP_ */

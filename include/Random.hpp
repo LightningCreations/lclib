@@ -22,12 +22,12 @@ using std::array;
 	This file follows the specification for the Random class defined by that document.
 	As per the specification this class comes with 2 Warnings:
 	The Random class is thread-safe, however using an instance of Random across multiple threads may have unpredictable effects.
-	The Random class is not cryptographically-secure. Use the SecureRandom class instead.
+	The Random class is not cryptographically-secure.
 	See the warnings on https://docs.oracle.com/javase/8/docs/api/java/util/Random.html for more details on these warnings
 	Code implementation provided by Connor Horman.
 */
 
-class Random{
+LIBLCAPI class Random{
 private:
 	seed_t seed;
 	double nextNextGaussian;
@@ -35,7 +35,7 @@ private:
     Random(const Random&)=delete;
     Random& operator=(const Random&)=delete;
 protected:
-    LIBLCFUNC virtual uint32_t next(int bits);
+    virtual uint32_t next(int bits);
     recursive_mutex lock;
 public:
 	/*
@@ -43,12 +43,12 @@ public:
         This generate seeds the generator with a seed that is almost guarenteed to be unique from other 
         invocations of this constructor
 	*/
-    LIBLCFUNC Random();
+    Random();
     /*
         Constructs a Pseudorandom Number Generator with a given seed.
         The Pseudorandom Number Generator is initialized with the seed as though it was passed to setSeed.
     */
-    LIBLCFUNC Random(seed_t);
+    Random(seed_t);
     Random(Random&&)=default;
     virtual ~Random()=default;
     Random& operator=(Random&&)=default;
@@ -59,20 +59,20 @@ public:
         the outputs are the same. (This guarentee also applies to Pseudorandom Number generators using the java implementation:
         java.util.Random)
     */
-    LIBLCFUNC virtual void setSeed(seed_t);
+    virtual void setSeed(seed_t);
     
     /*
         Obtains the next int in the pseudorandom number generator
         The output of the generator is a value from 0 to 2147483647.
     */
-    LIBLCFUNC int nextInt();
+    int nextInt();
     
     /*
         Obtains the next int in the pseudorandom number generator
         The output of this function is a value from 0 inclusive to the bound exclusive.
         If bound is negative or 0, then the method throws an exception.
     */
-    LIBLCFUNC int nextInt(int);
+    int nextInt(int);
     /*
         Obtains a double from the pseudorandom number generator using Guassian/Normal distribution.
         The distribution has mean 0 and standard deviation 1. The numbers generated are extremely like to be close to 0,
@@ -80,28 +80,28 @@ public:
         If the generated numbers need (approximately) uniform distribution, the nextDouble() function is more
         appropriate for use.
     */
-    LIBLCFUNC double nextGuassian();
+    double nextGuassian();
     /*
         Obtains the next Long produced from this psuedorandom number generator.
         Note that because the generator only uses a 48-bit seed, the function may not
         produce all possible long values.
     */
-    LIBLCFUNC int64_t nextLong();
+    int64_t nextLong();
     /*
         Obtains a pseudorandom floating-point number from 0 inclusive to 1 exclusive.
         Approximately every real number(that can be represented by the float type) in this range is generated with equal probability
     */
-    LIBLCFUNC float nextFloat();
+    float nextFloat();
     /*
         Obtains a pseudorandom floating-point number from 0 inclusive to 1 exclusive
         Approximately every real number(that can be represented by the double type) in this range are generated with equal probability.
         If Normal Distribution doubles are required the nextGuassian() function is more appropriate for use.
     */
-    LIBLCFUNC double nextDouble();
+    double nextDouble();
     /*
         Obtains a number of psuedorandom bytes and fills the passed buffer with them.
     */
-    LIBLCFUNC virtual void nextBytes(uint8_t*,size_t);
+    virtual void nextBytes(uint8_t*,size_t);
     /*
         Fills an array with its size known at compile time with a bunch of psuedo-random bytes.
     */

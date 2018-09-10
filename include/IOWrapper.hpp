@@ -11,14 +11,14 @@
 #include <Config.hpp>
 #include <TypeInfo.hpp>
 #include <STLTypeInfo.hpp>
-class FileNotFoundException:public std::exception{
+LIBLCAPI class FileNotFoundException:public std::exception{
 public:
 	 const char* what()const noexcept(true) override;
 };
 
 
 
-class EOFException:public std::exception{
+LIBLCAPI class EOFException:public std::exception{
 public:
 	 const char* what()const noexcept(true) override;
 };
@@ -54,7 +54,7 @@ public:
      * that is not a pointer (including pointer to member or function pointer types),
      * which has no pointer non-static members (including pointer to member, or function pointer types), reference non-static members,
      * virtual functions (including virtual destructors), or const members, or the behavior of this function is undefined.
-     * If the object is a multibyte scalar data-type it is implementation defined
+     * If the object is a multibyte scalar data-type it is unspecified
      * whether or not the data is read in Big-Endian or Little-Endian.
      * If The byte order of scalar data is required to be fixed, use the DataInputStream class.
      * If there is a complete, non-array object at the target of the pointer, and the returned size
@@ -73,7 +73,7 @@ public:
      * Subclasses may impose further restrictions on what may be read to.
      * These subclasses are required to detail what results in undefined behavior and what may cause an exception to be thrown.
      * If an exception is thrown, the stream is left in an unspecified state.
-     * All objects being read to are invalidated in this case.
+     * All objects being read to are invalidated in this case, and there use is undefined behavior
      * \Exception Guarantee: Implementations may throw an exception from this function
      */
     virtual size_t read(void*,size_t)=0;
@@ -161,6 +161,7 @@ public:
     int read();
 };
 
+
 LIBLCAPI class FilterInputStream:public InputStream{
 private:
 	InputStream* underlying;
@@ -181,7 +182,7 @@ public:
 LIBLCAPI class DataInputStream:public FilterInputStream{
 private:
     bool little;
-    LIBLCHIDDEN int readSingle();
+    LIBLCHIDE int readSingle();
 public:
     /*
      * Constructs a new DataInputStream which reads from a given stream.

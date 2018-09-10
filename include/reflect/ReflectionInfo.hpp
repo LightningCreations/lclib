@@ -194,11 +194,11 @@ namespace reflect{
 };
 #define BIND(cl,name) cl::name
 #ifndef __NOREFLECTION
-#define export_field(field) extern const reflect::field_reflection_info<decltype(field),field> UNIQUEID(__reflect__f##field){#field};
-#define export_function(function) extern const reflect::function_reflection_info<decltype(function),function> UNIQUEID(__reflect__m##function){#function};
-#define export_type(type) extern const reflect::type_reflection_info<type> UNIQUEID(__reflect__t##type){#type};
-#define export_function_overload(function,ret,...) extern const reflect::function_reflection_info<ret(__VA_ARGS__),function> UNIQUEID(__reflect__m){#function};
-#define export_static_function(cl,function) extern const reflect::function_reflection_info<decltype(BIND(cl,function)),BIND(cl,function)> UNIQUEID(__reflect__m##cl##_1##function){STRINGIFY(BIND(cl,function))};
+#define export_field(field) const reflect::field_reflection_info<decltype(field),field> UNIQUEID(__reflect__f##field){#field};
+#define export_function(function) const reflect::function_reflection_info<decltype(function),function> UNIQUEID(__reflect__m##function){#function};
+#define export_type(type) const reflect::type_reflection_info<type> UNIQUEID(__reflect__t##type){#type};
+#define export_function_overload(function,ret,...) const reflect::function_reflection_info<ret(__VA_ARGS__),function> UNIQUEID(__reflect__m){#function};
+#define export_static_function(cl,function) const reflect::function_reflection_info<decltype(BIND(cl,function)),BIND(cl,function)> UNIQUEID(__reflect__m##cl##_1##function){STRINGIFY(BIND(cl,function))};
 #else
 #define export_field(field)
 #define export_function(function)

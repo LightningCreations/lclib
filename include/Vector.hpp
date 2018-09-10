@@ -7,14 +7,18 @@
 #include <type_traits>
 #include <Types.hpp>
 
-template<typename To,typename From> constexpr std::enable_if_t<std::is_trivially_copyable_v<To>&&std::is_trivially_copyable_v<From>&&(sizeof(To)<=sizeof(From)),To> bit_cast(const From& f){
+#if defined(__cpp_bit_cast) && __cpp_bit_cast > 201806
+#include <bit>
+using std::bit_cast;
+#else
+template<typename To,typename From> constexpr std::enable_if_t<std::is_trivially_copyable_v<To>&&std::is_trivially_copyable_v<From>&&(sizeof(To)==sizeof(From)),To> bit_cast(const From& f){
     union{
         From f;
         To t;
     } u = {f};
     return u.t;
 }
-
+#endif
 struct Vec2{
     int x,y;
     constexpr Vec2():x(0),y(0){}

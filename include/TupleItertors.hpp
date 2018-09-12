@@ -4,7 +4,15 @@
 #include <variant>
 #include <utility>
 #include <type_traits>
-template<typename T> struct tuple_iterator{
+#include <TypeTraits.hpp>
+/**
+ * Helper class for iterating over the elements of a tuple or tuple-like-type
+ * Returns an InputIterator of variants containing const references to the elements of the tuple
+ * The behavior is undefined if the iterator's lifetime is longer then the tuple.
+ * tuple_iterator can be instantiated for any type which defines std::tuple_size, std::tuple_element, and std::get
+ * except for std::variant.
+ */
+template<typename T,typename=void> struct tuple_iterator{
 private:
     tuple_iterator()=delete;
     tuple_iterator(const tuple_iterator&)=delete;
@@ -12,41 +20,54 @@ private:
     tuple_iterator& operator=(const tuple_iterator&)=delete;
     tuple_iterator& operator=(tuple_iterator&&)=delete;
 };
-
-template<typename... Ts> struct tuple_iterator<std::tuple<Ts...>>{
+/**
+ * Specialization of tuple_iterator for std::tuples
+ */
+template<typename T> struct tuple_iterator<T,std::tuple_size<remove_cvref_t<T>>>{
 private:
-    using value_type = std::variant<std::reference_wrapper<std::add_const_t<Ts>>...>;
-    const static constexpr std::size_t max_pos = sizeof...(Ts);
-    const std::tuple<Ts...>& target;
+	using tuple_type = remove_cvref_t<T>;
+	template<size_t... Is> static auto get_value_type(std::index_sequence<Is...>) ->
+		std::variant<std::reference_wrapper<std::remove_reference_t<
+			std::add_const_t<std::tuple_element_t<Is,tuple_type>>>>...>;
+
+    const static constexpr std::size_t max_pos = std::tuple_size_v<T>;
+
+    using value_type = decltype(get_value_type(std::make_index_sequence<max_pos>{}));
+    const tuple_type& target;
     std::size_t pos;
     friend struct reference;
     struct reference{
     private:
-        const std::tuple<Ts...>& target;
+        const tuple_type& target;
         std::size_t pos;
         template<std::size_t I,std::size_t... Is> value_type getValueHelper(std::index_sequence<I,Is...>){
             if(I==pos)
-                return std::get<I>(target.target);
+                return std::ref(std::get<I>(target.target));
             else
                 return getValueHelper(std::index_sequence<Is...>{});
         }
         template<std::size_t I> value_type getValueHelper(std::index_sequence<I>){
             if(I==pos)
-                return std::get<I>(target.target);
+                return std::ref(std::get<I>(target.target));
             else
                 throw "Placeholder error: reached end of tuple";
         }
     public:
-        reference(const std::tuple<Ts...>& t,std::size_t pos):target(t),pos(t.pos){}
+        reference(const T& t,std::size_t pos):target(t),pos(t.pos){}
+
         operator value_type(){
             return getValueHelper(std::make_index_sequence<max_pos>{});
         }
-        template<typename T,typename=std::enable_if_t<(std::is_same_v<T,Ts>||...)>> operator T()const{
-            return std::get<T>(getValueHelper(std::make_index_sequence<max_pos>{});
+        template<typename U,std::size_t... Ids,typename=std::enable_if_t<std::disjunction_v<
+        		std::is_same<U,std::tuple_element_t<Ids,T>>...>>> const U& get(std::index_sequence<Ids...>)const{
+        	return std::get<U>(getValueHelper(std::make_index_sequence<max_pos>{}));
+        }
+        template<typename U,typename=decltype(get(std::make_index_sequence<max_pos>{}))> operator const U&()const{
+        	return get(std::make_index_sequence<max_pos>{});
         }
     };
-    tuple_iterator(const std::tuple<Ts...>& target,std::size_t pos=0):target(target),pos(pos){}
-    tuple_iterator(std::tuple<Ts...>&&,std::size_t=0)=delete;
+    tuple_iterator(const T& target,std::size_t pos=0):target(target),pos(pos){}
+    tuple_iterator(T&&,std::size_t=0)=delete;
     tuple_iterator& operator++(){
         pos++;
         return *this;
@@ -55,7 +76,14 @@ private:
         return reference(target,pos);
     }
 };
-template<typename T> struct tuple_iterator<const T>:tuple_iterator<T>{};
+template<typename... Ts> struct tuple_iterator<std::variant<Ts...>,void>{
+private:
+	tuple_iterator()=delete;
+	tuple_iterator(const tuple_iterator&)=delete;
+	tuple_iterator(tuple_iterator&&)=delete;
+	tuple_iterator& operator=(const tuple_iterator&)=delete;
+	tuple_iterator& operator=(tuple_iterator&&)=delete;
+};
 
 template<typename T> tuple_iterator(const T&) -> tuple_iterator<T>;
 template<typename T> tuple_iterator(const T&,std::size_t) -> tuple_iterator<T>; 
@@ -75,5 +103,7 @@ public:
 };
 
 template<typename T> tuple_iterable(const T&) -> tuple_iterable<T>;
+
+
 
 #endif

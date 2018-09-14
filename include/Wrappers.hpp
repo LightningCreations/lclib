@@ -37,6 +37,7 @@ public:
         PolymorphicWrapper(U&& u)noexcept(std::is_nothrow_move_constructible_v<U>):val(new U(u)){}
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
         PolymorphicWrapper(const U&&)=delete;
+
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
         explicit operator U&()&{
             return dynamic_cast<U&>(*val);
@@ -49,13 +50,13 @@ public:
         explicit operator U&&()&&{
             return std::move(dynamic_cast<U&>(*val));
     }
-    operator T&()&{
+    operator T&()& noexcept(true){
         return *val;
     }
-    operator const T&()const{
+    operator const T&()const noexcept(true){
         return *val;
     }
-    operator T&&()&&{
+    operator T&&()&& noexcept(true){
         return std::move(*val);
     }
     const std::type_info& type()const noexcept(true){
@@ -84,11 +85,14 @@ public:
     const T* operator->()const noexcept(true){
         return val;
     }
-    T& operator*()noexcept(true){
+    T& operator*()&noexcept(true){
         return *val;
     }
     const T& operator*()const noexcept(true){
         return *val;
+    }
+    T&& operator*()&&noexcept(true){
+        return std::move(*val);
     }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
         PolymorphicWrapper<T>& operator=(const U& u)noexcept(std::is_nothrow_copy_constructible_v<U>){

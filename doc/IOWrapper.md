@@ -113,8 +113,7 @@ template<size_t N> size_t read(int8_t(&arr)[N]); //(4)
 template<size_t N> size_t read(std::byte(&arr)[N]); //(5)
 ```
 
-(1): read(void* ptr,size_t size)<br/>
-Reads size bytes from the stream and places it in the buffer pointed to by ptr, then returns the number of bytes read.
+(1):Reads size bytes from the stream and places it in the buffer pointed to by ptr, then returns the number of bytes read.
 If there exists a complete (that is, well-formed object) at the address given by ptr, then that object, and all of its sub-objects must satisfy the following requirements or the behavior is undefined:
 <ul>
 <li>The object must satisfy TriviallyCopyable</li>
@@ -162,9 +161,7 @@ FilterInputStream(InputStream&); //(1)
 size_t read(void* ptr,size_t size); //(1)
 int read(); //(2)
 ```
-(1): size_t read(void* ptr,size_t size);
-(2): int read();
-Forwards to the equivalent method in the wrapped stream.
+(1), (2):Forwards to the equivalent method in the wrapped stream.
 Any exceptions thrown by the equivalent method in the wrapped stream is forwarded by this method
 
 <h3>class FileInputStream</h3>
@@ -211,14 +208,14 @@ Moves in to this. If this has control of an underlying file has not been moved,
 
 <h4>Methods</h4>
 <h5>read</h5>
+
 ```cpp
 size_t read(void* ptr,size_t size); //(1)
 int read(); //(2)
 ```
-(1): size_t read(void* ptr,size_t size)
-Reads size bytes from the underlying file into the object pointed to by ptr. ptr must satisfy the same requirements as specified by InputStream::read
-(2): int read()
-Reads a single byte from the underlying file and returns it or EOF if the file has reached the end of file.
+
+(1): Reads size bytes from the underlying file into the object pointed to by ptr. ptr must satisfy the same requirements as specified by InputStream::read
+(2): Reads a single byte from the underlying file and returns it or EOF if the file has reached the end of file.
 
 <h6>Exception Guarantee</h6>
 Neither method will throw any exceptions

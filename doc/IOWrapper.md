@@ -289,6 +289,7 @@ If any of the methods reach an EOF before finishing the read, an EOFException is
 
 <h5>Stream Operator Overloads</h5>
 Reads a given value from the stream based on the type of the argument, and assigns the target reference to that value
+
 ```cpp
 DataInputStream& operator>>(uint8_t& b); //(1)
 DataInputStream& operator>>(int8_t& b); //(2)
@@ -305,6 +306,7 @@ DataInputStream& operator>>(float& f); //(12)
 DataInputStream& operator>>(double& d); //(13)
 template<typename E> DataInputStream& operator>>(E& e); //(14)
 ```
+
 (1),(2),(3),(4),(5),(7),(9),(12),(13): assigns the argument to the value returned by the equivalent Specialized read method
 (6),(8): assigns the argument to the value returned by readInt, or readLong respectively.
 (10): Reads a Version from the stream, and assigns it to v. Effectively v= Version{int(readUnsignedByte())+1,readUnsignedByte()}; The behavior is undefined unless the bytes read were written as such by DataOutputStream or a similar utility, or were written by the writeShort or writeUnsignedShort method of a DataOutputStream in Big-Endian byte order mode, or a similar utility.

@@ -131,14 +131,9 @@ If there is not a complete object at the address given by ptr, then ptr must ref
 If the size of the object indicated by ptr is not at least size, the behavior is undefined.
 <br/><br/>
 
-(2): int read()<br/>
-Reads a single byte from the stream and returns it. If EOF is reached returns -1 instead.
-<br/><br/>
-
-(3):template&lt;size_t N&gt; size_t read(uint8_t(&arr)[N])
-(4):template&lt;size_t N&gt; size_t read(int8_t(&arr)[N])
-(5):template&lt;size_t N&gt; size_t read(std::byte(&arr)[N])
-Reads N bytes from the stream into arr. Effectively read(arr,N);
+(2): Reads a single byte from the stream and returns it. If EOF is reached returns -1 instead.
+<br/>
+(3),(4),(5):Reads N bytes from the stream into arr. Effectively read(arr,N);
 
 <h5>Exceptions</h5>
 (1): Any subclass of InputStream may throw any Exception from the read method. If a subclass can throw an exception, it must be clearly detailed which exceptions can be thrown and in what cases they are. If an exception is thrown by the read method, the object being read is invalidated, and using in any way (except for assignment operators/destructors) is undefined behavior.
@@ -228,9 +223,11 @@ Reads a single byte from the underlying file and returns it or EOF if the file h
 <h6>Exception Guarantee</h6>
 Neither method will throw any exceptions
 <h5>getUnderlying</h5>
+
 ```cpp
 FILE* getUnderlying()const noexcept(true);
 ```
+
 Gets the underlying file or a null pointer if control of the underlying file has been moved. This allows for users to query the status of the underlying file (such as with ferror). If the underlying file is closed, reopened, used for raw c io operations, or passed to the constructor of FileInputStream, the behavior is undefined.
 <h6>Exception Guarantee</h6>
 noexcept(true)

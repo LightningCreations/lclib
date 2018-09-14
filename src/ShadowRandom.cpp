@@ -1,7 +1,9 @@
 #include <ShadowRandom.hpp>
 #include <random>
 #include <reflect/ReflectionInfo.hpp>
-
+extern "C"{
+#include <openssl/sha.h>
+};
 uint64_t lrotate(uint64_t t,size_t s){
     s &=0x3f;
     return t<<s|(t>>(64-s));
@@ -11,8 +13,8 @@ uint64_t rrotate(uint64_t t,size_t s){
     return t>>s|(t<<(64-s));
 }
 
-export_type(ShadowRandom)
-export_static_function(ShadowRandom,transform)
+
+
 
 const uint64_t ctable[] ={
     0x6a09e667f3bcc908,0xbb67ae8584caa73b,
@@ -33,6 +35,8 @@ const size_t rotations[] = {
 };
 
 
+
+
 uint64_t ShadowRandom::getConstant(size_t s){
     size_t idx = s%12;
     size_t modifier = (2uLL<<((s/12)&0x3f))-1;
@@ -40,9 +44,13 @@ uint64_t ShadowRandom::getConstant(size_t s){
 }
 
 uint64_t ShadowRandom::transform(uint64_t u){
-    return lrotate(u,rotations[u&0x0f])^
+    uint64_t l = lrotate(u,rotations[u&0x0f])^
         getConstant(rrotate(u,rotations[(u+1)&0x0f])&target);
+    uint64_t q[4];
+    SHA256(reinterpret_cast<const unsigned char*>(&l),sizeof(l),reinterpret_cast<unsigned char*>(&q));
+    return q[0]^q[1]^q[2]^q[3]^l;
 }
+
 
 uint8_t sbox[256] = 
 {
@@ -64,6 +72,39 @@ uint8_t sbox[256] =
     0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 };
 
+void expand(const uint8_t(&arr)[256],uint64_t(&out)[256]){
+    uint64_t block[8];
+    SHA512(arr,256,reinterpret_cast<unsigned char*>(block));
+    for(std::size_t s = 0;s<256;s++){
+        out[s] = block[s&0x7];
+        out[s] ^= sbox[arr[s]];
+        for(std::size_t n = 0;n<8;n++)
+            if(n!=s&0x7)
+                out[s] ^= block[n];
+        for(std::size_t q=0;q<256;q++)
+            out[s] ^= rrotate(arr[q],q);
+        out[s] = lrotate(out[s],s);
+        block[s&0x7] ^= out[s];
+    }
+    for(std::size_t s=255;s>0;s--)
+        out[s-1] ^= out[s];
+}
+
+uint64_t reduce(const uint64_t(&arr)[256]){
+    uint64_t block[8];
+    SHA512(reinterpret_cast<const unsigned char*>(arr),sizeof(arr),reinterpret_cast<unsigned char*>(block));
+    for(std::size_t s = 0;s<256;s++){
+        block[s&0x7] ^= arr[s];
+        block[(s-1)&0x7] ^= rrotate(block[s&0x7],s);
+        block[(s+1)&0x7] ^= lrotate(block[s&0x7],s);
+    }
+    uint64_t ret{0};
+    for(std::size_t s = 0;s<8;s++)
+        ret ^= block[s];
+    
+    return ret;
+}
+
 uint8_t toByte(uint64_t t){
     uint8_t b = 0;
     for(size_t s=0;s<16;s++)
@@ -75,18 +116,7 @@ uint8_t toByte(uint64_t t){
 void ShadowRandom::initSeed(const unsigned char* buff,size_t s){
     //Lock state
     std::lock_guard<recursive_mutex> sync(lock);
-    //Start with 16 fixed values, the first 16 constants
-    uint64_t expanded[] = 
-    {
-        0x6a09e667f3bcc908,0xbb67ae8584caa73b,
-        0x3c6ef372fe94f82b,0xa54ff53a5f1d36f1,
-        0x510e527fade682d1,0x9b05688c2b3e6c1f,
-        0x1f83d9abfb41bd6b,0x5be0cd19137e2179,
-        0xB7E151628AED2A6B,0x243F6A8885A308D3,
-        0x9E3779B97F4A7C15,0x93C467E37DB0C7A4,
-        getConstant(12),getConstant(13),
-        getConstant(14),getConstant(15)
-    };
+    uint64_t qbuff[256];
     //Construct the fixed array
     uint8_t array[] = 
     {
@@ -116,27 +146,14 @@ void ShadowRandom::initSeed(const unsigned char* buff,size_t s){
     //Substitute all values in the array
     for(size_t i=0;i<255;i++)
         array[i] = sbox[array[i]];
-    //preform main loop
-    for(size_t t=0;t<64;t++){
-        for(size_t i=0;i<16;i++){
-            //Add each value in the array to the expanded array.
-            for(size_t j=0;j<256;j++)
-                expanded[i] += array[j]^getConstant((t*4096)+(i*256)+j);
-            expanded[i] ^= expanded[(i-1)&0x3f];
-            expanded[i] = transform(expanded[i]);
-        }
-        //Subsitute each element in the array
-        for(size_t j=0;j<256;j++)
-            array[j] = sbox[array[j]];
-        //xor array[2],array[3],array[5], and array[7] with the output of the sbox at it.
-        array[2] ^=sbox[array[2]];
-        array[3] ^=sbox[array[3]];
-        array[5] ^=sbox[array[5]];
-        array[7] ^=sbox[array[7]];
+    expand(array,qbuff);
+    for(size_t i=0;i<32;i++){
+        state[i] = reduce(qbuff);
+        qbuff[i] ^= lrotate(state[i],i);
+        for(std::size_t n=0;n<256;n++)
+            if(n!=i)
+                qbuff[n] ^= qbuff[i];
     }
-    //Preform final loop
-    for(size_t i=0;i<16;i++)
-        state[i] = rrotate(expanded[i],3*i+1)^getConstant(s)^transform(array[i]);
 }
 
 void ShadowRandom::seed(){
@@ -145,9 +162,10 @@ void ShadowRandom::seed(){
     uint64_t numbers[16];
     for(size_t i = 0;i<16;i++)
         vals[i] = dev();
-    
+    SHA512(reinterpret_cast<const unsigned char*>(vals),sizeof(vals),reinterpret_cast<unsigned char*>(numbers));
+    SHA512(reinterpret_cast<const unsigned char*>(numbers),sizeof(vals),reinterpret_cast<unsigned char*>(numbers)+64);
     for(size_t j =0;j<16;j++)
-        numbers[j] = (vals[(j-1)&0x0f]+transform(vals[j]))^ getConstant(j);
+        numbers[j] ^= (vals[(j-1)&0x0f]+transform(vals[j]))^ getConstant(j);
     initSeed((unsigned char*)numbers,sizeof(numbers));
 }
 

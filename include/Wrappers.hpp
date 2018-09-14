@@ -38,15 +38,15 @@ public:
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
         PolymorphicWrapper(const U&&)=delete;
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
-        operator U&()&{
+        explicit operator U&()&{
             return dynamic_cast<U&>(*val);
     }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
-        operator const U&()const{
+        explicit operator const U&()const{
             return dynamic_cast<const U&>(*val);
     }
     template<typename U,typename=std::enable_if_t<std::is_base_of_v<T,U>>>
-        operator U&&()&&{
+        explicit operator U&&()&&{
             return std::move(dynamic_cast<U&>(*val));
     }
     operator T&()&{

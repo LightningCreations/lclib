@@ -23,11 +23,13 @@ FileInputStream::FileInputStream(FILE* f):underlying(f){
         throw FileNotFoundException();
 }
 FileInputStream::FileInputStream(const char* c):FileInputStream(fopen(c,"rb")){}
-FileInputStream::FileInputStream(const std::string& str):FileInputStream(fopen(str.c_str(),"r")){}
+FileInputStream::FileInputStream(const std::string& str):FileInputStream(fopen(str.c_str(),"rb")){}
+FileInputStream::FileInputStream(const std::filesystem::path& p):FileInputStream(fopen(p.c_str(),"rb")){}
 FileInputStream::~FileInputStream(){
     if(underlying!=nullptr&&underlying!=NULL)
         fclose(underlying);
 }
+
 
 FileInputStream::FileInputStream(FileInputStream&& f):underlying(std::exchange(f.underlying,nullptr)){}
 FileInputStream& FileInputStream::operator=(FileInputStream&& f){
@@ -178,8 +180,10 @@ FileOutputStream::FileOutputStream(FILE* f):underlying(f){
 }
 FileOutputStream::FileOutputStream(const char* c):FileOutputStream(fopen(c,"wb")){}
 FileOutputStream::FileOutputStream(const std::string& str):FileOutputStream(fopen(str.c_str(),"wb")){}
+FileOutputStream::FileOutputStream(const std::filesystem::path& p):FileOutputStream(fopen(p.c_str(),"wb")){}
 FileOutputStream::FileOutputStream(const char* c,append_t):FileOutputStream(fopen(c,"ab")){}
 FileOutputStream::FileOutputStream(const std::string& str,append_t):FileOutputStream(fopen(str.c_str(),"ab")){}
+FileOutputStream::FileOutputStream(const std::filesystem::path& p,append_t):FileOutputStream(fopen(p.c_str(),"ab")){}
 FileOutputStream::FileOutputStream(FileOutputStream&& f):underlying(std::exchange(f.underlying,nullptr)){}
 FileOutputStream::~FileOutputStream(){
     if(underlying!=NULL&&underlying!=nullptr)
@@ -312,6 +316,35 @@ DataOutputStream& DataOutputStream::operator<<(float f){
 DataOutputStream& DataOutputStream::operator<<(double d){
 	writeDouble(d);
 	return *this;
+}
+
+std::size_t ByteArrayInputStream::read(void* vptr,size_t n){
+	if(n>(bufferSize-bufferPosition)){
+		memcpy(vptr,buffer+bufferPosition,(bufferSize-bufferPosition));
+		return (bufferSize-bufferPosition);
+	}
+	memcpy(vptr,buffer+bufferPosition,n);
+	bufferPosition+=n;
+	return n;
+}
+int ByteArrayInputStream::read(){
+	if(bufferSize==bufferPosition)
+		return -1;
+	else
+		return static_cast<int>(buffer[bufferPosition++]);
+}
+
+std::size_t ByteArrayOutputStream::write(const void* vptr,size_t n){
+	const std::size_t pos = buffer.size();
+	buffer.reserve(pos+n);
+	memcpy(buffer.data()+pos,vptr,n);
+	return n;
+}
+void ByteArrayOutputStream::write(uint8_t u){
+	buffer.push_back(static_cast<std::byte>(u));
+}
+const std::byte* ByteArrayOutputStream::getBuffer()const{
+	return buffer.data();
 }
 
 const char* FileNotFoundException::what()const noexcept(true){

@@ -11,6 +11,8 @@
 #include <Config.hpp>
 #include <TypeInfo.hpp>
 #include <STLTypeInfo.hpp>
+#include <filesystem>
+#include <TypeTraits.hpp>
 LIBLCAPI class FileNotFoundException:public std::exception{
 public:
 	 const char* what()const noexcept(true) override;
@@ -23,6 +25,10 @@ public:
 	 const char* what()const noexcept(true) override;
 };
 
+/**
+ * Tag type for little endian overloads of DataInputStream/DataOutputStream constructors
+ * Directs the stream to write multibyte primitives in Little-Endian Mode (default Big-Endian)
+ */
 struct little_endian_t{
 public:
     constexpr explicit little_endian_t()=default;
@@ -50,12 +56,13 @@ public:
     /**
      * Reads a up to the given size_t bytes from the stream into the provided buffer.
      * The size read is returned or EOF.
-     * If an object exists at the address passed, it must be a TriviallyCopyable, have a Trivial (but potentially virtual destructor), StandardLayoutType,
+     * If an object exists at the address passed, it must be a TriviallyCopyable type,
      * that is not a pointer (including pointer to member or function pointer types),
-     * which has no pointer non-static members (including pointer to member, or function pointer types), reference non-static members,
-     * virtual functions (including virtual destructors), or const members, or the behavior of this function is undefined.
-     * If the object is a multibyte scalar data-type it is unspecified
-     * whether or not the data is read in Big-Endian or Little-Endian.
+     * that has no pointer non-static members (including pointer to member, or function pointer types), reference non-static members,
+     * virtual functions (including virtual destructors), cv-qualified members, or reference members, 
+     *  or the behavior of this function is undefined.
+     * If the object is a multibyte scalar data-type (or has any multibyte scalar members),
+     *  it is unspecified whether or not the data is read in Big-Endian or Little-Endian.
      * If The byte order of scalar data is required to be fixed, use the DataInputStream class.
      * If there is a complete, non-array object at the target of the pointer, and the returned size
      * is less then the supplied size it is undefined behavior to use that object
@@ -88,10 +95,24 @@ public:
      * Reads Up to N bytes into the array given.
      * This acts as read(arr,N) except that it is not undefined behavior
      * to access indices of the array beyond the end of the read area,
-     * and those bytes are preserved by this function.
+     * and those bytes are preserved by this function (whatever value was in that index prior to the call remains)
      * \Exception Guarantee: This function throws if the implementation of read(void*,size_t) throws
      */
     template<size_t N> size_t read(uint8_t(&arr)[N]){
+        return read(arr,N);
+    }
+    /**
+     * Reads up to N bytes into the array given.
+     * Same Guarantee's as read(uint8_t(&)[N]);
+     */
+    template<size_t N> size_t read(std::byte(&arr)[N]){
+        return read(arr,N);
+    }
+        /**
+     * Reads up to N bytes into the array given.
+     * Same Guarantee's as read(uint8_t(&)[N]);
+     */
+    template<size_t N> size_t read(int8_t(&arr)[N]){
         return read(arr,N);
     }
 };
@@ -111,8 +132,8 @@ public:
      * Constructs a FileInputStream from a FILE*.
      * Behavior is undefined if the passed pointer is not NULL or nullptr,
      * and does not point to an object created by fopen.
-     * If The file is created with fopen behavior is undefined if the file is not open in
-     * binary read mode (fopen(<name>,"rb")). Note that omitting the b in the specifier may be undefined behavior, but also may not (implementation defined).
+     * If The file is created with fopen behavior is unspecified(and may be undefined) if the file is not open in
+     * binary read mode (fopen(<name>,"rb")).
      * \Exceptions: This constructor throws a FileNotFoundException if the passed FILE is a null pointer
      */
     FileInputStream(FILE*);
@@ -129,6 +150,14 @@ public:
      * \Exceptions: This constructor throws a FileNotFoundException if the file cannot be found or opened for any reason.
      */
     FileInputStream(const std::string&);
+
+    /**
+     * Constructs a FileInputStream from a std::filesystem::path
+     * The stream is constructed as if by FileInputStream(fopen(p.c_str(),"rb"))
+     * \Exceptions: If the path cannot be opened in read mode (it does not exist or you do not have read access to the file), a FileNotFoundException is thrown
+     */
+    FileInputStream(const std::filesystem::path&);
+
     /**
      * Constructs a new FileInputStream from a moved from object.
      * The moved from object will not have an underlying file after this call
@@ -159,6 +188,12 @@ public:
      * or -1 if no bytes are available.
      */
     int read();
+
+    /**
+     * Gets the underlying file controlled by the stream,
+     * or a null pointer if the stream has been moved from
+     */
+    FILE* getUnderlying()noexcept(true);
 };
 
 
@@ -431,8 +466,8 @@ public:
     virtual ~OutputStream()=default;
     /**
      * Writes an object to the stream, then returns the number of byte written.
-     * It is undefined behavior to write any object, unless the object is a TriviallyCopyable, StandardLayoutType, with a Trivial Destructor
-     * and is not a Pointer (including Pointer to Member or Function Pointer type), or a type which contains
+     * It is undefined behavior to write any object, unless the object is a TriviallyCopyable type
+     * that is not a Pointer (including Pointer to Member or Function Pointer type), or a type which contains
      * non-static members of any pointer type (including pointer to member or function pointer type), or Reference type, or any virtual functions
      * There is also addition restrictions on reading objects (See InputStream#read)
      * If multibyte scalar types are written it is implementation defined whether they are written in Big-Endian or Little-Endian byte order.
@@ -483,7 +518,9 @@ public:
 	 void write(uint8_t);
 	 void flush();
 };
-
+/**
+ * Tag type for disambugating appending constructors of FileOutputStream
+ */
 class append_t{
 public:
     constexpr explicit append_t()=default;
@@ -507,6 +544,7 @@ public:
      * Constructs a new stream from an existing file.
      * The behavior is undefined if the given FILE is not NULL or nullptr, and it was not obtained from fopen,
      * or was opened in read-only mode.
+     * The behavior is unspecified(and may be undefined), if the FILE was not opened in binary write mode (fopen(<name>,"wb") or fopen(<name>,"ab"))
      * \Exceptions: If the passed file is a null pointer, then a FileNotFoundException is thrown.
      */
      FileOutputStream(FILE*);
@@ -523,6 +561,13 @@ public:
      * \Exceptions: If the passed file cannot be opened or does not exist and cannot be created, a FileNotFoundException is thrown
      */
      FileOutputStream(const std::string&);
+
+    /**
+     * Constructs a new stream from a path.
+     * The stream is constructed as if by FileOutputStream(fopen(p.c_str(),"wb"))
+     * \Exceptions: If the file cannot be opened in write mode (does not exist and cannot be created), or you have insufficient permission, a FileNotFoundException is throw
+     */
+    FileOutputStream(const std::filesystem::path&);
     /**
      * Constructs a new output stream with the given name, in append mode.
      * The Stream is constructed as if by FileOutputStream(fopen(str,"ab"))
@@ -535,6 +580,14 @@ public:
      * \Exceptions: If the passed file cannot be opened or does not exist and cannot be created, a FileNotFoundException is thrown
      */
      FileOutputStream(const std::string&,append_t);
+
+        /**
+     * Constructs a new stream from a path, in appaned mode
+     * The stream is constructed as if by FileOutputStream(fopen(p.c_str(),"ab"))
+     * \Exceptions: If the file cannot be opened in write mode (does not exist and cannot be created), or you have insufficient permission, a FileNotFoundException is throw
+     */
+    FileOutputStream(const std::filesystem::path&,append_t);
+
     /**
      * Moves an existing FileOutputStream to this.
      * The underlying file of the moved-from object is reused by this object.
@@ -569,6 +622,11 @@ public:
      * Flushes the bytes written to the stream.
      */
      void flush();
+
+    /**
+     * Obtains the underlying file, or a null pointer if the underlying file has been moved. 
+     */
+     FILE* getUnderlying()const noexcept(true);
 };
 
 /**
@@ -675,157 +733,30 @@ public:
     	return *this << static_cast<std::underlying_type_t<E>>(e);
     }
 
+
 };
 
-namespace types{
-	template<> struct TypeHash<InputStream>{
-	public:
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return nameHash("InputStream");
-		}
-	};
-	template<> struct TypeHash<FileInputStream>{
-	public:
-		using base_type = InputStream;
-		using base_hash = TypeHash<base_type>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<base_type>{}()^nameHash("FileInputStream");
-		}
-	};
-	template<> struct TypeHash<FilterInputStream>{
-	public:
-		using base_type = InputStream;
-		using base_hash = TypeHash<base_type>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<base_type>{}()^nameHash("FilterInputStream");
-		}
-	};
-	template<> struct TypeHash<DataInputStream>{
-	public:
-		using base_type = FilterInputStream;
-		using base_hash = TypeHash<base_type>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<base_type>{}()^nameHash("DataInputStream");
-		}
-	};
-	template<> struct TypeHash<OutputStream>{
-	public:
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return nameHash("OutputStream");
-		}
-	};
-	template<> struct TypeHash<FileOutputStream>{
-	public:
-		using base_type = FilterInputStream;
-		using base_hash = TypeHash<base_type>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<base_type>{}()^nameHash("FileOutputStream");
-		}
-	};
-	template<> struct TypeHash<FilterOutputStream>{
-	public:
-		using base_type = OutputStream;
-		using base_hash = TypeHash<base_type>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<base_type>{}()^nameHash("FilterOutputStream");
-		}
-	};
-	template<> struct TypeHash<DataOutputStream>{
-	public:
-		using base_type = FilterOutputStream;
-		using base_hash = TypeHash<base_type>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<base_type>{}()^nameHash("DataOutputStream");
-		}
-	};
-	template<> struct TypeHash<FileNotFoundException>{
-	public:
-		using base_type = std::exception;
-		using base_hash = TypeHash<std::exception>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<std::exception>{}()^nameHash("FileNotFoundException");
-		}
-	};
-	template<> struct TypeHash<EOFException>{
-	public:
-		using base_type = std::exception;
-		using base_hash = TypeHash<std::exception>;
-		constexpr TypeHash()=default;
-		constexpr TypeHash(const TypeHash&)=default;
-		constexpr TypeHash(TypeHash&&)=default;
-		TypeHash(const TypeHash&&)=delete;
-		constexpr TypeHash& operator=(const TypeHash&)=default;
-		constexpr TypeHash& operator=(TypeHash&&)=default;
-		TypeHash& operator=(const TypeHash&&)=delete;
-		constexpr TypeCode operator()(){
-			return TypeHash<std::exception>{}()^nameHash("EOFException");
-		}
-	};
+LIBLCAPI class ByteArrayInputStream:public InputStream{
+private:
+	const std::byte* buffer;
+	std::size_t bufferSize;
+	std::size_t bufferPosition;
+public:
+	template<typename byte,typename=std::enable_if_t<is_byte_v<byte>>>
+		ByteArrayInputStream(const byte* buff,std::size_t sz):buffer{reinterpret_cast<const std::byte*>(buff)},bufferSize{sz},
+		bufferPosition{0}{}
+	template<typename byte,std::size_t N,typename=std::enable_if_t<is_byte_v<byte>>>
+		ByteArrayInputStream(const byte(&arr)[N]):buffer{reinterpret_cast<const std::byte*>(arr)},bufferSize{N},
+		bufferPosition{0}{}
+	std::size_t read(void*,std::size_t);
+	int read();
 };
-NameHash(little_endian_t)
-NameHash(append_t)
-
+LIBLCAPI class ByteArrayOutputStream:public OutputStream{
+private:
+	std::vector<std::byte> buffer;
+public:
+	std::size_t write(const void*,std::size_t);
+	void write(uint8_t);
+	const std::byte* getBuffer()const;
+};
 #endif

@@ -1,22 +1,8 @@
-#include <IOWrapper.hpp>
+#include <lclib-cxx/IOWrapper.hpp>
 #include <string>
-#include <Vector.hpp>
-#include <reflect/ReflectionInfo.hpp>
+#include <lclib-cxx/Vector.hpp>
+#include <cstring>
 
-export_type(InputStream)
-export_type(FileInputStream)
-export_type(FilterInputStream)
-export_type(DataInputStream)
-export_type(OutputStream)
-export_type(FileOutputStream)
-export_type(FilterOutputStream)
-export_type(DataOutputStream)
-export_type(little_endian_t)
-export_type(append_t)
-export_type(FileNotFoundException)
-export_type(EOFException)
-export_field(little_endian)
-export_field(append)
 
 FileInputStream::FileInputStream(FILE* f):underlying(f){
     if(f==NULL||f==nullptr)
@@ -24,7 +10,9 @@ FileInputStream::FileInputStream(FILE* f):underlying(f){
 }
 FileInputStream::FileInputStream(const char* c):FileInputStream(fopen(c,"rb")){}
 FileInputStream::FileInputStream(const std::string& str):FileInputStream(fopen(str.c_str(),"rb")){}
+#ifdef USE_PATH_CTORS
 FileInputStream::FileInputStream(const std::filesystem::path& p):FileInputStream(fopen(p.c_str(),"rb")){}
+#endif
 FileInputStream::~FileInputStream(){
     if(underlying!=nullptr&&underlying!=NULL)
         fclose(underlying);
@@ -36,6 +24,7 @@ FileInputStream& FileInputStream::operator=(FileInputStream&& f){
     if(underlying!=nullptr&&underlying!=NULL)
         fclose(underlying);
     underlying = std::exchange(f.underlying,nullptr);
+    return *this;
 }
 int FileInputStream::read(){
     uint8_t c;
@@ -64,7 +53,7 @@ DataInputStream::DataInputStream(InputStream& i,little_endian_t):FilterInputStre
 
 
 int DataInputStream::readSingle(){
-	int ret = underlying->read();
+	int ret = this->read();
 	if(ret<0)
 		throw EOFException();
 	return ret;
@@ -180,10 +169,13 @@ FileOutputStream::FileOutputStream(FILE* f):underlying(f){
 }
 FileOutputStream::FileOutputStream(const char* c):FileOutputStream(fopen(c,"wb")){}
 FileOutputStream::FileOutputStream(const std::string& str):FileOutputStream(fopen(str.c_str(),"wb")){}
-FileOutputStream::FileOutputStream(const std::filesystem::path& p):FileOutputStream(fopen(p.c_str(),"wb")){}
+
 FileOutputStream::FileOutputStream(const char* c,append_t):FileOutputStream(fopen(c,"ab")){}
 FileOutputStream::FileOutputStream(const std::string& str,append_t):FileOutputStream(fopen(str.c_str(),"ab")){}
+#ifdef USE_PATH_CTORS
+FileOutputStream::FileOutputStream(const std::filesystem::path& p):FileOutputStream(fopen(p.c_str(),"wb")){}
 FileOutputStream::FileOutputStream(const std::filesystem::path& p,append_t):FileOutputStream(fopen(p.c_str(),"ab")){}
+#endif
 FileOutputStream::FileOutputStream(FileOutputStream&& f):underlying(std::exchange(f.underlying,nullptr)){}
 FileOutputStream::~FileOutputStream(){
     if(underlying!=NULL&&underlying!=nullptr)
@@ -320,10 +312,10 @@ DataOutputStream& DataOutputStream::operator<<(double d){
 
 std::size_t ByteArrayInputStream::read(void* vptr,size_t n){
 	if(n>(bufferSize-bufferPosition)){
-		memcpy(vptr,buffer+bufferPosition,(bufferSize-bufferPosition));
+		std::memcpy(vptr,buffer+bufferPosition,(bufferSize-bufferPosition));
 		return (bufferSize-bufferPosition);
 	}
-	memcpy(vptr,buffer+bufferPosition,n);
+	std::memcpy(vptr,buffer+bufferPosition,n);
 	bufferPosition+=n;
 	return n;
 }
@@ -337,7 +329,7 @@ int ByteArrayInputStream::read(){
 std::size_t ByteArrayOutputStream::write(const void* vptr,size_t n){
 	const std::size_t pos = buffer.size();
 	buffer.reserve(pos+n);
-	memcpy(buffer.data()+pos,vptr,n);
+	std::memcpy(buffer.data()+pos,vptr,n);
 	return n;
 }
 void ByteArrayOutputStream::write(uint8_t u){

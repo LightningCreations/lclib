@@ -1,24 +1,19 @@
-#include "UUID.hpp"
+#include <lclib-cxx/UUID.hpp>
 #include <string>
-#include "Hash.hpp"
+#include <lclib-cxx/Hash.hpp>
 #include <iomanip>
 #include <sstream>
-#include "StringHelper.hpp"
+#include <lclib-cxx/StringHelper.hpp>
 #include <cstdlib>
-#include "ShadowRandom.hpp"
-#include "JTime.hpp"
-#include <reflect/ReflectionInfo.hpp>
+#include <lclib-cxx/ShadowRandom.hpp>
+#include <lclib-cxx/JTime.hpp>
 
-#include <SHA256.hpp>
 
-extern const int32_t hashPrime;
+#include <openssl/sha.h>
 
-export_type(UUID)
-export_static_function(UUID,nilUUID)
-export_static_function(UUID,fromString)
-export_static_function(UUID,ofNow)
-export_static_function(UUID,randomUUID)
-ShadowRandom uuidRandom;
+
+
+ShadowRandom uuidRandom{};
 
 
 
@@ -31,6 +26,7 @@ using std::istream;
 const string sep("-");
 const int sizes[] = {8,4,4,4,12};
 
+uint32_t clockSeq{0};
 
 
 
@@ -95,14 +91,13 @@ string operator+(const string& s,const UUID& id){
 	return s+(id.toString());
 }
 
-Instant UUID_EPOCH = Instant::fromEpochSecond(-12244089600);
+const Instant UUID_EPOCH{Instant::fromEpochSecond(-12244089600)};
 
 UUID UUID::ofNow(){
-	Instant now = Instant::now();
-	Duration d = Duration::between(UUID_EPOCH, now);
+	Duration d = Duration::between(UUID_EPOCH,Instant::now());
 	uint64_t ts = d.getSeconds()*10000000+d.getNanos()/100;
 	uint64_t rnode = (uuidRandom.nextLong()&0x7FFFFFFFFFFF)|0x800000000000;
-	uint64_t low = rnode|((uint64_t)(0xE000|(d.hashCode()&0xCFFF)))<<56LL;
+	uint64_t low = rnode|((uint64_t)(0xE000|((clockSeq+=257)&0xCFFF)))<<56LL;
 	uint64_t high = (ts&0xFFFFFFFF)<<32|((ts>>32)&0xFFFF)<<16|0x1000|((ts>>48)&0xFFF);
 	return UUID(high,low);
 }
@@ -110,10 +105,8 @@ UUID UUID::ofNow(){
 UUID UUID::randomUUID(){
 	char bytes[32];
 	uint64_t longs[2];
-	int (&ints)[4] = reinterpret_cast<int(&)[4]>(bytes);
-	for(int& i:ints)
-		i = uuidRandom.nextInt();
-	SHA256(bytes,32,bytes);
+	uuidRandom.nextBytes(reinterpret_cast<uint8_t*>(bytes),32);
+	SHA256(reinterpret_cast<const unsigned char*>(bytes),32,reinterpret_cast<unsigned char*>(bytes));
 	for(int i = 0;i<16;i++){
 		bytes[i] = bytes[2*i]^bytes[2*i+1];
 	}

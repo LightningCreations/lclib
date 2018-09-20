@@ -4,22 +4,16 @@
  *  Created on: Apr 4, 2018
  *      Author: Connor Horman
  */
-#include "Version.hpp"
-#include "StringHelper.hpp"
+#include <lclib-cxx/Version.hpp>
+#include <lclib-cxx/StringHelper.hpp>
 #include <string>
 #include <stdexcept>
-#include <reflect/ReflectionInfo.hpp>
-#define CURR_MAJOR 1
-#define CURR_MINOR 0
-#define MIN_MAJOR  1
-#define MIN_MINOR  0
 
 using std::string;
 using std::to_string;
 using std::stoi;
 using std::invalid_argument;
 
-export_type(Version)
 
 
 Version::Version(string ver){

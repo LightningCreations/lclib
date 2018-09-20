@@ -1,12 +1,11 @@
-#include "Random.hpp"
-#include "JTime.hpp"
+#include <lclib-cxx/Random.hpp>
+#include <lclib-cxx/JTime.hpp>
 #include <algorithm>
-#include <reflect/ReflectionInfo.hpp>
-using std::min;
-seed_t number(32);
-const seed_t cprime = 4989641;
 
-export_type(Random)
+using std::min;
+seed_t number{32};
+const seed_t cprime{4989641};
+
 
 seed_t highResTime(){
 	Instant i = Instant::now();
@@ -35,10 +34,8 @@ seed_t initRandomizeSeed(seed_t seed){
 
 uint32_t Random::next(int bits){
 	std::lock_guard<recursive_mutex> sync(lock);
-	int ret;
 	seed = (seed * 0x5DEECE66DL + 0xBL) & ((1LL << 48) - 1);
 	return (int)(seed >> (48 - bits));
-
 }
 Random::Random():lock(){
 	setSeed(genUniqueSeed());
@@ -80,9 +77,9 @@ double Random::nextGuassian(){
 	} else {
 			double v1, v2, s;
 			do {
-			v1 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
-			v2 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
-			s = v1 * v1 + v2 * v2;
+				v1 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
+				v2 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
+				s = v1 * v1 + v2 * v2;
 			} while (s >= 1 || s == 0);
 			double multiplier = sqrt(-2 * log(s)/s);
 			nextNextGaussian = v2 * multiplier;
@@ -107,6 +104,10 @@ void Random::nextBytes(uint8_t* out,size_t size){
 		for (int rnd = nextInt(), n = min<size_t>(size - i, 4);
         	  n-- > 0; rnd >>= 8)
       		 out[i++] = (char)rnd;
+}
+
+bool Random::nextBoolean(){
+	return next(1)!=0;
 }
 
 

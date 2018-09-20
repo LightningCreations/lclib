@@ -12,17 +12,16 @@ extern "C"{
 #include <netdb.h>
 };
 #include <cstdio>
-#include <Socket.hpp>
-#include <IOWrapper.hpp>
+#include <lclib-cxx/Socket.hpp>
+#include <lclib-cxx/IOWrapper.hpp>
 #include <mutex>
 #include <atomic>
 #include <chrono>
 #include <thread>
-#include <Types.hpp>
+#include <lclib-cxx/Types.hpp>
 #include <cstring>
 #include <cstdlib>
-#include <Callable.hpp>
-#include <reflect/ReflectionInfo.hpp>
+#include <lclib-cxx/Callable.hpp>
 extern int errno;
 using namespace std::chrono_literals;
 typedef decltype(socket(0,0,0)) socket_t;
@@ -35,20 +34,6 @@ typedef decltype(socket(0,0,0)) socket_t;
  */
 std::recursive_mutex globalSocketLock;
 
-template<typename FunctionObject,typename Ret,typename... Args> bool doAtomic(Ret& ret,const FunctionObject& o,std::chrono::system_clock::duration dur,Args&&... args){
-	std::atomic_flag flag;
-	std::thread t([&o,&flag,&ret](Args&&... args){
-		ret = o(std::forward<Args>(args)...);
-		flag = true;
-	},std::forward<Args>(args)...);
-	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-
-	while(!flag){
-		if((std::chrono::system_clock::now()-start)>dur)
-			return false;
-	}
-	return true;
-}
 const auto dur = std::chrono::duration_cast<std::chrono::system_clock::duration>(2s+500ms);
 const auto baseDur = std::chrono::duration_cast<std::chrono::system_clock::duration>(5s);
 const auto conDur = std::chrono::duration_cast<std::chrono::system_clock::duration>(10s);
@@ -62,10 +47,8 @@ public:
 	size_t read(void* ptr,size_t size){
 		std::lock_guard<std::recursive_mutex> sync(*lock);
 		ssize_t retSize;
-		if(!doAtomic(retSize,recv,baseDur+(dur*((size/8)+1)),socket,ptr,size,0))
-			throw TimedOutException();
-		else if(retSize<0)
-			throw SocketConcurrencyException();
+		if((retSize =recv(socket,ptr,size,0)<0))
+			throw ConnectionException();
 		return retSize;
 	}
 	int read(){
@@ -77,7 +60,7 @@ public:
 	}
 };
 
-class SocketImplOutputStream{
+class SocketImplOutputStream:public OutputStream{
 private:
 	socket_t socket;
 	std::recursive_mutex* lock;
@@ -87,10 +70,8 @@ public:
 	size_t write(const void* ptr,size_t size){
 		std::lock_guard<std::recursive_mutex> sync(*lock);
 		ssize_t retSize;
-		if(!doAtomic(retSize,send,(dur*((size/8)+1)),socket,ptr,size,0))
-			throw TimedOutException();
-		else if(retSize<0)
-			throw SocketConcurrencyException();
+		if((retSize =send(socket,ptr,size,0))<0)
+			throw ConnectionException();
 		return retSize;
 	}
 	void write(uint8_t b){
@@ -218,29 +199,27 @@ public:
 	}
 };
 
-function<std::unique_ptr<SocketImpl>()> sockGeneratorFunction = forwardThreadSafe(globalSocketLock,std::make_unique<LinuxSocketImpl>);
-function<std::unique_ptr<ServerSocketImpl>()> serverGeneratorFunction = forwardThreadSafe(globalSocketLock,std::make_unique<LinuxServerSocketImpl>);
+function<std::unique_ptr<SocketImpl>()> sockGeneratorFunction = std::make_unique<LinuxSocketImpl>;
+function<std::unique_ptr<ServerSocketImpl>()>  serverGeneratorFunction = std::make_unique<LinuxServerSocketImpl>;
 void setDefaultSocketHandlerConstructor(function<std::unique_ptr<SocketImpl>()> generator){
 	std::lock_guard<std::recursive_mutex> sync(globalSocketLock);
-	sockGeneratorFunction = forwardThreadSafe(globalSocketLock,generator);
+	sockGeneratorFunction = std::move(generator);
 }
 
-void setDefaultServerSocketHandlerConstructor(function<std::unique_ptr<SocketImpl>()> generator){
+void setDefaultServerSocketHandlerConstructor(function<std::unique_ptr<ServerSocketImpl>()> generator){
 	std::lock_guard<std::recursive_mutex> sync(globalSocketLock);
-	serverGeneratorFunction = forwardThreadSafe(globalSocketLock,generator);
+	serverGeneratorFunction = std::move(generator);
 }
 
 std::unique_ptr<SocketImpl> newSocketHandle(){
+	std::lock_guard<std::recursive_mutex> sync(globalSocketLock);
 	return sockGeneratorFunction();
 }
 std::unique_ptr<ServerSocketImpl> newServerSocketHandle(){
+	std::lock_guard<std::recursive_mutex> sync(globalSocketLock);
 	return serverGeneratorFunction();
 }
 
-export_function(setDefaultSocketHandlerConstructor)
-export_function(setDefaultServerSocketHandlerConstructor)
-export_function(newSocketHandle)
-export_function(newServerSocketHandle)
 
 
 

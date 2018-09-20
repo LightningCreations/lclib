@@ -1,13 +1,11 @@
-#include "Menu.hpp"
-#include "Random.hpp"
+#include <lclib-cxx/Menu.hpp>
+#include <lclib-cxx/Random.hpp>
 #include <iostream>
 #include <cstdlib>
-#include <reflect/ReflectionInfo.hpp>
 
 using namespace std::string_literals;
 
-export_type(MenuItem)
-export_type(Menu)
+
 
 MenuItem::MenuItem(const string& name,int code):c(Color::NONE),name(name),code(code){}
 MenuItem::MenuItem(const string& name,Color color,int code):c(color),name(name),code(code){}

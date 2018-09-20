@@ -4,14 +4,15 @@
  *  Created on: Sep 10, 2018
  *      Author: connor
  */
-#include <UI/GraphicsBase.hpp>
+#include <lclib-cxx/UI/GraphicsBase.hpp>
 #include <type_traits>
 #include <algorithm>
 #include <cmath>
+#include <lclib-cxx/Config.hpp>
 
 namespace graphics{
 	namespace detail{
-		float getColorValue(float p,float q,float t){
+		float getColorValue(float p,float q,float t)LIBLCHIDE{
             if(t < 0) t += 1;
             if(t > 1) t -= 1;
             if(t < 1/6) return p + (q - p) * 6 * t;
@@ -19,10 +20,10 @@ namespace graphics{
             if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
             return p;
 		}
-		float combine(float a,float b,float t){
+		float combine(float a,float b,float t)LIBLCHIDE{
 			return std::sqrt((1-t)*a*a+t*b*b);
 		}
-		uint8_t combineAlpha(uint8_t a,uint8_t b){
+		uint8_t combineAlpha(uint8_t a,uint8_t b)LIBLCHIDE{
 			return std::max(a,b);
 		}
 	}
@@ -81,11 +82,9 @@ namespace graphics{
 		else{
 			float h;
 			float d = max-min;
-	        switch(max){
-	            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-	            case g: h = (b - r) / d + 2; break;
-	            case b: h = (r - g) / d + 4; break;
-	        }
+	            if(r==max) h = (g - b) / d + (g < b ? 6 : 0);
+	            else if(g==max) h = (b - r) / d + 2;
+	            else h = (r - g) / d + 4;
 	        h/=6;
 	        return h;
 		}
@@ -117,7 +116,7 @@ namespace graphics{
 		float t = (getTransparency()+1.f)/2;
 		return Color(256*detail::combine(r/256.f,((static_cast<uint32_t>(c)>>16))/256.f,t),
 				256*detail::combine(g/256.f,((static_cast<uint32_t>(c)>>8)&0xff)/256.f,t),
-				256*detail::combine(b/256.f,static_cast<uint32_t>(c)&0xff/256.f,t));
+				256*detail::combine(b/256.f,(static_cast<uint32_t>(c)&0xff)/256.f,t));
 	}
 	Color& Color::operator+=(Color c)noexcept(true){
 		return (*this = (*this+c));
@@ -134,10 +133,10 @@ namespace graphics{
 	Color operator+(TGIColor c1,Color c2)noexcept(true){
 		return c2+c1;
 	}
-	Color operator==(TGIColor c1,Color c2)noexcept(true){
+	bool operator==(TGIColor c1,Color c2)noexcept(true){
 		return c2==c1;
 	}
-	Color operator!=(TGIColor c1,Color c2)noexcept(true){
+	bool operator!=(TGIColor c1,Color c2)noexcept(true){
 		return c2!=c1;
 	}
 }

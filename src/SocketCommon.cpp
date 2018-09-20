@@ -4,21 +4,10 @@
  *  Created on: Sep 5, 2018
  *      Author: connor
  */
-#include <Socket.hpp>
-#include <IOWrapper.hpp>
+#include <lclib-cxx/Socket.hpp>
+#include <lclib-cxx/IOWrapper.hpp>
 #include <memory>
-#include <reflect/ReflectionInfo.hpp>
 
-export_type(ConnectionException)
-export_type(AddressBindException)
-export_type(TimedOutException)
-export_type(UnknownHostException)
-export_type(SocketConcurrencyException)
-export_type(SocketOperationUnsupportedException)
-export_type(Socket)
-export_type(SocketImpl)
-export_type(ServerSocket)
-export_type(ServerSocketImpl)
 
 const char* ConnectionException::what()const noexcept(true){
 	return "Connection Error: No other information";
@@ -42,7 +31,7 @@ const char* SocketOperationUnsupportedException::what()const noexcept(true){
 	return "The requested operation is unsupported or forbidden";
 }
 
-Socket::Socket(std::unique_ptr<SocketImpl>&& impl):impl(impl){}
+Socket::Socket(std::unique_ptr<SocketImpl>&& impl):impl(std::move(impl)){}
 Socket::Socket():impl(newSocketHandle()){}
 Socket::Socket(const std::string& host,uint16_t port):impl(newSocketHandle()){
 	impl->connect(host,port);
@@ -59,7 +48,7 @@ void Socket::connect(const std::string& host,uint16_t port){
 	impl->connect(host,port);
 }
 
-bool Socket::isConnected()const{
+bool Socket::isConnected()const noexcept(true){
 	return impl->isConnected();
 }
 
@@ -79,7 +68,7 @@ ServerSocket::ServerSocket():impl(newServerSocketHandle()){}
 ServerSocket::ServerSocket(const std::string& host,uint16_t port):impl(newServerSocketHandle()){
 	impl->bind(host,port);
 }
-ServerSocket::ServerSocket(std::unique_ptr<ServerSocketImpl>&& impl):impl(impl){}
+ServerSocket::ServerSocket(std::unique_ptr<ServerSocketImpl>&& impl):impl(std::move(impl)){}
 
 
 Socket ServerSocket::accept(){

@@ -1,4 +1,4 @@
-#include "Hash.hpp"
+#include <lclib-cxx/Hash.hpp>
 #include <array>
 #include <utility>
 #include <string>
@@ -9,13 +9,10 @@
 #include <cstdint>
 #include <memory>
 #include <chrono>
-#include <ReflectionInfo.hpp>
 
 
 extern const int hashPrime(31);
 
-export_field(hashPrime)
-export_type(Hashable)
 
 
 

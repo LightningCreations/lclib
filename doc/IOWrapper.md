@@ -113,7 +113,8 @@ template<size_t N> size_t read(int8_t(&arr)[N]); //(4)
 template<size_t N> size_t read(std::byte(&arr)[N]); //(5)
 ```
 
-(1):Reads size bytes from the stream and places it in the buffer pointed to by ptr, then returns the number of bytes read.
+(1): read(void* ptr,size_t size)<br/>
+Reads size bytes from the stream and places it in the buffer pointed to by ptr, then returns the number of bytes read.
 If there exists a complete (that is, well-formed object) at the address given by ptr, then that object, and all of its sub-objects must satisfy the following requirements or the behavior is undefined:
 <ul>
 <li>The object must satisfy TriviallyCopyable</li>
@@ -130,9 +131,14 @@ If there is not a complete object at the address given by ptr, then ptr must ref
 If the size of the object indicated by ptr is not at least size, the behavior is undefined.
 <br/><br/>
 
-(2): Reads a single byte from the stream and returns it. If EOF is reached returns -1 instead.
-<br/>
-(3),(4),(5):Reads N bytes from the stream into arr. Effectively read(arr,N);
+(2): int read()<br/>
+Reads a single byte from the stream and returns it. If EOF is reached returns -1 instead.
+<br/><br/>
+
+(3):template&lt;size_t N&gt; size_t read(uint8_t(&arr)[N])
+(4):template&lt;size_t N&gt; size_t read(int8_t(&arr)[N])
+(5):template&lt;size_t N&gt; size_t read(std::byte(&arr)[N])
+Reads N bytes from the stream into arr. Effectively read(arr,N);
 
 <h5>Exceptions</h5>
 (1): Any subclass of InputStream may throw any Exception from the read method. If a subclass can throw an exception, it must be clearly detailed which exceptions can be thrown and in what cases they are. If an exception is thrown by the read method, the object being read is invalidated, and using in any way (except for assignment operators/destructors) is undefined behavior.
@@ -161,7 +167,9 @@ FilterInputStream(InputStream&); //(1)
 size_t read(void* ptr,size_t size); //(1)
 int read(); //(2)
 ```
-(1), (2):Forwards to the equivalent method in the wrapped stream.
+(1): size_t read(void* ptr,size_t size);
+(2): int read();
+Forwards to the equivalent method in the wrapped stream.
 Any exceptions thrown by the equivalent method in the wrapped stream is forwarded by this method
 
 <h3>class FileInputStream</h3>
@@ -189,21 +197,16 @@ In addition, the behavior is unspecified (and may be undefined), if the stream w
 
 Exceptions: Throws FileNotFoundException if the passed file is a null pointer
 
-(2): FileInputStream(const char* c)
-(3): FileInputStream(const std::string& str)
-(4): FileInputStream(const std::filesystem::path& p)
-Constructs the FileInputStream from the given filename. Constructs the stream as though by FileInputStream(fopen(c,"rb")), FileInputStream(fopen(str.c_str(),"rb")), or FileInputStream(fopen(p.c_str(),"rb")) respectively.
+
+(2),(3),(4):Constructs the FileInputStream from the given filename. Constructs the stream as though by FileInputStream(fopen(c,"rb")), FileInputStream(fopen(str.c_str(),"rb")), or FileInputStream(fopen(p.c_str(),"rb")) respectively.
 
 Exceptions: Throws FileNotFoundException if given file does not exist or cannot be openned.
 
-(5): FileInputStream(FileInputStream&& in)
-Constructs a new FileInputStream by moving in. Control of the File object wrapped by in is moved to the new stream.
+(5):Constructs a new FileInputStream by moving in. Control of the File object wrapped by in is moved to the new stream.
 
-(6): ~FileInputStream()
-Destroys this stream and closes the underlying file if it has not been moved.
+(6): Destroys this stream and closes the underlying file if it has not been moved.
 
-(7): FileInputStream& operator=(FileInputStream&& in)
-Moves in to this. If this has control of an underlying file has not been moved, 
+(7):Moves in to this. If this has control of an underlying file has not been moved, 
  it is closed, then the control of the underlying file wrapped by in is moved to this.
 
 <h4>Methods</h4>
@@ -220,11 +223,9 @@ int read(); //(2)
 <h6>Exception Guarantee</h6>
 Neither method will throw any exceptions
 <h5>getUnderlying</h5>
-
 ```cpp
 FILE* getUnderlying()const noexcept(true);
 ```
-
 Gets the underlying file or a null pointer if control of the underlying file has been moved. This allows for users to query the status of the underlying file (such as with ferror). If the underlying file is closed, reopened, used for raw c io operations, or passed to the constructor of FileInputStream, the behavior is undefined.
 <h6>Exception Guarantee</h6>
 noexcept(true)
@@ -300,7 +301,6 @@ DataInputStream& operator>>(float& f); //(12)
 DataInputStream& operator>>(double& d); //(13)
 template<typename E> DataInputStream& operator>>(E& e); //(14)
 ```
-
 (1),(2),(3),(4),(5),(7),(9),(12),(13): assigns the argument to the value returned by the equivalent Specialized read method
 (6),(8): assigns the argument to the value returned by readInt, or readLong respectively.
 (10): Reads a Version from the stream, and assigns it to v. Effectively v= Version{int(readUnsignedByte())+1,readUnsignedByte()}; The behavior is undefined unless the bytes read were written as such by DataOutputStream or a similar utility, or were written by the writeShort or writeUnsignedShort method of a DataOutputStream in Big-Endian byte order mode, or a similar utility.

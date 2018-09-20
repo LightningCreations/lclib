@@ -1,21 +1,51 @@
 CXX = g++
-SOURCE_FILES = src/Hash.cpp src/IOWrapper.cpp src/JTime.cpp
-SOURCE_FILES += src/SHA256.cpp src/ShadowRandom.cpp src/Random.cpp
-SOURCE_FILES += src/Terminal.cpp src/TextComponent.cpp src/UUID.cpp
-SOURCE_FILES += src/StringHelper.cpp src/Version.cpp
-#SOURCE_FILES += src/nbt/NBTBase.cpp src/nbt/NBTCompound.cpp
-#SOURCE_FILES += src/nbt/NBTList.cpp src/nbt/NBTLoad.cpp
-#SOURCE_FILES += src/nbt/NBTPrimitive.cpp
-FLAGS = -fpic -pthread -std=c++1z -fpermissive -fvisibility=hidden -shared -DLCLIB_CXX_DEFINITION
+OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.cpp
+OBJECT_FILES += out/json/json_reader.o out/json/json_value.o out/json/json_writer.o
+OBJECT_FILES += out/Hash.o out/IOWrapper.o out/JTime.o
+OBJECT_FILES += out/Menu.o out/Random.o out/ShadowRandom.o
+OBJECT_FILES += out/SocketCommon.o out/StringHelper.o out/Terminal.o
+OBJECT_FILES += out/TextComponent.o out/UUID.o out/Version.o
+OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
+
+COMPILE_FLAGS = -fvisibility=default -std=c++2a -fpic -w -fpermissive 
+LINKER_FLAGS = -fvisibility=default -shared -fpic -flinker-output=dyn -pthread 
 LIBS = -lssl
 OUTPUT = liblc-cxx.so
 INCLUDE = -I./ -I./include
+DEFINES = -DLCLIB_CXX_DEFINITION -D__NOREFLECTION
+
+DIRS := out/ out/impl/linux out/json out/UI
 
 all: $(OUTPUT)
 
-$(OUTPUT): $(SOURCE_FILES)
-	$(CXX) $(FLAGS) $(INCLUDE) -o $(OUTPUT) $(SOURCE_FILES) $(LIBS)
+out:
+	mkdir -p $(DIRS)
 
-install:
-	cp $(OUTPUT) /usr/lib
-	cp /. /usr/include/
+$(OUTPUT): out $(OBJECT_FILES)
+	$(CXX) $(LINKER_FLAGS) -o $(OUTPUT) $(LIBS) $(SOURCE_FILES) 
+
+install:$(OUTPUT)
+	install $(OUTPUT) /usr/lib/
+	install --mode=755 -d -v /usr/include/lclib-cxx include/lclib-cxx
+	install --mode=755 -d -v /usr/include/json include/json
+	cp -R include/lclib-cxx /usr/include
+	cp -R include/json /usr/include
+	chmod -R 755 /usr/include/json
+	chmod -R 755 /usr/include/lclib-cxx
+
+uninstall:
+	rm -rf /usr/include/lclib-cxx
+	rm -rf /usr/lib/$(OUTPUT)
+
+relink:
+	rm -rf $(OUTPUT)
+	make $(OUTPUT)
+
+clean:
+	rm -rf out
+	rm -f $(OUTPUT)
+	rm -f init
+
+
+out/%.o: src/%.cpp
+	$(CXX) $(COMPILE_FLAGS) -c $(INCLUDE) -o $@ $<

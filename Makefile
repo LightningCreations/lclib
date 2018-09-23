@@ -1,5 +1,5 @@
 CXX = g++
-OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.cpp
+OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.o
 OBJECT_FILES += out/json/json_reader.o out/json/json_value.o out/json/json_writer.o
 OBJECT_FILES += out/Hash.o out/IOWrapper.o out/JTime.o
 OBJECT_FILES += out/Menu.o out/Random.o out/ShadowRandom.o
@@ -7,8 +7,8 @@ OBJECT_FILES += out/SocketCommon.o out/StringHelper.o out/Terminal.o
 OBJECT_FILES += out/TextComponent.o out/UUID.o out/Version.o
 OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
 
-COMPILE_FLAGS = -fvisibility=default -std=c++2a -fpic -w -fpermissive 
-LINKER_FLAGS = -fvisibility=default -shared -fpic -flinker-output=dyn -pthread 
+COMPILE_FLAGS = -fvisibility=default -std=c++2a -fpic -w -fpermissive
+LINKER_FLAGS = -fvisibility=default -shared -fpic -flinker-output=dyn -pthread
 LIBS = -lssl
 OUTPUT = liblc-cxx.so
 INCLUDE = -I./ -I./include
@@ -22,7 +22,7 @@ out:
 	mkdir -p $(DIRS)
 
 $(OUTPUT): out $(OBJECT_FILES)
-	$(CXX) $(LINKER_FLAGS) -o $(OUTPUT) $(LIBS) $(SOURCE_FILES) 
+	$(CXX) $(LINKER_FLAGS) -o $(OUTPUT) $(LIBS) $(SOURCE_FILES)
 
 install:$(OUTPUT)
 	install $(OUTPUT) /usr/lib/

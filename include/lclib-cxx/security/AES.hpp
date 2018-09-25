@@ -31,7 +31,7 @@ namespace security{
 			memset(d+sz,N,N);
 		}
 		static std::size_t unpad(data_type d,std::size_t sz){
-			const std::size_t N = d[sz];
+			const std::size_t N = static_cast<std::size_t>(d[sz]);
 			return sz-N;
 		}
 	};

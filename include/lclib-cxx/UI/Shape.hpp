@@ -69,7 +69,7 @@ namespace graphics{
 		bool isSquare()const noexcept(true);
 		Point getTopLeft()const noexcept(true);
 	};
-	struct Square:Rectangle{
+	struct LIBLCAPI Square:Rectangle{
 	public:
 		Square(size_t tlx,size_t tly,size_t s)noexcept(true);
 	};

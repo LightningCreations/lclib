@@ -24,8 +24,8 @@ std::unique_ptr<ServerSocketImpl> newServerSocketHandle();
 
 <h2>Overview</h2>
 Provides a strong, consistent Socket Based Networking Interface built off of IOWrapper and the Service Provider Interface Model. The providers for Sockets/Servers are called Handles and the default Provider can be set via setDefaultSocketHandleConstructor and setDefaultServerSocketHandleConstructors. 
-An implementation specific default handle constructor is provided so that sockets may be created.
-SocketException is the base class for exceptions reported by the SocketIO Library. It is guarenteed that only Exceptions of this type are thrown. The behavior of an implementation which throws any exceptions which do not derive from SocketException is undefined.
+An implementation specific default handle constructor is provided so that sockets may be created. 
+SocketException is the base class for exceptions reported by the SocketIO Library. It is guarenteed that only Exceptions of this type are thrown. The behavior of an implementation which throws any exceptions which do not derive from SocketException is undefined. 
 IO Access to sockets are provided through unspecified subclasses of InputStream and OutputStream which are obtained through the handle's getInputStream/getOutputStream (which are accessed through the Socket itself).
 
 <h2>Classes</h2>

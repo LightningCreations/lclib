@@ -9,7 +9,7 @@
 #define _INCLUDE_CONFIG_HPP__2018_09_06_16_35
 
 #if __cplusplus < 201703L
-#error "This library requires C++17 Mode to function"
+#error This library requires C++17 Mode to function
 #endif
 #if __cplusplus >201703L
 #define LCLIBCXX_CXX2a
@@ -17,35 +17,66 @@
 //If a User Configuration file is provided, and we are not Building the Library,
 //Include that file first
 #ifndef LCLIB_CXX_DEFINITION
-#if __has_include(<UserConfig.hpp>)
-#include <UserConfig.hpp>
+#if __has_include(<configure/UserConfig.hpp>)
+#include <configure/UserConfig.hpp>
 #endif
 #endif
 
-//Then if a build configuration file has been generated, include that file
-#if __has_include(<BuildConfig.hpp>)
-#include <BuildConfig.hpp>
+//Then if a build configuration file is provided, include that file
+#if __has_include(<configure/BuildConfig.hpp>)
+#include <configure/BuildConfig.hpp>
 #endif
 
-#define LCLIBEXPORT [[visibility("default"),dllexport]]
-#define LCLIBIMPORT [[dllimport]]
-
+#ifndef LCLIBEXPORT
+#ifdef _WIN32
+#define LCLIBEXPORT __declspec(dllexport)
+#else
+#define LCLIBEXPORT __attribute__((visibility("default")))
+#endif
+#endif
+#ifndef LCLIBIMPORT
+#ifdef _WIN32
+#define LCLIBIMPORT __declspec(dllimport)
+#else
+#define LCLIBIMPORT
+#endif
+#endif
+#ifndef LIBLCAPI
 #ifdef LCLIB_CXX_DEFINITION
 #define LIBLCAPI LCLIBEXPORT
 #else
 #define LIBLCAPI LCLIBIMPORT
 #endif
+#endif
 #define LIBLCFUNC LIBLCAPI
-#define LIBLCHIDE [[visibility("hidden")]]
+#ifndef LIBLCHIDE
+#ifndef _WIN32
+#define LIBLCHIDE __attribute__((visibility("internal")))
+#else
+#define LIBLCHIDE
+#endif
+#endif
 
 #ifdef MINIMAL
+//Minimal Implementation (Disables Reflection, Contracts, Assertions, and CLI Extensions
 #define __NOREFLECTION
+#if MINIMAL>0
 #define __NOCONTRACTS
 #define __NOASSERTIONS
 #endif
+#if MINIMAL>2
+#define __NOCLIEXTENSIONS
+#endif
+#endif
 
 
+#if defined(_WIN32)&&!defined(__NOCLIEXTENSIONS)
+#define __CPP_USE_CLI_EXTENSIONS //Use CLI Extensions if availble.
+#endif
 
+#if defined(__CPP_USE_CLI_EXTENSIONS)&&defined(__cplusplus_cli)
+#define LCLIBCXX_HAS_CLI
+#endif
 
 
 #define __CONCAT2A(a,b) a##b
@@ -63,7 +94,7 @@
 #if defined(__OAPI_PRAGMA_MACROS)&&defined(__HAS_IMPORT_UNIQUE)
 #pragma macros import("__UNIQUE__") define("__UNIQUE__")
 //On SNES-OS __UNIQUE__ expands to UID<filename hash><line number hash><Translation Time Random Token>QJJ
-//__UNIQUE__() expands to the same
+//__UNIQUE__() expands to the same, except that in a Function-like macro, it expands recursively.
 #else
 #define __UNIQUE__() CONCAT4(UID00AAKKZ09,__COUNTER__,__LINE__,QJJ)
 #endif
@@ -79,10 +110,10 @@
 #ifndef __NOASSERTIONS
 #ifndef ASSERT
 #define ASSERTION_MESSAGE(...) "Assertion Failure: " STRINGIFY(__VA_ARGS__)"@" __FILE__ STRINGIFY(__LINE__) ":"
-#define ASSERT(condition,...) if(!(condition))throw __DETAIL_ASSERTION_MESSAGE(__VA_ARGS__);
+#define ASSERT(condition,...) if(!(condition))throw ASSERTION_MESSAGE(__VA_ARGS__);
 #endif
 #else
-#define ASSERT(conditon,message)
+#define ASSERT(conditon,...)
 #endif
 
 
@@ -95,14 +126,13 @@
 #define CONTRACTASSERT(condition)
 #endif
 #if __has_cpp_attribute(expects)&& !defined(__NOCONTRACTS)
+#ifdef __CONTRACTS_AUDIT
+#define EXPECTS(condition) [[expects audit:condition]]
+#else
 #define EXPECTS(condition) [[expects:condition]]
+#endif
 #else
 #define EXPECTS(condition)
-#endif
-#if __has_cpp_attribute(ensures)&& !defined(__NOCONTRACTS)
-#define ENSURES(condition) [[ensures:condition]]
-#else
-#define ENSURES(condition)
 #endif
 
 #if __has_include(<concepts>)&&(__cplusplus>201803L)

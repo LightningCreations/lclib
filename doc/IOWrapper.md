@@ -135,10 +135,7 @@ If the size of the object indicated by ptr is not at least size, the behavior is
 Reads a single byte from the stream and returns it. If EOF is reached returns -1 instead.
 <br/><br/>
 
-(3):template&lt;size_t N&gt; size_t read(uint8_t(&arr)[N])
-(4):template&lt;size_t N&gt; size_t read(int8_t(&arr)[N])
-(5):template&lt;size_t N&gt; size_t read(std::byte(&arr)[N])
-Reads N bytes from the stream into arr. Effectively read(arr,N);
+(3),(4),(5): Reads N bytes from the stream into arr. Effectively read(arr,N);
 
 <h5>Exceptions</h5>
 (1): Any subclass of InputStream may throw any Exception from the read method. If a subclass can throw an exception, it must be clearly detailed which exceptions can be thrown and in what cases they are. If an exception is thrown by the read method, the object being read is invalidated, and using in any way (except for assignment operators/destructors) is undefined behavior.
@@ -167,10 +164,8 @@ FilterInputStream(InputStream&); //(1)
 size_t read(void* ptr,size_t size); //(1)
 int read(); //(2)
 ```
-(1): size_t read(void* ptr,size_t size);
-(2): int read();
-Forwards to the equivalent method in the wrapped stream.
-Any exceptions thrown by the equivalent method in the wrapped stream is forwarded by this method
+(1),(2): Forwards to the equivalent method in the wrapped stream.
+Any exceptions thrown by the equivalent method in the wrapped stream propagate through this call.
 
 <h3>class FileInputStream</h3>
 
@@ -189,8 +184,7 @@ FileInputStream(FileInputStream&& in); //(5)
 FileInputStream& operator=(FileInputStream&& in); //(7)
 ```
 
-(1): FileInputStream(FILE*)
-Constructs the FileInputStream from an already constructed FILE object.
+(1): Constructs the FileInputStream from an already constructed FILE object.
 The behavior is undefined if the file is not opened in read mode, is not a null pointer and was not the return value of fopen, or was previously closed. 
 
 In addition, the behavior is unspecified (and may be undefined), if the stream was not opened in binary read mode.
@@ -198,7 +192,7 @@ In addition, the behavior is unspecified (and may be undefined), if the stream w
 Exceptions: Throws FileNotFoundException if the passed file is a null pointer
 
 
-(2),(3),(4):Constructs the FileInputStream from the given filename. Constructs the stream as though by FileInputStream(fopen(c,"rb")), FileInputStream(fopen(str.c_str(),"rb")), or FileInputStream(fopen(p.c_str(),"rb")) respectively.
+(2),(3),(4):Constructs the FileInputStream from the given filename. Constructs the stream as though by `FileInputStream(fopen(c,"rb"))`, `FileInputStream(fopen(str.c_str(),"rb"))`, or `FileInputStream(fopen(p.c_str(),"rb"))` respectively.
 
 Exceptions: Throws FileNotFoundException if given file does not exist or cannot be openned.
 
@@ -278,7 +272,7 @@ template<typename E> E readEnum();//(10)
 (7): reads 4 bytes from the stream and returns them as a 32-bit single-precision float. The behavior is undefined unless all 4 bytes on the stream were written by the writeFloat method of a DataOutputStream in the same byte order mode or a similar utility, and they were all written as part of the same call. In addition, the behavior is undefined if the default float on the system is not an IEEE754 single-precision binary32 floating-point number. If the value read is a NaN, it is unspecified whether the binary representation of the NaN is preserved. If the NaN is a signaling NaN it is also unspecified whether the NaN is quieted and a floating point error is raised.
 (8): reads 8 bytes from the stream and returns them as a 64-bit double. The behavior is undefined unless all 8 bytes on the stream were written by the writeDouble method of a DataOutputStream in the same byte order mode or a similar utility, and they were all written as part of the same call. In addition, the behavior is undefined if the default double on the system is not an IEEE754 double-precision binary64 floating point number. If the value read is a NaN, it is unspecified whether the binary representation of the NaN is preserved. If the NaN is a signaling NaN it is also unspecified whether the NaN is quieted and a floating point error is raised.
 (9): reads a 2-byte length, as though by readUnsignedShort from the stream, and then reads that many bytes, treating them as a utf-8 encoded string (non-nul terminated), and returns the resultant std::string. The behavior is undefined unless all bytes read from the stream were written by the writeString method of a DataOutputStream in the same byte order mode or a similar utility, the first byte read was the first byte written by that call, and all bytes were written by that call.
-(10): reads a number of bytes based on the underlying type of E as if by the best matching read method for that type, and returns to bytes treated as a value of type E. The behavior is undefined unless all bytes read were written by an equivalent call to writeEnum of DataOutputStream, and if the enum type is not 1 byte long, in the same byte order mode. If E is std::byte it may additionally be used to read byte sequences suitable for the readSignedByte() and readUnsignedByte()  methods. This method only participates in overload resolution if std::is_enum_v&lt;E&gt; is true. 
+(10): reads a number of bytes based on the underlying type of E as if by the best matching read method for that type, and returns to bytes treated as a value of type E. The behavior is undefined unless all bytes read were written by an equivalent call to writeEnum of DataOutputStream, and if the enum type is not 1 byte long, in the same byte order mode. If E is std::byte it may additionally be used to read byte sequences suitable for the readSignedByte() and readUnsignedByte()  methods. This method only participates in overload resolution if `std::is_enum_v<E>` is true. 
 
 If any of the methods reach an EOF before finishing the read, an EOFException is thrown
 
@@ -305,7 +299,7 @@ template<typename E> DataInputStream& operator>>(E& e); //(14)
 (6),(8): assigns the argument to the value returned by readInt, or readLong respectively.
 (10): Reads a Version from the stream, and assigns it to v. Effectively v= Version{int(readUnsignedByte())+1,readUnsignedByte()}; The behavior is undefined unless the bytes read were written as such by DataOutputStream or a similar utility, or were written by the writeShort or writeUnsignedShort method of a DataOutputStream in Big-Endian byte order mode, or a similar utility.
 (11): Reads a UUID from the stream, and assigns it to u. Effectively u=UUID{readLong(),readLong()};
-(14): Reads an enum value from the stream as if by e = readEnum<E>(); This operator does not participate in overload resolution unless std::is_enum_v<E> is true.
+(14): Reads an enum value from the stream as if by `e = readEnum<E>();` This operator does not participate in overload resolution unless `std::is_enum_v<E>` is true.
 
 <h3>class OutputStream</h3>
 OutputStream is the abstract base class of the output portion of the IOWrapper Library, mirroring InputStream. Like InputStreams, OutputStreams have ownership of any resources they use, and aquires and releases those resources during construction and destruction respectively. Subclasses of OutputStream may buffer output before commiting writes in the stream. If a subclass does, it must override the flush method to flush the internal buffer and commiting previous writes to the resource. In addition the buffer must be flushed when the stream is destroyed or reassigned.  If flush is not called it is unspecified when writes are reflected in the underlying resource. If the OutputStream does not buffer input then writes are immediately reflected in the underlying resource, and flushing the stream has no effect. 
@@ -354,7 +348,7 @@ If objects are intended for persistance accross platforms, languages, or even co
 Like InputStream::read, subclasses may impose other restrictions on what objects may be passed to the write method. Those subclasses must detail these additional restrictions and the effects of violating them if they exist.
 
 (2): writes a single byte to the stream. 
-(3),(4),(5): writes an array of uint8_t, int8_t, or std::byte to the stream. Effectively read(arr,N);
+(3),(4),(5): writes an array of `uint8_t`, `int8_t`, or `std::byte` to the stream. Effectively read(arr,N);
 
 <h6>Exceptions</h6>
 (1),(2): Subclasses may throw any exception from the write method. If they do, it must be detailed which exceptions can be thrown, and the conditions under which they are thrown. If an exception is thrown from a stream that buffers writes, the stream is rolled-back to state it was in prior to the write call, and the internal buffer is left in an unspecified state. If an exception is thrown from a stream that does not buffer writes, the stream is left in an unspecified state.
@@ -420,7 +414,7 @@ FileOutputStream& operator=(FileOutputStream&& out);//(10)
 (1): Constructs a new FileOutputStream, binding the underlying file to f and taking control of f. The behavior is undefined if f is not a null pointer, and was not obtained from a call to fopen, was closed, or is open in read-only mode.
 In addition, the behavior is unspecified (and may be undefined), if f was not opened in binary write or binary append mode.
 (2),(3),(4): Constructs a new FileOutputStream from the given path name. 
-This constructor acts as if by FileOutputStream(fopen(c,"wb")), FileOutputStream(fopen(str.c_str(),"wb")), or FileOutputStream(fopen(p.c_str(),"wb")). The behavior is undefined if the argument to (2) is a null pointer.
+This constructor acts as if by `FileOutputStream(fopen(c,"wb"))`, `FileOutputStream(fopen(str.c_str(),"wb"))`, or `FileOutputStream(fopen(p.c_str(),"wb"))`. The behavior is undefined if the argument to (2) is a null pointer.
 (5),(6),(7): Disambugation Constructors for openning in append mode. Same as (2),(3),(4) respectively, except that the stream is openned in "ab" mode instead of "wb" mode.
 (8): Move Constructor. Control of the underlying file object of out is moved to the new object
 (9): Destructor. If control of the underlying file has not been moved from this object, the underlying file is closed. If the underlying file buffers writes, it is also flushed.
@@ -463,10 +457,12 @@ The byte sequences produced by given write methods of a DataOutputStream in Big-
 Extends (public) FilterOutputStream
 
 <h4>Constructors</h4>
+
 ```cpp
 DataOutputStream(OutputStream& out); //(1)
 DataOutputStream(OutputStream& out,little_endian_t); //(2)
 ```
+
 (1): Constructs a DataOutputStream wrapping (but not owning), out, in Big-Endian Byte order mode
 (2): Disabugation overload for Little-Endian byte order mode. The Stream wraps (but does not own) out.
 
@@ -490,7 +486,7 @@ template<typename E> void writeEnum(E e); //(8)
 (5): writes the length of str to the stream as if by writeShort, then writes that many bytes to the stream from str.data(). If the length of str is greater then 65536, only the first 65536 bytes of str are written. The bytes written are suitable for being read by the readString method of a DataInputStream in the same byte order mode, or a similar utility. The behavior is undefined if str contains embedded NUL bytes.
 (6): writes f to the underlying stream. The bytes written are suitable for being read by the readFloat method of a DataInputStream in the same byte order mode, or a similar utility. The behavior is undefined if the default float on the system is not an IEEE754 single-precision binary32 floating-point number. If the passed float is NaN, it is unspecified whether the bit representation of the NaN is preserved or not.
 (7): writes d to the underlying stream. The bytes written are suitable for being read by the readDouble method of a DataInputStream in the same byte order mode, or a similar utility. The behavior is undefined if the default double on the system is not an IEEE754 double-precision binary64 floating-point number. If the passed double is NaN, it is unspecified whether the bit representation of the NaN is preserved or not.
-(8): writes e to the underlying stream. The bytes written are suitable for being read by the equivalent readEnum method of a DataInputStream open in the same byte order mode. Unlike other methods writeEnum is not compatible with any similar interfaces. This method does not participate in overload resolution unless std::is_enum_v<E> is true
+(8): writes e to the underlying stream. The bytes written are suitable for being read by the equivalent readEnum method of a DataInputStream open in the same byte order mode. Unlike other methods writeEnum is not compatible with any similar interfaces. This method does not participate in overload resolution unless `std::is_enum_v<E>` is true
 
 <h5>Exceptions</h5>
 Any exceptions thrown by the write method of the underlying stream propagates through these methods.
@@ -518,7 +514,7 @@ template<typename E> DataOutputStream& operator<<(E e); //(14)
 (1),(3),(5),(7): Calls the write function with the arguments converted to there signed equivalents.
 (10): Writes the UUID as though by writeLong(u.getHigh()) and writeLong(u.getLow()).
 (11): Writes the Version as though by writeByte(v.getMajor()-1) and writeByte(v.getMinor())
-(14): Writes the enum value as though by the writeEnum method. This operator only participates in overload resolution if std::is_enum_v<E> is true.
+(14): Writes the enum value as though by the writeEnum method. This operator only participates in overload resolution if `std::is_enum_v<E>` is true.
 
 <h2>Fields</h2>
 

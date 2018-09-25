@@ -13,7 +13,7 @@
 
 
 
-ShadowRandom uuidRandom{};
+LIBLCHIDE ShadowRandom uuidRandom{};
 
 
 
@@ -26,7 +26,7 @@ using std::istream;
 const string sep("-");
 const int sizes[] = {8,4,4,4,12};
 
-uint32_t clockSeq{0};
+LIBLCHIDE uint32_t clockSeq{0};
 
 
 

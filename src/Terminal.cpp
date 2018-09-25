@@ -9,7 +9,7 @@
 
 using namespace std::string_literals;
 
-string toFColorCode(Color c){
+LIBLCHIDE string toFColorCode(Color c){
     string target = "\x1b[38;2;"s;
     uint32_t rgb = static_cast<uint32_t>(c);
     uint8_t r = rgb>>16;
@@ -23,7 +23,7 @@ string toFColorCode(Color c){
     target += "m";
     return std::move(target);
 }
-string toGColorCode(Color c){
+LIBLCHIDE string toGColorCode(Color c){
     string target = "\x1b[48;2;"s;
     uint32_t rgb = static_cast<uint32_t>(c);
     uint8_t r = rgb>>16;
@@ -38,7 +38,7 @@ string toGColorCode(Color c){
     return std::move(target);
 }
 
-string toCommandCode(Color c){
+LIBLCHIDE string toCommandCode(Color c){
     switch(c){
         case Color::Reset:
             return RESET;
@@ -77,11 +77,5 @@ Terminal& Terminal::print(const TextComponent& t)noexcept(true){
         std::cout << "\t";
     else
         std::cout << t.getText();
-    return *this;
-}
-
-Terminal& Terminal::wait()noexcept(true){
-    std::lock_guard<std::recursive_mutex> sync(lock);
-    get();
     return *this;
 }

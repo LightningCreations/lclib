@@ -64,9 +64,9 @@ constexpr int32_t hashcode(void* v){
 constexpr int32_t hashcode(nullptr_t n){
 	return 0;
 }
-int32_t hashcode(const char*)LIBLCAPI;
-int32_t hashcode(const std::string&)LIBLCAPI;
-int32_t hashcode(const std::type_info&)LIBLCAPI;
+LIBLCAPI int32_t hashcode(const char*);
+LIBLCAPI int32_t hashcode(const std::string&);
+LIBLCAPI int32_t hashcode(const std::type_info&);
 
 using std::vector;
 

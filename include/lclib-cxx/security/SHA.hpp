@@ -23,7 +23,9 @@ namespace security{
 	 * Support for SHA3 is not planned
 	 * Support for SHA512/224 SHA512/256 is whenever direct support (non-evp) for these variations is added to openssl
 	 */
-	template<std::size_t M,typename byte=std::byte> struct SHA{};
+	template<std::size_t M,typename byte=std::byte> struct SHA{
+		 static_assert(M==1,"SHA Cannot be instantiated for any Target that is not specialized");
+	};
 	template<typename byte> [[deprecated("SHA-1 is deprecated by the NSA as insecure. Use a SHA-2 Algorithm instead")]]
 							 struct SHA<1,byte>{
 	private:

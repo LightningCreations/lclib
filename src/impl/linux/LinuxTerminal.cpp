@@ -31,6 +31,7 @@ using namespace std::string_literals;
 
 
 int Terminal::get()noexcept(true){
+	std::lock_guard<std::recursive_mutex> sync(lock);
     unsigned char buf = 0;
     struct termios old = {0};
     if (tcgetattr(0, &old) < 0)
@@ -59,6 +60,7 @@ Terminal& Terminal::clear()noexcept(true){
 }
 
 Terminal& Terminal::wait()noexcept(true){
+	std::lock_guard<std::recursive_mutex> sync(lock);
 	get();
 	return *this;
 }

@@ -3,16 +3,16 @@
 #include <algorithm>
 
 using std::min;
-seed_t number{32};
-const seed_t cprime{4989641};
+LIBLCHIDE seed_t number{32};
+LIBLCHIDE const seed_t cprime{4989641};
 
 
-seed_t highResTime(){
+LIBLCHIDE seed_t highResTime(){
 	Instant i = Instant::now();
 	return i.get(ChronoUnit::MILISECONDS);
 }
 
-seed_t nextMultiplier(){
+LIBLCHIDE seed_t nextMultiplier(){
 	seed_t val = number;
 	number*=2;
 	if(val%10==2)
@@ -25,10 +25,10 @@ seed_t nextMultiplier(){
 		return nextMultiplier();//Probably doesn't have an adjacent prime
 	return val*cprime;
 }
-seed_t genUniqueSeed(){
+LIBLCHIDE seed_t genUniqueSeed(){
 	return highResTime()*nextMultiplier();
 }
-seed_t initRandomizeSeed(seed_t seed){
+LIBLCHIDE seed_t initRandomizeSeed(seed_t seed){
 	return (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
 }
 

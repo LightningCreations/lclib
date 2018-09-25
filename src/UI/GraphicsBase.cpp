@@ -12,7 +12,7 @@
 
 namespace graphics{
 	namespace detail{
-		float getColorValue(float p,float q,float t)LIBLCHIDE{
+		LIBLCHIDE float getColorValue(float p,float q,float t){
             if(t < 0) t += 1;
             if(t > 1) t -= 1;
             if(t < 1/6) return p + (q - p) * 6 * t;
@@ -20,10 +20,10 @@ namespace graphics{
             if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
             return p;
 		}
-		float combine(float a,float b,float t)LIBLCHIDE{
+		LIBLCHIDE float combine(float a,float b,float t){
 			return std::sqrt((1-t)*a*a+t*b*b);
 		}
-		uint8_t combineAlpha(uint8_t a,uint8_t b)LIBLCHIDE{
+		LIBLCHIDE uint8_t combineAlpha(uint8_t a,uint8_t b){
 			return std::max(a,b);
 		}
 	}

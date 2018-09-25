@@ -61,8 +61,13 @@ struct tab_t{
 public:
     explicit constexpr tab_t()=default; 
 };
-const tab_t tab;
+const tab_t tab{};
 
+struct in_background_t{
+public:
+	explicit constexpr in_background_t()=default;
+};
+const in_background_t in_background{};
 
 class LIBLCAPI TextComponent{
 private:
@@ -77,6 +82,7 @@ public:
     TextComponent(string&&);
     TextComponent(const char*);
     TextComponent(Color);
+    TextComponent(Color,in_background_t);
     TextComponent(int);
     TextComponent(double);
     TextComponent(bool);

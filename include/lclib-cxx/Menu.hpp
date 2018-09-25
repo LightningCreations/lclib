@@ -22,6 +22,7 @@ using std::recursive_mutex;
 class LIBLCAPI MenuItem{
 private:
 	Color c;
+	Color bgColor;
 	string name;
 	int code;
 	MenuItem(const MenuItem&)=delete;
@@ -32,11 +33,15 @@ public:
 	MenuItem(const string&,Color,int);
 	MenuItem(string&&,int);
 	MenuItem(string&&,Color,int);
+	MenuItem(const string&,Color,Color,int);
+	MenuItem(string&&,Color,Color,int);
 	MenuItem(MenuItem&&)=default;
 	MenuItem& operator=(MenuItem&&)=default;
 	Color getColor()const;
+	Color getBackgroundColor()const;
 	const string& getName()const;
 	int getCode()const;
+	void draw(Terminal&)const;
 };
 
 class LIBLCAPI Menu{

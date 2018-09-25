@@ -18,7 +18,7 @@ using std::to_string;
     TextComponent::TextComponent(endline_t):__tab(false),endl(true),c(Color::NONE),bg(false){}
     TextComponent::TextComponent(tab_t):__tab(true),endl(false),c(Color::NONE),bg(false){}
     TextComponent::TextComponent(const char* c):__tab(false),text(c),c(Color::NONE),endl(false),bg(false){}
-
+    TextComponent::TextComponent(Color c,in_background_t):__tab(false),text(),c(c),endl(false),bg(true){}
     Color TextComponent::getColor()const{
         return c;
     }

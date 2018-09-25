@@ -7,14 +7,19 @@ using namespace std::string_literals;
 
 
 
-MenuItem::MenuItem(const string& name,int code):c(Color::NONE),name(name),code(code){}
-MenuItem::MenuItem(const string& name,Color color,int code):c(color),name(name),code(code){}
+MenuItem::MenuItem(const string& name,int code):c(Color::NONE),bgColor(Color::NONE),name(name),code(code){}
+MenuItem::MenuItem(const string& name,Color color,int code):c(color),bgColor(Color::NONE),name(name),code(code){}
+MenuItem::MenuItem(const string& name,Color fgColor,Color bgColor,int code):c(fgColor),bgColor(bgColor),name(name),code(code){}
 
-MenuItem::MenuItem(string&& name,int code):c(Color::NONE),name(name),code(code){}
-MenuItem::MenuItem(string&& name,Color color,int code):c(color),name(name),code(code){}
+MenuItem::MenuItem(string&& name,int code):c(Color::NONE),bgColor(Color::NONE),name(name),code(code){}
+MenuItem::MenuItem(string&& name,Color color,int code):c(color),bgColor(Color::NONE),name(name),code(code){}
+MenuItem::MenuItem(string&& name,Color fgColor,Color bgColor,int code):c(fgColor),bgColor(bgColor),name(name),code(code){}
 
 Color MenuItem::getColor()const{
 	return c;
+}
+Color MenuItem::getBackgroundColor()const{
+	return bgColor;
 }
 const string& MenuItem::getName()const{
 	return name;
@@ -23,15 +28,23 @@ const string& MenuItem::getName()const{
 int MenuItem::getCode()const{
 	return code;
 }
+void MenuItem::draw(Terminal& t)const{
+	t.print(c,TextComponent(bgColor,in_background),name);
+}
+
 
 
 void Menu::drawV(Terminal& t){
 	std::lock_guard<recursive_mutex> sync(lock);
 	t.clear();
 	t.print("\t\t"s,c,name,Color::Reset,endline);
-	for(int i =0;i<menuItems.size();i++)
-		t.print(TextComponent(i==index?"->"s:"  "s),menuItems[i]->getColor(),menuItems[i]->getName(),Color::Reset,endline);
+	for(int i =0;i<menuItems.size();i++){
+		t.print(i==index?"->"s:"  "s);
+		menuItems[i]->draw(t);
+		t.print(Color::Reset,endline);
+	}
 }
+
 MenuItem& Menu::getTargetItem()const{
 	return *menuItems[index];
 }

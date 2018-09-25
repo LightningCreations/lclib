@@ -108,6 +108,7 @@ namespace security{
 	 * Defines the AsymettricCipherAlgorithm concept
 	 */
 	template<typename byte> class AsymmetricCipherAlgorithm{
+	public:
 		static_assert(is_byte_v<byte>,"AsymmetricCipherAlgorithm must be instantiated with a byte type");
 		using byte_type = byte;
 		using input_type = const byte_type*;
@@ -133,7 +134,7 @@ namespace security{
 		using source_type = ShadowRandom;
 		KeyGenerator();
 		KeyGenerator(source_type&&);
-		key newKey();
+		key operator()();
 	};
 	/**
 	 * Defines the KeyDerivationAlgorithm Concept.
@@ -161,7 +162,7 @@ namespace security{
 		using source_type = ShadowRandom;
 		KeyPairGenerator();
 		KeyPairGenerator(source_type&&);
-		std::pair<public_key,private_key> newKeyPair();
+		std::pair<public_key,private_key> operator()();
 	};
 	/**
 	 * Defines the MessageDigestAlgorithm concept
@@ -173,8 +174,8 @@ namespace security{
 		using output_type = byte_type*;
 		constexpr static const std::size_t digestSize{0};
 		void init();
-		void update(input_type*,std::size_t);
-		void doFinal(output_type*);
+		void update(input_type,std::size_t);
+		void doFinal(output_type);
 	};
 #ifdef LIBLCCXX_HAS_CONCEPTS
 	namespace concepts{
@@ -278,6 +279,83 @@ namespace security{
 				:std::true_type{};
 		template<typename T> constexpr const bool is_private_key_v = is_private_key<T>::value;
 
+		template<typename T,typename=void> struct is_padding:std::false_type{};
+		template<typename T> struct is_padding<T,std::void_t<
+			std::enable_if_t<is_byte_v<typename T::byte_type>>,
+			decltype(T::getPaddedSize(std::declval<std::size_t>())),
+			decltype(T::pad(std::declval<typename T::data_type>(),std::declval<std::size_t>())),
+			decltype(T::unpad(std::declval<typename T::data_type>(),std::declval<std::size_t>()))
+			>>:std::true_type{};
+		template<typename T> constexpr const bool is_padding_v = is_padding<T>::value;
+
+		template<typename T,typename=void> struct is_symmetric_cipher_algorithm:std::false_type{};
+		template<typename T> struct is_symmetric_cipher_algorithm<T,std::void_t<
+			std::enable_if_t<is_byte_v<typename T::byte_type>>,
+			std::enable_if_t<is_padding_v<typename T::padding>>,
+			std::enable_if_t<is_key_v<typename T::key>>,
+			std::enable_if_t<std::is_same_v<decltype(T::blockSize),std::size_t>>,
+			decltype(std::declval<T&>().init(std::declval<typename T::key>(),std::declval<bool>(),std::declval<typename T::input_type>())),
+			decltype(std::declval<T&>().update(std::declval<typename T::input_type>(),std::declval<std::size_t>(),std::declval<typename T::output_type>())),
+			decltype(std::declval<T&>().doFinal(std::declval<typename T::output_type>()))
+		>>:std::true_type{};
+		template<typename T> constexpr const bool is_symmetric_cipher_algorithm_v = is_symmetric_cipher_algorithm<T>::value;
+
+		template<typename T,typename=void> struct is_asymmetric_cipher_algorithm:std::false_type{};
+		template<typename T> struct is_asymmetric_cipher_algorithm<T,std::void_t<
+			std::enable_if_t<is_byte_v<typename T::byte_type>>,
+			std::enable_if_t<is_padding_v<typename T::padding>>,
+			std::enable_if_t<is_private_key_v<typename T::private_key>>,
+			std::enable_if_t<is_key_v<typename T::public_key>>,
+			decltype(std::declval<T&>().init(std::declval<typename T::private_key>(),std::declval<bool>(),std::declval<typename T::input_type>())),
+			decltype(std::declval<T&>().init(std::declval<typename T::public_key>(),std::declval<bool>(),std::declval<typename T::input_type>())),
+			decltype(std::declval<T&>().update(std::declval<typename T::input_type>(),std::declval<std::size_t>(),std::declval<typename T::output_type>())),
+			decltype(std::declval<T&>().doFinal(std::declval<typename T::output_type>()))
+		>>:std::true_type{};
+		template<typename T> constexpr const bool is_asymmetric_cipher_algorithm_v = is_asymmetric_cipher_algorithm<T>::value;
+
+		template<typename T> struct is_cipher_algorithm:std::disjunction<is_symmetric_cipher_algorithm<T>,is_asymmetric_cipher_algorithm<T>>{};
+		template<typename T> constexpr const bool is_cipher_algorithm_v = is_cipher_algorithm<T>::value;
+
+		template<typename T,typename=void> struct is_key_generator:std::false_type{};
+		template<typename T> struct is_key_generator<T,std::void_t<
+			std::enable_if_t<is_key_v<typename T::key>>,
+			std::enable_if_t<is_byte_v<typename T::byte_type>>,
+			std::enable_if_t<std::is_default_constructible_v<T>>,
+			std::enable_if_t<std::is_constructible_v<T,typename T::source_type&&>>,
+			std::enable_if_t<std::is_invocable_r_v<T,typename T::key>>
+		>>:std::true_type{};
+		template<typename T> constexpr const bool is_key_generator_v = is_key_generator<T>::value;
+
+		template<typename T,typename=void> struct is_key_pair_generator:std::false_type{};
+		template<typename T> struct is_key_pair_generator<T,std::void_t<
+			std::enable_if_t<is_private_key_v<typename T::private_key>>,
+			std::enable_if_t<is_key_v<typename T::public_key>>,
+			std::enable_if_t<is_byte_v<typename T::byte_type>>,
+			std::enable_if_t<std::is_default_constructible_v<T>>,
+			std::enable_if_t<std::is_constructible_v<T,typename T::source_type&&>>,
+			std::enable_if_t<std::is_invocable_r_v<T,std::pair<typename T::public_key,typename T::private_key>>>
+		>>:std::true_type{};
+		template<typename T> constexpr const bool is_key_pair_generator_v = is_key_pair_generator<T>::value;
+
+		template<typename T,typename=void> struct is_key_derivation_algorithm:std::false_type{};
+		template<typename T> struct is_key_derivation_algorithm<T,std::void_t<
+			std::enable_if_t<is_byte_v<typename T::byte_type>>,
+			std::enable_if_t<is_cstring_v<typename T::password_type>>,
+			std::enable_if_t<is_key_v<typename T::key>>,
+			std::enable_if_t<std::is_same_v<typename T::key,decltype(std::declval<T>().deriveKey(std::declval<typename T::input_type>(),std::declval<std::size_t>()))>>,
+			std::enable_if_t<std::is_same_v<typename T::key,decltype(std::declval<T>().deriveKey(std::declval<typename T::password_type>(),std::declval<typename T::salt_type>(),std::declval<std::size_t>()))>>
+		>>:std::true_type{};
+		template<typename T> constexpr const bool is_key_derivation_algorithm_v = is_key_derivation_algorithm<T>::value;
+
+		template<typename T,typename=void> struct is_message_digest_algorithm:std::false_type{};
+		template<typename T> struct is_message_digest_algorithm<T,std::void_t<
+			std::enable_if_t<is_byte_v<typename T::byte_type>>,
+			decltype(T::digestSize),
+			decltype(std::declval<T&>().init()),
+			decltype(std::declval<T&>().update(std::declval<typename T::input_type>(),std::declval<std::size_t>())),
+			decltype(std::declval<T&>().doFinal(std::declval<typename T::output_type>()))
+		>>:std::true_type{};
+		template<typename T> constexpr const bool is_message_digest_algorithm_v = is_message_digest_algorithm<T>::value;
 	}
 }
 

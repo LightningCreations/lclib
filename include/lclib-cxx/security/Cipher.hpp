@@ -13,6 +13,7 @@
 namespace security{
 	template<typename Algorithm> class CipherOutputStream:public FilterOutputStream{
 	public:
+		static_assert(traits::is_cipher_algorithm_v<Algorithm>,"CipherOutputStream requires CipherAlgorithm");
 		using byte_type = typename Algorithm::byte_type;
 		using padding = typename Algorithm::padding;
 		using input_type = typename Algorithm::input_type;
@@ -61,6 +62,7 @@ namespace security{
 	private:
 		Algorithm underlying;
 	public:
+		static_assert(traits::is_cipher_algorithm_v<Algorithm>,"CipherInputStream requires CipherAlgorithm");
 		using algorithm = Algorithm;
 		using byte_type = typename Algorithm::byte_type;
 		using input_type = typename Algorithm::input_type;
@@ -70,6 +72,13 @@ namespace security{
 			CipherInputStream(InputStream& in,const Key& k,input_type iv):FilterInputStream(in){
 			underlying.init(k,false,iv);
 		}
+		/**
+		 * Reads n bytes from the underlying stream into ptr.
+		 * The specific number of bytes read is dependent on the Padding of the agorithm.
+		 * This method will read that many bytes, then decrypt them, and storing the result in ptr.
+		 * This method is intended to read the entire stream at once.
+		 * \Exception Guarantee: If an exception is thrown, ptr is left in the original state, however the underlying stream is left in an Unspecified State
+		 */
 		std::size_t read(void* ptr,std::size_t bytes){
 			std::size_t sz = padding::getPaddedSize(bytes);
 			byte_type* buff = new byte_type[sz];
@@ -82,6 +91,8 @@ namespace security{
 			underlying.update(reinterpret_cast<input_type>(buff),sz,reinterpret_cast<output_type>(buff));
 			sz = padding::unpad(buff,sz);
 			memcpy(ptr,buff,sz);
+
+			delete[] buff;
 			return sz;
 		}
 	};

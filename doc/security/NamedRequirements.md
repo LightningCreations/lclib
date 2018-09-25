@@ -30,7 +30,7 @@ Given
 		<td>typename T::data_type</td>
 		<td>a typename which is a pointer or array to possibly cv-qualified byte_type</td>
 		<td></td>
-		<td>std::decay_t<data_type> must yield data_type*, const data_type*, volatile data_type*, or const volatile data_type*</td>
+		<td></td>
 	</tr>
 	<tr>
 		<td>T::algorithm</td>
@@ -139,7 +139,7 @@ T must also Satisfy DestroyableKey
 		<td>typename T::public_key</td>
 		<td>a Typename</td>
 		<td>The associated public key type</td>
-		<td>Must satisfy Key</td>
+		<td>Must satisfy Key. UB if public_key::byte_type is not T::byte_type</td>
 	</tr>
 	<tr>
 		<td>c.getPublicKey()</td>
@@ -205,7 +205,431 @@ Given:
 <ul>
 <li>T, a type which satisfies SymmetricCipherAlgorithm</li>
 <li>t, a value of type T</li>
-<li>
+<li>k, an lvalue of type const T::key, or an rvalue of type T::key</li>
+<li>b, a value of type bool</li>
+<li>in, a value of type T::input_type</li>
+<li>out, a value of type T::output_type</li>
+<li>sz, a value of type std::size_t, which is a multiple of T::blockSize</li>
+</ul>
+
+<table>
+	<tr>
+		<th>Expression</th>
+		<th>Result Type</th>
+		<th>Semantics or Value</th>
+		<th>Notes</th>
+	</tr>
+	<tr>
+		<td>typename T::byte_type</td>
+		<td>type alias</td>
+		<td>Byte type used by operations</td>
+		<td>Must satisfy Byte</td>
+	</tr>
+	<tr>
+		<td>typename T::input_type</td>
+		<td>type alias</td>
+		<td>Pointer to a constant input buffer of byte_type</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>typename T::output_type</td>
+		<td>type alias</td>
+		<td>Pointer to a mutable output buffer of byte_type</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>typename T::key</td>
+		<td>type alias</td>
+		<td>Key type used for init</td>
+		<td>Must Satisfy Key. UB if key::byte_type is not byte_type</td>
+	</tr>
+	<tr>
+		<td>typename T::padding</td>
+		<td>type alias</td>
+		<td>Padding type used for CipherIOStreams</td>
+		<td>Must satisfy Padding. UB if padding::byte_type is not byte_type</td>
+	</tr>
+	<tr>
+		<td>T::blockSize</td>
+		<td>size_t</td>
+		<td>The size of the block used or -1.</td>
+		<td>Must be a constant expression</td>
+	</tr>
+	<tr>
+		<td>t.init(k,b,in)</td>
+		<td>void</td>
+		<td>Initializes the Cipher to process input, using k as the key, and in as the iv(if used). b is true if the Cipher is used to Encrypt, false if used to Decrypt.</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>t.update(in,sz,out)</td>
+		<td>void</td>
+		<td>Processes bytes form in, and sends them to out</td>
+		<td>Effects are unspecified (and may be undefined) if blockSize is not -1, and sz is not a multiple of blockSize. Behavior is undefined if init has not been called</td>
+	</tr>
+	<tr>
+		<td>t.doFinal(out)</td>
+		<td>void</td>
+		<td>Finalizes the cipher. Any leftover bytes are copied to out.</td>
+		<td>Behavior is undefined if init has not been called</td>
+	</tr>
+</table>
+
+<h3>AsymmetricCipherAlgorithm</h3>
+Concept for Cipher Algorithms that use a different key for encryption/decryption (such as RSA).
+
+<h4>Requirements</h4>
+Given:
+
+<ul>
+<li>T, a type which satisfies AsymmetricCipherAlgorithm</li>
+<li>t, a value of type T</li>
+<li>pk, an lvalue of type const T::public_key, or an rvalue of type T::public_key</li>
+<li>pvk, an lvalue of type const T::private_key, or an rvalue of type T::private_key</li>
+<li>b, a value of type bool</li>
+<li>in, a value of type T::input_type</li>
+<li>out, a value of type T::output_type</li>
+<li>sz, a value of type std::size_t, which is a multiple of T::blockSize</li>
+</ul>
 
 
+<table>
+	<tr>
+		<th>Expression</th>
+		<th>Result Type</th>
+		<th>Semantics or Value</th>
+		<th>Notes</th>
+	</tr>
+	<tr>
+		<td>typename T::byte_type</td>
+		<td>type alias</td>
+		<td>Byte type used by operations</td>
+		<td>Must satisfy Byte</td>
+	</tr>
+	<tr>
+		<td>typename T::input_type</td>
+		<td>type alias</td>
+		<td>Pointer to a constant input buffer of byte_type</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>typename T::output_type</td>
+		<td>type alias</td>
+		<td>Pointer to a mutable output buffer of byte_type</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>typename T::private_key</td>
+		<td>type alias</td>
+		<td>Key type used for init</td>
+		<td>Must Satisfy PrivateKey. UB if key::byte_type is not byte_type</td>
+	</tr>
+	<tr>
+		<td>typename T::public_key</td>
+		<td>type alias</td>
+		<td>Key type used for init</td>
+		<td>Must Satisfy Key. UB if key::byte_type is not byte_type. UB if private_key::public_key is not the same type</td>
+	</tr>
+	<tr>
+		<td>typename T::padding</td>
+		<td>type alias</td>
+		<td>Padding type used for CipherIOStreams</td>
+		<td>Must satisfy Padding. UB if padding::byte_type is not byte_type</td>
+	</tr>
+	<tr>
+		<td>T::blockSize</td>
+		<td>size_t</td>
+		<td>The size of the block used or -1.</td>
+		<td>Must be a constant expression</td>
+	</tr>
+	<tr>
+		<td>t.init(pk,b,in)</td>
+		<td>void</td>
+		<td>Initializes the Cipher to process input, using pk as the key, and in as the iv(if used). b is true if the Cipher is used to Encrypt, false if used to Decrypt.</td>
+		<td>Effects of initializing an AssymetricCipherAlgorithm in decrypt mode with a public key is Implementation-Defined</td>
+	</tr>
+	<tr>
+		<td>t.init(pvk,b,in)</td>
+		<td>void</td>
+		<td>Initializes the Cipher to process input, using pvk as the key, and in as the iv(if used). b is true if the Cipher is used to Encrypt, false if used to Decrypt.</td>
+		<td>Effects of initializing an AssymetricCipherAlgorithm in encry mode with a private key is Implementation-Defined.</td>
+	</tr>
+	<tr>
+		<td>t.update(in,sz,out)</td>
+		<td>void</td>
+		<td>Processes bytes form in, and sends them to out</td>
+		<td>Effects are unspecified (and may be undefined) if blockSize is not -1, and sz is not a multiple of blockSize. Behavior is undefined if init has not been called</td>
+	</tr>
+	<tr>
+		<td>t.doFinal(out)</td>
+		<td>void</td>
+		<td>Finalizes the cipher. Any leftover bytes are copied to out.</td>
+		<td>Behavior is undefined if init has not been called</td>
+	</tr>
+</table>
+
+<h3>CipherAlgorithm</h3>
+CipherAlgorithm is a generalized concept, which has specializations in SymmetricCipherAlgorithm and AsymmetricCipherAlgorithm.
+CipherAlgorithm does not have any explicit requirements, but All types which satisfy SymmetricCipherAlgorithm or AsymmetricCipherAlgorithm, and only such types, satisfy CipherAlgorithm.
+
+<h3>KeyGenerator</h3>
+KeyGenerator is a provided to generate random Keys for SymmetricCipherAlgorithms. KeyGenerator is a special NullaryFunctionalObject which returns a key when called.
+
+<h4>Requirements</h4>
+Given:
+<ul>
+<li>T, a type which satisfies KeyGenerator</li>
+<li>t, a value of type t</li>
+<li>r, and rvalue of type T::source_type</li>
+</ul>
+<table>
+	<tr>
+		<th>Expression</th>
+		<th>Result Type</th>
+		<th>Semantics or Value</th>
+		<th>Notes</th>
+	</tr>
+	<tr>
+		<td>typename T::byte_type</td>
+		<td>type alias</td>
+		<td>The byte type</td>
+		<td>Must satisfy Byte</td>
+	</tr>
+	<tr>
+		<td>typename T::key</td>
+		<td>type alias</td>
+		<td>The Key type</td>
+		<td>Must satisfy Key. UB if key::byte_type is not the same as byte_type</td>
+	</tr>
+	<tr>
+		<td>typename T::source_type</td>
+		<td>type alias</td>
+		<td>The source of random bytes to be used to generate keys</td>
+		<td>
+			Must satisfy DefaultConstructible and MoveConstructible. Must also either: 
+			<ul>
+				<li> be a subclass of Random (defined in &lt;Random.hpp&gt;)</li>
+				<li>Satisfy UniformRandomBitGenerator</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td>T{}</td>
+		<td>T</td>
+		<td>Initialize the internal random number generator with an unpredictable state</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>T{r}</td>
+		<td>T</td>
+		<td>Initializes the internal random number generator by moving the state of r</td>
+		<td>If source_type is Non-Deterministic (such as std::random_device), this is equivalent to T{}</td>
+	</tr>
+	<tr>
+		<td>t()</td>
+		<td>T::key_type</td>
+		<td>Generates a random Key from the internal random number generator</td>
+		<td></td>
+	</tr>
+</table>
 		
+<h3>KeyPairGenerator</h3>
+KeyPairGenerator is a provided to generate random Keys pairs for AsymmetricCipherAlgorithms. KeyGenerator is a special NullaryFunctionalObject which returns a key when called.
+
+<h4>Requirements</h4>
+Given:
+<ul>
+<li>T, a type which satisfies KeyGenerator</li>
+<li>t, a value of type t</li>
+<li>r, and rvalue of type T::source_type</li>
+</ul>
+<table>
+	<tr>
+		<th>Expression</th>
+		<th>Result Type</th>
+		<th>Semantics or Value</th>
+		<th>Notes</th>
+	</tr>
+	<tr>
+		<td>typename T::byte_type</td>
+		<td>type alias</td>
+		<td>The byte type</td>
+		<td>Must satisfy Byte</td>
+	</tr>
+	<tr>
+		<td>typename T::private_key</td>
+		<td>type alias</td>
+		<td>The PrivateKey type</td>
+		<td>Must satisfy PrivateKey. UB if key::byte_type is not the same as byte_type</td>
+	</tr>
+	<tr>
+		<td>typename T::public_key</td>
+		<td>type alias</td>
+		<td>The PublicKey type</td>
+		<td>Must satisfy Key. UB if this is not the same type as private_key::public_key</td>
+	</tr>
+	<tr>
+		<td>typename T::source_type</td>
+		<td>type alias</td>
+		<td>The source of random bytes to be used to generate keys</td>
+		<td>
+			Must satisfy DefaultConstructible and MoveConstructible. Must also either: 
+			<ul>
+				<li> be a subclass of Random (defined in &lt;Random.hpp&gt;)</li>
+				<li>Satisfy UniformRandomBitGenerator</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td>T{}</td>
+		<td>T</td>
+		<td>Initialize the internal random number generator with an unpredictable state</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>T{r}</td>
+		<td>T</td>
+		<td>Initializes the internal random number generator by moving the state of r</td>
+		<td>If source_type is Non-Deterministic (such as std::random_device), this is equivalent to T{}</td>
+	</tr>
+	<tr>
+		<td>t()</td>
+		<td>std::pair<T::public_key,T::private_key></td>
+		<td>Generates a random Key Pair from the internal random number generator</td>
+		<td>The public key returned must be equivalent to value resulting from calling getPublicKey on the returned private key.</td>
+	</tr>
+</table>
+
+<h3>KeyDerivationAlgorithm</h3>
+KeyDerivationAlgorithm is an algorithm for turning arbitrary byte sequences, and salted passwords into keys. 
+<h4>Requirements</h4>
+Given:
+<ul>
+<li>T, a type which satisfies KeyDerivationAlgorithm</li>
+<li>t, a value of type T</li>
+<li>bytes, a value of type T::input_type</li>
+<li>pwd, a value of type T::password_type</li>
+<li>salt, a value of type T::salt_type</li>
+<li>sz, a value of type std::size_t</li>
+</ul>
+<table>
+	<tr>
+		<th>Expression</th>
+		<th>Result Type</th>
+		<th>Semantics or Value</th>
+		<th>Notes</th>
+	</tr>
+	<tr>
+		<td>typename T::byte_type</td>
+		<td>Type Alias</td>
+		<td>The byte type</td>
+		<td>Must satisfy Byte</td>
+	</tr>
+	<tr>
+		<td>typename T::input_type</td>
+		<td>Type Alias</td>
+		<td>The constant buffer of byte_type</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>typename T::password_type</td>
+		<td>Type Alias</td>
+		<td>The type of passwords for use in deriving from salted passwords</td>
+		<td>Must satisfy CString</td>
+	</tr>
+	<tr>
+		<td>typename T::salt_type</td>
+		<td>Type Alias</td>
+		<td>The Type of the salt for deriving from salted passwords</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>t.deriveKey(in,sz)</td>
+		<td>key</td>
+		<td>A key which's content depends on the buffer, and only the buffer</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>t.deriveKey(pwd,salt,sz)</td>
+		<td>key</td>
+		<td>A key which's content depends on the password and the salt (and only those values)</td>
+		<td></td>
+	</tr>
+</table>
+
+<h3>MessageDigestAlgorithm</h3>
+Algorithm for the MessageDigest structure. MessageDigestAlgorithms hash or "digest" arbitary byte buffers, and returns a staticly sized hash. 
+
+<h4>Requirements</h4>
+Given:
+<ul>
+<li>T, a type which satisfies MessageDigestAlgorithm</li>
+<li>t, a value of type T</li>
+<li>in, a value of type T::input_type</li>
+<li>out, a value of type T::output_type</li>
+<li>sz, a value of std::size_t</li>
+</ul>
+
+<table>
+	<tr>
+		<th>Expression</th>
+		<th>Result Type</th>
+		<th>Semantics or Value</th>
+		<th>Notes</th>
+	</tr>
+	<tr>
+		<td>typename T::byte_type</td>
+		<td>Type Alias</td>
+		<td>The byte type</td>
+		<td>Must satisfy Byte</td>
+	</tr>
+	<tr>
+		<td>typename T::input_type</td>
+		<td>Type Alias</td>
+		<td>The input buffer type</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>typename T::output_type</td>
+		<td>Type Alias</td>
+		<td>The output buffer type</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>T::digestSize</td>
+		<td>std::size_t</td>
+		<td>The size of the resultant digest</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>t.init()</td>
+		<td>void</td>
+		<td>Initializes the MessageDigest</td>
+		<td>UB if called multiple times without a call to doFinal()</td>
+	</tr>
+	<tr>
+		<td>t.update(in,sz)</td>
+		<td>void</td>
+		<td>Updates the state with the given buffer</td>
+		<td>UB if called before a call to init() or since a call to doFinal() but before a subsequent call to init()</td>
+	</tr>
+	<tr>
+		<td>t.doFinal(out)</td>
+		<td>void</td>
+		<td>Finalizes the internal state, and moves the digest into out</td>
+		<td>UB if called before a call to init(), or since a call to doFinal() but before a subsequent call to init()</td>
+	</tr>
+</table>
+
+<h2>Concepts</h2>
+Included with &lt;lclib-cxx/security/Concepts.hpp&gt;<br/>
+Requires LIBLCCXX_HAS_CONCEPTS<br/>
+The Security API Provides a Set of Concepts if Concepts are supported by the compiler. 
+Each named requirement has a respective concept, declared in the security::concepts namespace.
+
+<h2>Type Traits</h2>
+Included with &lt;lclib-cxx/security/Concepts.hpp&gt;<br/>
+The Security API Also provides a Set of legacy type traits, for when concepts may not be or are not available. 
+Each named requirement has a respective type trait, declared in the security::traits namespace.
+
+

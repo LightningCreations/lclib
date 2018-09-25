@@ -43,7 +43,9 @@ namespace security{
 	public:
 		static constexpr const char algorithm[]= "AES";
 		using data_type = const byte*;
-		AESKey(byte(&arr)[N/8]):key{arr}{}
+		AESKey(const byte(&arr)[N/8]){
+			memcpy(key,arr,N/8);
+		}
 		~AESKey(){
 			memset(key,0,N/8);
 		}

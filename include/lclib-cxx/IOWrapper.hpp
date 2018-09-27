@@ -93,30 +93,15 @@ public:
      * \Exception Guarantee: Implementations may throw an exception.
      */
     virtual int read()=0;
-    /**
-     * Reads Up to N bytes into the array given.
-     * This acts as read(arr,N) except that it is not undefined behavior
-     * to access indices of the array beyond the end of the read area,
-     * and those bytes are preserved by this function (whatever value was in that index prior to the call remains)
-     * \Exception Guarantee: This function throws if the implementation of read(void*,size_t) throws
-     */
-    template<size_t N> size_t read(uint8_t(&arr)[N]){
-        return read(arr,N);
+
+    template<typename T,std::size_t N,typename=std::enable_if_t<is_byte_v<T>&&!std::is_const_v<T>>>
+    		std::size_t read(T(&arr)[N]){
+    	return read(arr,N);
     }
-    /**
-     * Reads up to N bytes into the array given.
-     * Same Guarantee's as read(uint8_t(&)[N]);
-     */
-    template<size_t N> size_t read(std::byte(&arr)[N]){
-        return read(arr,N);
-    }
-        /**
-     * Reads up to N bytes into the array given.
-     * Same Guarantee's as read(uint8_t(&)[N]);
-     */
-    template<size_t N> size_t read(int8_t(&arr)[N]){
-        return read(arr,N);
-    }
+    template<typename T,std::size_t N,typename=std::enable_if_t<is_byte_v<T>&&!std::is_const_v<T>>>
+			std::size_t read(std::array<T,N>& arr){
+		return read(arr.data(),N);
+	}
 };
 
 
@@ -492,9 +477,12 @@ public:
      * Writes an array of bytes to a stream.
      * This function acts as if by write(arr,N)
      */
-    template<size_t N> size_t write(uint8_t(&arr)[N]){
+    template<typename T,size_t N,typename=std::enable_if_t<is_byte_v<T>>> size_t write(const T(&arr)[N]){
         return write(arr,N);
     }
+    template<typename T,size_t N,typename=std::enable_if_t<is_byte_v<T>>> size_t write(const std::array<T,N>& arr){
+		return write(arr.data(),N);
+	}
     OutputStream& operator=(OutputStream&&)=default;
 
     /**

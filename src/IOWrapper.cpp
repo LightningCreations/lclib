@@ -346,3 +346,23 @@ const char* FileNotFoundException::what()const noexcept(true){
 const char* EOFException::what()const noexcept(true){
 	return "End Of File Reached before completing read";
 }
+
+std::size_t NullDeviceOutputStream::write(const void*,std::size_t n){
+	return n;
+}
+void NullDeviceOutputStream::write(uint8_t u){}
+
+std::size_t NullDeviceInputStream::read(void*,std::size_t){
+	return 0;
+}
+int NullDeviceInputStream::read(){
+	return EOF;
+}
+std::size_t ZeroDeviceInputStream::read(void* v,std::size_t s){
+	memset(v,0,s);
+	return s;
+}
+
+int ZeroDeviceInputStream::read(){
+	return 0;
+}

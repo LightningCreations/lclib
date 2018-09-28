@@ -753,4 +753,23 @@ public:
 	void write(uint8_t);
 	const std::byte* getBuffer()const;
 };
+
+class LIBLCAPI NullDeviceOutputStream:public OutputStream{
+public:
+	std::size_t write(const void*,std::size_t);
+	void write(uint8_t);
+};
+
+class LIBLCAPI NullDeviceInputStream:public InputStream{
+public:
+	std::size_t read(void*,std::size_t);
+	int read();
+};
+
+class LIBLCAPI ZeroDeviceInputStream:public InputStream{
+public:
+	std::size_t read(void*,std::size_t);
+	int read();
+};
+
 #endif

@@ -208,6 +208,8 @@ public:
 	 */
 	virtual ~ServerSocketImpl()=default;
 
+	virtual bool isBound()const noexcept(true)=0
+
 };
 
 class LIBLCAPI Socket{
@@ -240,12 +242,12 @@ public:
 	 * Gets the input stream of this socket.
 	 * The behavior is undefined if the socket is not connected.
 	 */
-	InputStream& getInputStream();
+	InputStream& getInputStream() EXPECTS(isConnected());
 	/**
 	 * Gets the output stream of this socket.
 	 * The behavior is undefined if the socket is not connected.
 	 */
-	OutputStream& getOutputStream();
+	OutputStream& getOutputStream() EXPECTS(isConnected());
 	/**
 	 * Attempts to connect to a server.
 	 * The Socket first checks if it can find a server with the given hostname
@@ -261,11 +263,13 @@ public:
 	 * If the implementation throws any exception not detailed above, the behavior is undefined
 	 * \Exception Safety: If an exception occurs, the socket is left in an valid but unspecified state, which is not connected to any server.
 	 */
-	void connect(const std::string&,uint16_t);
+	void connect(const std::string&,uint16_t) EXPECTS(!isConnected());
 	/**
 	 * Checks if the Socket is connected to a server already.
 	 * Returns true if it has successfully connected to a server,
-	 * false otherwise.
+	 * false otherwise. If connect was called previous and did not result in an exception, this will usually return true.
+	 * If connect was not called previously, or was called previously, and the call threw an exception, this will usually return false.
+	 * An exception to the above is that Sockets returned from ServerSocket.accept() will not throw exceptions
 	 * \Exception Guarantee: This function will not throw any exceptions
 	 */
 	bool isConnected()const noexcept(true);
@@ -279,13 +283,13 @@ public:
 	 * The behavior is undefined if the socket is not connected to a server.
 	 * The behavior is unspecified (and may be undefined) if the socket is not using the default Socket Implemenation.
 	 */
-	const std::string& getConnectedName()const;
+	const std::string& getConnectedName()const EXPECTS(isConnected());
 	/**
 	 * Gets the port which the server is connected to.
 	 * The behavior is undefined if the socket is not connected to a server.
 	 * The behavior is unspecified (and may be undefined) if the socket is not using the default Socket Implemenation.
 	 */
-	uint16_t getConnectedPort()const;
+	uint16_t getConnectedPort()const EXPECTS(isConnected());
 };
 
 class LIBLCAPI ServerSocket{
@@ -316,7 +320,7 @@ public:
 	 * If the server is not bound the behavior is undefined.
 	 * If there is no pending connection, the call may block. This may throw a SocketConcurrencyException as per ServerSocketImpl::accept
 	 */
-	Socket accept();
+	Socket accept() EXPECTS(isBound());
 	/**
 	 * Binds the server socket to a given hostname and port.
 	 * If the current host cannot open a server at the given hostname (as it is an external ip address, or a domain which resolves to such an ip address,
@@ -326,19 +330,21 @@ public:
 	 * Otherwise the server is bound and opened at the specified hostname and port.
 	 * If the server is already bound the behavior is undefined
 	 */
-	void bind(const std::string&,uint16_t);
+	void bind(const std::string&,uint16_t) EXPECTS(!isBound());
 	/**
 	 * Obtains an implementation defined reference to an InputStream which reads from all open connections.
 	 * The behavior is undefined if the server is not bound.
 	 * Server Wide IO is not mandated, and thus this method may throw a SocketOperationUnsupportedException
 	 */
-	InputStream& getInputStream();
+	InputStream& getInputStream() EXPECTS(isBound());
 	/**
 	 * Obtains an implemenation defined reference to an OutputStream which writes to all open connections.
 	 * The behavior is undefined if the server is not bound.
 	 * Server Wide IO is not mandated, and thus this method may throw a SocketOperationUnssuportedException
 	 */
-	OutputStream& getOutputStream();
+	OutputStream& getOutputStream() EXPECTS(isBound());
+
+	bool isBound()const noexcept(true);
 };
 
 /**

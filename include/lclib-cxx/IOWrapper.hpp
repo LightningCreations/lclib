@@ -102,6 +102,10 @@ public:
 			std::size_t read(std::array<T,N>& arr){
 		return read(arr.data(),N);
 	}
+    virtual bool checkError()const noexcept(true)=0;
+    explicit operator bool()const noexcept(true);
+    bool operator!()const noexcept(true);
+    virtual void clearError()noexcept(true)=0;
 };
 
 
@@ -182,6 +186,9 @@ public:
      * or a null pointer if the stream has been moved from
      */
     FILE* getUnderlying()noexcept(true);
+
+    bool checkError()const noexcept(true);
+    void clearError()noexcept(true);
 };
 
 
@@ -193,6 +200,8 @@ public:
 	 ~FilterInputStream()=0;//Force Abstract
 	 size_t read(void*,size_t);
 	 int read();
+	 bool checkError()const noexcept(true);
+	 void clearError()noexcept(true);
 };
 
 /**
@@ -497,6 +506,11 @@ public:
      */
      virtual void flush();
 
+     virtual bool checkError()const noexcept(true)=0;
+     virtual void clearError()noexcept(true)=0;
+     explicit operator bool()const noexcept(true);
+     bool operator!()const noexcept(true);
+
 };
 
 class LIBLCAPI FilterOutputStream:public OutputStream{
@@ -508,6 +522,8 @@ public:
 	 size_t write(const void*,size_t);
 	 void write(uint8_t);
 	 void flush();
+	 bool checkError()const noexcept(true);
+	 void clearError()noexcept(true);
 };
 /**
  * Tag type for disambugating appending constructors of FileOutputStream
@@ -621,6 +637,8 @@ public:
      * Obtains the underlying file, or a null pointer if the underlying file has been moved. 
      */
      FILE* getUnderlying()const noexcept(true);
+     bool checkError()const noexcept(true);
+     void clearError()noexcept(true);
 };
 
 /**
@@ -744,6 +762,8 @@ public:
 		bufferPosition{0}{}
 	std::size_t read(void*,std::size_t);
 	int read();
+	bool checkError()const noexcept(true);
+	void clearError()noexcept(true);
 };
 class LIBLCAPI ByteArrayOutputStream:public OutputStream{
 private:
@@ -752,24 +772,32 @@ public:
 	std::size_t write(const void*,std::size_t);
 	void write(uint8_t);
 	const std::byte* getBuffer()const;
+	bool checkError()const noexcept(true);
+	void clearError()noexcept(true);
 };
 
 class LIBLCAPI NullDeviceOutputStream:public OutputStream{
 public:
 	std::size_t write(const void*,std::size_t);
 	void write(uint8_t);
+	bool checkError()const noexcept(true);
+	void clearError()noexcept(true);
 };
 
 class LIBLCAPI NullDeviceInputStream:public InputStream{
 public:
 	std::size_t read(void*,std::size_t);
 	int read();
+	bool checkError()const noexcept(true);
+	void clearError()noexcept(true);
 };
 
 class LIBLCAPI ZeroDeviceInputStream:public InputStream{
 public:
 	std::size_t read(void*,std::size_t);
 	int read();
+	bool checkError()const noexcept(true);
+	void clearError()noexcept(true);
 };
 
 #endif

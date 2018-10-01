@@ -27,6 +27,7 @@ namespace detail{
 
 }
 
+
 template<std::size_t N> constexpr const char* nameHash(const char(&str)[N],char(&out)[25]){
 	std::size_t prev = 2846782441;
 	for(std::size_t q=0;q<24;q++)

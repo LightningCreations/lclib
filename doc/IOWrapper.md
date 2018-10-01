@@ -18,14 +18,20 @@ class InputStream;
 class FilterInputStream:public InputStream;
 class FileInputStream:public InputStream;
 class DataInputStream:public FilterInputStream;
+class NullDeviceInputStream:public InputStream;
+class ZeroDeviceInputStream:public InputStream;
+class ByteArrayInputStream:public InputStream;
 
 class OutputStream;
 class FilterOutputStream:public OutputStream;
 class FileOutputStream:public OutputStream;
 class DataOutputStream:public OutputStream;
+class NullDeviceOutputStream:public OutputStream;
+class ByteArrayOutputStream:public OuputStream;
 ```
 
 <h2>Overview</h2>
+
 The IOWrapper library provides an OO, Generic, and Extensible interface for reading and writing data.
 The Interface of the IOWrapper library is designed to be consistent with java's Stream IO Library (java.io). Only InputStream/OutputStreams are provided, Writers/Readers, and PrintStream are not supported. Character IO should be preformed using C++ &lt;iostream&gt; library. 
 
@@ -103,7 +109,7 @@ InputStream& operator=(const InputStream&)=delete; //(6)
 (5): Defaulted Move Assignment
 (6): Deleted Copy Assignment
 
-<h4>Methods</h4>
+<h4>read methods</h4>
 
 ```cpp
 virtual size_t read(void* ptr,size_t size)=0; //(1)
@@ -141,7 +147,24 @@ Reads a single byte from the stream and returns it. If EOF is reached returns -1
 (1): Any subclass of InputStream may throw any Exception from the read method. If a subclass can throw an exception, it must be clearly detailed which exceptions can be thrown and in what cases they are. If an exception is thrown by the read method, the object being read is invalidated, and using in any way (except for assignment operators/destructors) is undefined behavior.
 (2),(3),(4),(5): Same as (1). 
 
+<h4>Stream Error Analysis</h4>
+
+```cpp
+virtual bool checkError()const noexcept(true)=0; //(1)
+virtual void clearError()noexcept(true)=0; //(2)
+explicit operator bool()const noexcept(true); //(3)
+bool operator!()const noexcept(true); //(4)
+```
+
+(1),(4): Checks if an error is on stream. If there is an error the stream should not be used (may be closed or moved). (4) is implemented in terms of (1).<br/> 
+(3): opposite of checkError(), IE. checks if the stream is OK.<br/>
+(2): Clears any error which may be on stream. Has no effect if there is no error, or the error cannot be cleared.
+<h5>Exceptions</h5>
+All are non-throwing.
+
+
 <h3>class FilterInputStream</h3>
+
 Abstract base class for InputStreams which wrap an existing stream, to add functionality.
 
 <h4>Base classes</h4>
@@ -158,7 +181,7 @@ FilterInputStream(InputStream&); //(1)
 (1): Constructs a FilterInputStream binding it to the specific InputStream.
 (2): Virtual Destructor to prevent direct Construction of FilterInputStreams
 
-<h4>Methods</h4>
+<h4>Read Methods</h4>
 
 ```cpp
 size_t read(void* ptr,size_t size); //(1)
@@ -166,6 +189,15 @@ int read(); //(2)
 ```
 (1),(2): Forwards to the equivalent method in the wrapped stream.
 Any exceptions thrown by the equivalent method in the wrapped stream propagate through this call.
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+bool checkError()const noexcept(true); //(1)
+void clearError()noexcept(true); //(2)
+```
+
+(1),(2): Same as the equivalent method in the underlying stream.
 
 <h3>class FileInputStream</h3>
 
@@ -203,8 +235,7 @@ Exceptions: Throws FileNotFoundException if given file does not exist or cannot 
 (7):Moves in to this. If this has control of an underlying file has not been moved, 
  it is closed, then the control of the underlying file wrapped by in is moved to this.
 
-<h4>Methods</h4>
-<h5>read</h5>
+<h4>Read Methods</h4>
 
 ```cpp
 size_t read(void* ptr,size_t size); //(1)
@@ -214,15 +245,25 @@ int read(); //(2)
 (1): Reads size bytes from the underlying file into the object pointed to by ptr. ptr must satisfy the same requirements as specified by InputStream::read
 (2): Reads a single byte from the underlying file and returns it or EOF if the file has reached the end of file.
 
-<h6>Exception Guarantee</h6>
+<h5>Exception Guarantee</h5>
 Neither method will throw any exceptions
-<h5>getUnderlying</h5>
+<h4>Raw Stream Access</h4>
+
 ```cpp
 FILE* getUnderlying()const noexcept(true);
 ```
 Gets the underlying file or a null pointer if control of the underlying file has been moved. This allows for users to query the status of the underlying file (such as with ferror). If the underlying file is closed, reopened, used for raw c io operations, or passed to the constructor of FileInputStream, the behavior is undefined.
-<h6>Exception Guarantee</h6>
+<h5>Exception Guarantee</h5>
 noexcept(true)
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+bool checkError()const noexcept(true); //(1)
+void clearError()noexcept(true); //(2)
+```
+(1): Checks if an error is on stream. Checks the stream's Error and EOF flags.  Effectively the same as ferror(getUnderlying())||feof(getUnderlying()). 
+(2): Clears any error on stream. Effectively the same as clearerr(getUnderlying()).
 
 <h3>DataInputStream</h3>
 A wrapper on basic InputStreams, which provides Byte-Order sensitive read operations for scalar and other types. 
@@ -301,6 +342,107 @@ template<typename E> DataInputStream& operator>>(E& e); //(14)
 (11): Reads a UUID from the stream, and assigns it to u. Effectively u=UUID{readLong(),readLong()};
 (14): Reads an enum value from the stream as if by `e = readEnum<E>();` This operator does not participate in overload resolution unless `std::is_enum_v<E>` is true.
 
+
+<h3>class NullDeviceInputStream</h3>
+NullDeviceInputStream is a Special InputStream which reads from the Null Symbolic Device (on Linix/Unix, this is at /dev/null). 
+Read Methods will unconditionally yield EOF, and no bytes are read. 
+Note that Despite this referencing a symbolic device, no actual read is made, the methods simply do nothing. 
+
+
+<h4>Read Methods</h4>
+
+```cpp
+std::size_t read(void* ptr,std::size_t sz); //(1)
+int read(); //(2)
+```
+(1), (2): Reads from the stream. The NullDevice is allways empty, and these methods unconditionally return EOF. Unlike InputStream::read(void*,std::size_t), this method will NOT invalidate any objects at ptr. 
+However, despite the fact that the method has no effect, ptr must still follow all rules layed out in InputStream::read(void*,std::size_t);
+
+<h5>Exceptions</h5>
+Neither method will throw any exceptions.
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+bool checkError()const noexcept(true); //(1)
+void clearError()noexcept(true); //(2)
+```
+(1):Checks if an error is on stream. As No reads are made this method unconditionally returns false.
+(2): Clears the error on stream. Due to no errors being reported, this method has no effect.
+
+<h3>class ZeroDeviceInputStream</h3>
+ZeroDeviceInputStream is a InputStream that reads from the Symbol Zero Device (On Linux/Unix, this is at /dev/zeros). 
+Read methods will result in a stream of Zeros, that is, will fill the buffer provided with 0s and return zero from read(). 
+Despite referencing /dev/zeros, no actual device read is made, the implementation is in terms of memset. This may be a more secure method of destroying objects, due to the optimizations of memset, which are not present in this file (as IO operations cannot be optimized due to the AS-IS Rule). 
+
+<h4>Read Methods</h4>
+
+```cpp
+std::size_t read(void* ptr,std::size_t sz); //(1)
+int read(); //(2)
+```
+(1): Reads sz bytes from the stream into ptr. This sets all bytes in the object indicated by ptr to 0, then returns sz. 
+(2): Reads a byte from the stream and returns it. Always returns 0;
+
+<h5>Exceptions</h5>
+Neither method will throw any exceptions.
+
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+bool checkError()const noexcept(true);//(1)
+void clearError()noexcept(true);//(2)
+```
+(1): Checks if an error is on stream. As no read is actually preformed, this always returns false
+(2): Clears the error on stream. As no errors are reported, this method has no effect
+
+<h3>ByteArrayInputStream</h3>
+Reads bytes from a internal buffer. An unsupressable error condition is reported if the end of the buffer has been reached.
+
+<h4>Constructors</h4>
+
+```cpp
+template<typename Byte> ByteArrayInputStream(const Byte* buff,std::size_t blen); //(1)
+template<typename Byte,std::size_t N> ByteArrayInputStream(const Byte(&arr)[N]); //(2)
+template<typename Byte,std::ptrdiff_t extent> ByteArrayInputStream(const span<Byte,extent>& s); //(3)
+template<typename Byte> ByteArrayInputStream(const span<Byte,dynamic_extent>& s); //(4)
+```
+(1): Constructs a new ByteArrayInputStream over the given buffer. buff must be a pointer to a valid object which is at least blen bytes in size. The behavior is undefined if buff is a null pointer, an invalid pointer, or points to an object which is not TriviallyCopyable, or either the object or any subobject meets any of the following conditions:
+<ul>
+<li>Is a volatile object</li>
+<li>Is a Pointer type (including Pointer to member and Function Pointer types)</li>
+<li>Is a Reference type</li>
+</ul>
+The requirements are effectively the same as for OutputStream.write(const void*,std::size_t).<br/>
+The Total length of the resultant buffer is sz. 
+This method does not participate in overload resolution unless `is_byte_v<Byte>` is true. 
+(2): Constructs a new ByteArrayInputStream over the given array, with total size N. This method does not participate in Overload resolution unless `is_byte_v<Byte>` is true. 
+(3),(4): Constructs a new ByteArrayInputStream over s.data(), with total size s.size(). This method does not participate in Overload resolution unless `is_byte_v<Byte>` is true. (3) does not participate in Overload resolution if extent&lt;0. Byte may be a const qualified byte type.
+
+<h4>Read Methods</h4>
+
+```cpp
+std::size_t read(void* ptr,std::size_t sz); //(1)
+int read(); //(2)
+```
+(1): reads sz bytes from the buffer to ptr. If there are no bytes remaining in the buffer, returns EOF. 
+Otherwise, if there is n bytes remaining in buffer, where n is less than sz, then n bytes are copied from the buffer to ptr, the buffer is advanced to the end, and n is returned. This may invalidate objects at ptr as specified in InputStream.read(void*,std::size_t). Otherwise, sz bytes are copied to ptr, the buffer is advanced by sz bytes, and sz is returned<br/>
+(2): reads a single byte from the stream. If there are no bytes remaining in the buffer, returns EOF. 
+Otherwise, returns the byte at the current position of the buffer, and advances the buffer by 1.
+
+<h5>Exceptions</h5>
+Neither method will throw an exception
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+bool checkError()const noexcept(true); //(1)
+void clearError()noexcept(true); //(2)
+```
+(1): Checks if there is an error on stream. Returns true if the buffer is at the end of the stream, false otherwise.
+(2): Clears any error on the stream. This method has no effect as the only error is unsuppressable (end of stream).
+
 <h3>class OutputStream</h3>
 OutputStream is the abstract base class of the output portion of the IOWrapper Library, mirroring InputStream. Like InputStreams, OutputStreams have ownership of any resources they use, and aquires and releases those resources during construction and destruction respectively. Subclasses of OutputStream may buffer output before commiting writes in the stream. If a subclass does, it must override the flush method to flush the internal buffer and commiting previous writes to the resource. In addition the buffer must be flushed when the stream is destroyed or reassigned.  If flush is not called it is unspecified when writes are reflected in the underlying resource. If the OutputStream does not buffer input then writes are immediately reflected in the underlying resource, and flushing the stream has no effect. 
 OutputStreams are not inheritly thread safe. The effects of using a single OutputStream across multiple threads is unspecified, and may be undefined.
@@ -321,8 +463,8 @@ OutputStream& operator=(OutputStream&&)=default; //(6)
 (4): Virtual Defaulted Destructor
 (5): Deleted Copy Assignment Operator
 (6): Defaulted Move Assignment Operator
-<h4>Methods</h4>
-<h5>write</h5>
+
+<h4>Write Methods</h4>
 
 ```cpp
 virtual size_t write(const void* ptr,size_t size)=0; //(1)
@@ -334,7 +476,7 @@ template<size_t N> size_t write(std::byte(&arr)[N]); //(5)
 (1): writes size bytes from the object pointed to by ptr to the stream, and returns the total number of bytes written. The behavior is undefined if ptr is null or does not point to a complete object. In addition, if ptr points to a complete object, the behavior is undefined unless all of the objects and all subobjects meet the following conditions:
 <ul>
 <li>The Object must be TriviallyCopyable</li>
-<li>The Object may not be a pointer (including pointer to function or pointer to member), or have pointer non-static data members</li>
+<li>The Object may not be a pointer (including pointer to function or pointer to member), or have any pointer non-static data members</li>
 <li>The Object must not have virtual or duplicate (direct or indirect) base classes</li>
 <li>The Object must not have virtual methods or destructors</li>
 <li>The Object must not have any reference members</li>
@@ -350,19 +492,35 @@ Like InputStream::read, subclasses may impose other restrictions on what objects
 (2): writes a single byte to the stream. 
 (3),(4),(5): writes an array of `uint8_t`, `int8_t`, or `std::byte` to the stream. Effectively read(arr,N);
 
-<h6>Exceptions</h6>
+<h5>Exceptions</h5>
 (1),(2): Subclasses may throw any exception from the write method. If they do, it must be detailed which exceptions can be thrown, and the conditions under which they are thrown. If an exception is thrown from a stream that buffers writes, the stream is rolled-back to state it was in prior to the write call, and the internal buffer is left in an unspecified state. If an exception is thrown from a stream that does not buffer writes, the stream is left in an unspecified state.
 (3),(4),(5): Forwards any exceptions thrown by write.
 
-<h5>flush</h5>
+<h4>flush</h4>
 
 ```cpp
 virtual void flush();
 ```
 Flushes the stream. Has no effect if the OutputStream does not buffer input. Otherwise the internal buffer must be written to the resource.
 
-<h6>Exceptions</h6>
+<h5>Exceptions</h5>
 Subclasses may throw any exception from flush. If they do, it must be detailed which exceptions can be thrown, and the conditions under which they are thrown. If an exception is thrown, both the stream and the internal buffer are left in an unspecified state.
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+virtual bool checkError()const noexcept(true)=0; //(1)
+virtual void clearError()noexcept(true)=0;//(2)
+explicit operator bool()const noexcept(true);//(3)
+bool operator!()const noexcept(true); //(4)
+```
+
+(1),(4): Checks if an error is on stream. The stream should not be used if an error is on the stream until it is cleared. (4) is implemented in terms of (1).
+(3): Checks if there is no error on stream. Effectively the Inverse of checkError()
+(2): Clears any error on stream. Has No effect if there is no error, or the error cannot be cleared.
+
+<h5>Exceptions</h5>
+All methods are non-throwing
 
 <h3>class FilterOutputStream</h3>
 FilterOutputStream wraps an existing OutputStream to be extended to provide extra functionality. The Stream is Not explicitly managed by FilterOutputStream or any subclasses. Destroying the FilterOutputStream will neither close nor flush the underlying stream object.
@@ -386,12 +544,17 @@ The behavior is undefined if out is destroyed before the current object.
 size_t write(const void* ptr,size_t size); //(1)
 void write(uint8_t b); //(2)
 void flush(); //(3)
+bool checkError()const noexcept(true);//(4)
+void clearError()noexcept(true);//(5)
 ```
 (1),(2): calls the corresponding write method in the underlying stream
 (3): Calls the flush method of the underlying stream
+(4): Calls the checkError method of the underlying stream
+(5): Calls the clearError method of the underlying stream.
 
-<h6>Exceptions</h6>
-Any exception thrown by the respective method in the underlying stream propagates through all methods
+<h4>Exceptions</h4>
+(1),(2),(3) Any exception thrown by the respective method in the underlying stream propagates through all methods
+(4),(5): Non-throwing
 
 <h3>FileOutputStream</h3>
 FileOutputStream is an OutputStream which wraps a c FILE*. The file is managed by the stream and is closed when it is destroyed. FileOutputStream will buffer writes if the underlying c IO implementation buffers writes.
@@ -420,12 +583,11 @@ This constructor acts as if by `FileOutputStream(fopen(c,"wb"))`, `FileOutputStr
 (9): Destructor. If control of the underlying file has not been moved from this object, the underlying file is closed. If the underlying file buffers writes, it is also flushed.
 (10): Move Assignment Operator. If control of the underlying file has not been from this object it is closed and potentially flushed. Then control of the underlying file of out is moved to this object.
 
-<h6>Exceptions</h6>
+<h5>Exceptions</h5>
 (1): If the passed file is a null pointer, the constructor throws a FileNotFoundException
 (2),(3),(4),(5),(6),(7): If the named file does not exist or cannot be created, or the named file cannot be opened in write mode, the constructor throws a FileNotFoundException
 
-<h4>Methods</h4>
-<h5>write and flush</h5>
+<h4>Write and Flush Methods</h4>
 
 ```cpp
 size_t write(const void* ptr,size_t size); //(1)
@@ -436,17 +598,22 @@ void flush(); //(3)
 (2): writes a single byte to the underlying file
 (3): If the underlying file buffers writes then flushes that file. Otherwise does nothing
 
-<h6>Exceptions</h6>
+<h5>Exceptions</h5>
 None of these methods will throw an exception
 
-<h5>getUnderlying</h5>
+<h4>Raw File Access and Stream Error Analysis</h4>
 
 ```cpp
-FILE* getUnderlying()const noexcept(true);
+FILE* getUnderlying()const noexcept(true); //(1)
+bool checkError()const noexcept(true);//(2)
+void clearError()noexcept(true); //(3)
 ```
-Gets the underlying file of the InputStream. This file may be inspected by feof, ferror or similar inspection functions. Closing or flushing the file, constructing a new FileOutputStream with the file, or using the file in raw c io calls is undefined behavior.
+(1):Gets the underlying file of the InputStream. This file may be inspected by feof, ferror or similar inspection functions. Closing or flushing the file, constructing a new FileOutputStream with the file, or using the file in raw c io calls is undefined behavior. 
+(2): Checks if there is an error on the stream. Effectively ferror(getUnderlying())||feof(getUnderlying()) 
+(3): Clears any error on the stream. Effectively clearerror(getUnderlying())
 
-<h6>Exceptions</h6>
+
+<h5>Exceptions</h5>
 noexcept(true)
 
 <h3>class DataOutputStream</h3>
@@ -516,6 +683,61 @@ template<typename E> DataOutputStream& operator<<(E e); //(14)
 (11): Writes the Version as though by writeByte(v.getMajor()-1) and writeByte(v.getMinor())
 (14): Writes the enum value as though by the writeEnum method. This operator only participates in overload resolution if `std::is_enum_v<E>` is true.
 
+<h3>class NullDeviceOutputStream</h3>
+NullDeviceOutputStream is a stream that writes to the Null Symbolic Device (/dev/null on Linux/Unix). Write methods will have no effect, no writes actually take place. 
+Despite referencing the Null Device, no handle to that device is created. 
+NullDeviceOutputStream is unbuffered.
+
+<h4>Write Methods</h4>
+
+```cpp
+std::size_t write(const void* ptr,std::size_t sz); //(1)
+void write(uint8_t b); //(2)
+```
+(1): Writes sz bytes from ptr to the stream. This method will have no effect and return sz. Note that this is because the Null Device traditionally acts as a Byte Sink, that is, all writes are accepted by it and discarded. This is in contrast to reading from the Null Device which always yields EOF. 
+(2): Writes a single byte to the stream. This method has no effect
+
+<h5>Exceptions</h5>
+Neither method will throw any exceptions.
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+bool checkError()const noexcept(true); //(1)
+void clearError()noexcept(true); //(2)
+```
+(1): Checks if there is an error on stream. As no writes actually take place, this method unconditionally returns false. 
+(2): Clears any error on the stream. As no errors are reported, this method has no effect.
+
+<h3>class ByteArrayOutputStream</h3>
+Inverse of ByteArrayInputStream. ByteArrayOutputStream writes bytes to an internal resizable buffer, which can be accessed by the program. ByteArrayOutputStream will not buffer writes.
+
+<h4>Write Methods</h4>
+
+```cpp
+std::size_t write(const void* ptr,std::size_t sz); //(1)
+void write(uint8_t b); //(2)
+```
+(1): writes sz bytes from ptr to the underlying buffer. The appropriate number of bytes are reserved in the underlying buffer, then the bytes are copied from ptr to the buffer. Returns sz. 
+(2): writes a single byte to the underlying buffer. 
+
+<h5>Exceptions</h5>
+Neither method will throw any exceptions.
+
+<h4>Buffer access and Stream Error Reporting</h4>
+
+```cpp
+const std::byte* getBuffer()const noexcept(true); //(1)
+std::size_t getSize()const noexcept(true); //(2)
+bool checkError()const noexcept(true); //(3)
+void clearError()noexcept(true); //(4)
+```
+(1): Gets the underlying buffer. This provides a read access pointer to the start of the buffer. This pointer is invalidated if a subsequent call to either write method is made. 
+(2): Gets the size of the underlying buffer. 
+(3): Checks if there is an error on stream. No errors are reported, so this method unconditionally returns false.
+(4): Clears any error on stream. As no errors are reported, this method has no effect.
+
+
 <h2>Fields</h2>
 
 ```cpp
@@ -524,6 +746,6 @@ const little_endian_t little_endian{}; //(2)
 const std::size_t EOF{-1}; //(3)
 ```
 
-(1): Tag for FileOutputStream constuctors to disambugate the overloads that open the file in append mode instead of write mode.
+(1): Tag for FileOutputStream constructors to disambugate the overloads that open the file in append mode instead of write mode.
 (2): Tag for DataOutputStream/DataInputStream constructors to disambugate overloads that write/read in little-endian byte order mode instead of Big-Endian byte order mode
 (3): Value returned from read() to indicate that the end-of-file was reached.

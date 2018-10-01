@@ -39,16 +39,17 @@ const auto baseDur = std::chrono::duration_cast<std::chrono::system_clock::durat
 const auto conDur = std::chrono::duration_cast<std::chrono::system_clock::duration>(10s);
 class SocketImplInputStream:public InputStream{
 private:
+	bool err;
 	std::recursive_mutex* lock;
 	socket_t socket;
 public:
 	SocketImplInputStream(socket_t sock,std::recursive_mutex& lock):socket(sock),
-		lock(&lock){}
+		lock(&lock),err(false){}
 	size_t read(void* ptr,size_t size){
 		std::lock_guard<std::recursive_mutex> sync(*lock);
 		ssize_t retSize;
 		if((retSize =recv(socket,ptr,size,0)<0))
-			throw ConnectionException();
+			err=true,throw ConnectionException();
 		return retSize;
 	}
 	int read(){
@@ -58,24 +59,37 @@ public:
 			return -1;
 		return val;
 	}
+	bool checkError()const noexcept(true){
+		return err;
+	}
+	void clearError()noexcept(true){
+		err= false;
+	}
 };
 
 class SocketImplOutputStream:public OutputStream{
 private:
+	bool err;
 	socket_t socket;
 	std::recursive_mutex* lock;
 public:
 	SocketImplOutputStream(socket_t socket,std::recursive_mutex& lock):socket(socket),
-	lock(&lock){}
+	lock(&lock),err(false){}
 	size_t write(const void* ptr,size_t size){
 		std::lock_guard<std::recursive_mutex> sync(*lock);
 		ssize_t retSize;
 		if((retSize =send(socket,ptr,size,0))<0)
-			throw ConnectionException();
+			err=true,throw ConnectionException();
 		return retSize;
 	}
 	void write(uint8_t b){
 		write(&b,sizeof(b));
+	}
+	bool checkError()const noexcept(true){
+		return err;
+	}
+	void clearError()noexcept(true){
+		err= false;
 	}
 };
 

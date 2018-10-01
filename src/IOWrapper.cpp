@@ -3,6 +3,12 @@
 #include <lclib-cxx/Vector.hpp>
 #include <cstring>
 
+InputStream::operator bool()const noexcept(true){
+	return !checkError();
+}
+bool InputStream::operator!()const noexcept(true){
+	return checkError();
+}
 
 FileInputStream::FileInputStream(FILE* f):underlying(f){
     if(f==NULL||f==nullptr)
@@ -37,6 +43,13 @@ size_t FileInputStream::read(void* ptr,size_t size){
     return fwrite(ptr,1,size,underlying);
 }
 
+bool FileInputStream::checkError()const noexcept(true){
+	return ferror(underlying)||feof(underlying);
+}
+void FileInputStream::clearError()noexcept(true){
+	clearerr(underlying);
+}
+
 FilterInputStream::FilterInputStream(InputStream& i):underlying(&i){}
 FilterInputStream::~FilterInputStream(){}
 
@@ -45,6 +58,13 @@ size_t FilterInputStream::read(void* ptr,size_t size){
 }
 int FilterInputStream::read(){
 	return underlying->read();
+}
+
+bool FilterInputStream::checkError()const noexcept(true){
+	return underlying->checkError();
+}
+void FilterInputStream::clearError()noexcept(true){
+	underlying->clearError();
 }
 
 DataInputStream::DataInputStream(InputStream& i):FilterInputStream(i),little(false){}
@@ -163,6 +183,13 @@ DataInputStream& DataInputStream::operator>>(double& d){
 
 void OutputStream::flush(){}
 
+OutputStream::operator bool()const noexcept(true){
+	return !checkError();
+}
+bool OutputStream::operator!()const noexcept(true){
+	return checkError();
+}
+
 FileOutputStream::FileOutputStream(FILE* f):underlying(f){
     if(underlying==NULL||underlying==nullptr)
         throw FileNotFoundException();
@@ -198,6 +225,13 @@ void FileOutputStream::flush(){
 	fflush(underlying);
 }
 
+bool FileOutputStream::checkError()const noexcept(true){
+	return ferror(underlying)||feof(underlying);
+}
+void FileOutputStream::clearError()noexcept(true){
+	clearerr(underlying);
+}
+
 FilterOutputStream::FilterOutputStream(OutputStream& o):underlying(&o){}
 FilterOutputStream::~FilterOutputStream(){}
 size_t FilterOutputStream::write(const void* ptr,size_t size){
@@ -208,6 +242,13 @@ void FilterOutputStream::write(uint8_t val){
 }
 void FilterOutputStream::flush(){
 	underlying->flush();
+}
+
+bool FilterOutputStream::checkError()const noexcept(true){
+	return underlying->checkError();
+}
+void FilterOutputStream::clearError()noexcept(true){
+	underlying->clearError();
 }
 
 DataOutputStream::DataOutputStream(OutputStream& o):FilterOutputStream(o),little(false){}
@@ -311,6 +352,8 @@ DataOutputStream& DataOutputStream::operator<<(double d){
 }
 
 std::size_t ByteArrayInputStream::read(void* vptr,size_t n){
+	if(bufferPosition==bufferSize)
+		return EOF;
 	if(n>(bufferSize-bufferPosition)){
 		std::memcpy(vptr,buffer+bufferPosition,(bufferSize-bufferPosition));
 		return (bufferSize-bufferPosition);
@@ -321,10 +364,14 @@ std::size_t ByteArrayInputStream::read(void* vptr,size_t n){
 }
 int ByteArrayInputStream::read(){
 	if(bufferSize==bufferPosition)
-		return -1;
+		return EOF;
 	else
 		return static_cast<int>(buffer[bufferPosition++]);
 }
+bool ByteArrayInputStream::checkError()const noexcept(true){
+	return bufferSize==bufferPosition;
+}
+void ByteArrayInputStream::clearError()noexcept(true){}
 
 std::size_t ByteArrayOutputStream::write(const void* vptr,size_t n){
 	const std::size_t pos = buffer.size();
@@ -337,6 +384,13 @@ void ByteArrayOutputStream::write(uint8_t u){
 }
 const std::byte* ByteArrayOutputStream::getBuffer()const{
 	return buffer.data();
+}
+
+bool ByteArrayOutputStream::checkError()const noexcept(true){
+	return false;
+}
+void ByteArrayOutputStream::clearError()noexcept(true){
+
 }
 
 const char* FileNotFoundException::what()const noexcept(true){
@@ -352,12 +406,22 @@ std::size_t NullDeviceOutputStream::write(const void*,std::size_t n){
 }
 void NullDeviceOutputStream::write(uint8_t u){}
 
+bool NullDeviceOutputStream::checkError()const noexcept(true){
+	return false;
+}
+void NullDeviceOutputStream::clearError()noexcept(true){}
+
 std::size_t NullDeviceInputStream::read(void*,std::size_t){
-	return 0;
+	return EOF;
 }
 int NullDeviceInputStream::read(){
 	return EOF;
 }
+
+bool NullDeviceInputStream::checkError()const noexcept(true){
+	return false;
+}
+void NullDeviceInputStream::clearError()noexcept(true){}
 std::size_t ZeroDeviceInputStream::read(void* v,std::size_t s){
 	memset(v,0,s);
 	return s;
@@ -366,3 +430,8 @@ std::size_t ZeroDeviceInputStream::read(void* v,std::size_t s){
 int ZeroDeviceInputStream::read(){
 	return 0;
 }
+
+bool ZeroDeviceInputStream::checkError()const noexcept(true){
+	return false;
+}
+void ZeroDeviceInputStream::clearError()noexcept(true){}

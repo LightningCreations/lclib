@@ -1,5 +1,7 @@
 <h1>SocketIO Library</h1>
-Included by &lt;Socket.hpp&gt;
+Included by `<Socket.hpp>`<br/>
+Part of the io library.<br/>
+
 <h2>Synopsis</h2>
 
 ```cpp

@@ -1,5 +1,6 @@
 <h1>IOWrapper</h1>
-<b>Included by &lt;IOWrapper.hpp&gt;</b><br/>
+<b>Included by `<lclib-cxx/IOWrapper.hpp>`</b><br/>
+Part of The IO Library<br/>
 <h2>Synopsis</h2>
 
 ```cpp

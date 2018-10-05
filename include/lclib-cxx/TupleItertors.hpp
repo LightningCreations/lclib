@@ -24,7 +24,7 @@ private:
 /**
  * Specialization of tuple_iterator for std::tuples
  */
-template<typename T> struct tuple_iterator<T,std::tuple_size<remove_cvref_t<T>>>{
+template<typename T> struct tuple_iterator<T,std::void_t<std::tuple_size<remove_cvref_t<T>>>>{
 public:
 	using tuple_type = remove_cvref_t<T>;
 private:
@@ -49,13 +49,13 @@ public:
         std::size_t pos;
         template<std::size_t I,std::size_t... Is> value_type getValueHelper(std::index_sequence<I,Is...>){
             if(I==pos)
-                return std::ref(std::get<I>(target.target));
+                return std::ref(std::get<I>(target));
             else
                 return getValueHelper(std::index_sequence<Is...>{});
         }
         template<std::size_t I> value_type getValueHelper(std::index_sequence<I>){
             if(I==pos)
-                return std::ref(std::get<I>(target.target));
+                return std::ref(std::get<I>(target));
             else
                 throw "Placeholder error: reached end of tuple";
         }
@@ -95,19 +95,20 @@ private:
 template<typename T> tuple_iterator(const T&) -> tuple_iterator<T>;
 template<typename T> tuple_iterator(const T&,std::size_t) -> tuple_iterator<T>; 
 
-template<typename T,typename=decltype(tuple_iterator<T>(std::declval<const T&>()))> struct tuple_iterable{
-private:
-    const T& t;
-public:
-    tuple_iterable(const T& t):t(t){}
-    tuple_iterable(T&&)=delete;
-    tuple_iterator<T> begin()const{
-        return tuple_iterator(t);
-    }
-    tuple_iterator<T> end()const{
-        return tuple_iterator(t,std::tuple_size_v<T>);
-    }
-};
+template<typename T,typename=std::enable_if_t<std::is_constructible_v<tuple_iterator<T>,const T&>>>
+	struct tuple_iterable{
+	private:
+		const T& t;
+	public:
+		tuple_iterable(const T& t):t(t){}
+		tuple_iterable(T&&)=delete;
+		tuple_iterator<T> begin()const{
+			return tuple_iterator(t);
+		}
+		tuple_iterator<T> end()const{
+			return tuple_iterator(t,std::tuple_size_v<T>);
+		}
+	};
 
 template<typename T> tuple_iterable(const T&) -> tuple_iterable<T>;
 

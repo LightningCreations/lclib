@@ -15,7 +15,7 @@ template<typename T> struct is_complete<T,std::enable_if_t<sizeof(T)==sizeof(T)>
 template<typename T> const constexpr bool is_complete_v = is_complete<T>::value;
 
 template<typename T> struct type_identity{
-	using type = T;
+	typedef T type;
 };
 template<typename T> using type_identity_t = typename type_identity<T>::type;
 template<typename T> struct remove_cvref{
@@ -67,9 +67,6 @@ template<typename T,typename U> using mirror_cv_t = typename mirror_cv<T,U>::typ
  * or some V, such that V can contain a T, then can_contain inherits from true_type.
  * Note that Arrays of Unknown bound do not contain a T, nor do references to arrays.
  * Otherwise can_contain inherits from false_type.
- * Users may specialize can_contain, provided that at least the first argument is specialized.
- * A program which specializes can_contain for its second argument (and not its first argument),
- * has undefined behavior.
  */
 template<typename T,typename U> struct can_contain:std::false_type{};
 template<typename T> struct can_contain<T,T>:std::true_type{};
@@ -133,4 +130,16 @@ template<typename T> struct is_cstring<const T>:is_cstring<T>{};
 template<typename T> struct is_cstring<volatile T>:is_cstring<T>{};
 template<typename T> struct is_cstring<const volatile T>:is_cstring<T>{};
 template<typename T> constexpr const bool is_cstring_v = is_cstring<T>::value;
+
+template<typename T,typename...> struct require_types:type_identity<T>{};
+
+template<typename T,typename... Types> using require_types_t = typename require_types<T,Types...>::type;
+
+template<template<typename> class Trait,typename... Ts> struct all_match: std::conjunction<Trait<Ts>...>{};
+template<template<typename> class Trait,typename... Ts> constexpr const bool all_match_v = all_match<Trait,Ts...>::value;
+template<template<typename> class Trait,typename... Ts> struct any_match: std::conjunction<Trait<Ts>...>{};
+template<template<typename> class Trait,typename... Ts> constexpr const bool any_match_v = any_match<Trait,Ts...>::value;
+template<template<typename> class Trait,typename... Ts> struct none_match:std::conjunction<std::negation<Trait<Ts>>...>{};
+template<template<typename> class Trait,typename... Ts> constexpr const bool none_match_v = none_match<Trait,Ts...>::value;
+
 #endif

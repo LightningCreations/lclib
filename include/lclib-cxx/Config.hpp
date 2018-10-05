@@ -9,7 +9,7 @@
 #define _INCLUDE_CONFIG_HPP__2018_09_06_16_35
 
 #if __cplusplus < 201703L
-#error This library requires C++17 Mode to function
+#error This library requires C++17 Mode to function (Compile with -std=c++1z, -std=c++17, or -std=c++2a)
 #endif
 #if __cplusplus >201703L
 #define LCLIBCXX_CXX2a
@@ -60,21 +60,16 @@
 #ifdef MINIMAL
 //Minimal Implementation (Disables Reflection, Contracts, Assertions, and CLI Extensions
 #define __NOREFLECTION
-#if MINIMAL>0
 #define __NOCONTRACTS
-#define __NOASSERTIONS
-#endif
-#if MINIMAL>2
 #define __NOCLIEXTENSIONS
-#endif
 #endif
 
 
 #if defined(_WIN32)&&!defined(__NOCLIEXTENSIONS)
-#define __CPP_USE_CLI_EXTENSIONS //Use CLI Extensions if availble.
+#define __CXX_USE_CLI_EXTENSIONS //Use CLI Extensions if availble.
 #endif
 
-#if defined(__CPP_USE_CLI_EXTENSIONS)&&defined(__cplusplus_cli)
+#if defined(__CXX_USE_CLI_EXTENSIONS)&&defined(__cplusplus_cli)
 #define LCLIBCXX_HAS_CLI
 #endif
 
@@ -91,14 +86,21 @@
 
 #ifndef __UNIQUE__
 //Unique Id's are used by reflection (though are also availble to users)
-#if defined(__OAPI_PRAGMA_MACROS)&&defined(__HAS_IMPORT_UNIQUE)
+#if defined(__OAPI_ENHANCED_CPP)&&defined(__HAS_IMPORT_UNIQUE)
 #pragma macros import("__UNIQUE__") define("__UNIQUE__")
-//On SNES-OS __UNIQUE__ expands to UID<filename hash><line number hash><Translation Time Random Token>QJJ
+//On SNES-OS __UNIQUE__ expands to UID<filename hash><line number><in file counter><Translation Time Random Token>QJJ
 //__UNIQUE__() expands to the same, except that in a Function-like macro, it expands recursively.
+#define __OAPI_USE_SHARED_COUNTER
 #else
+#ifdef defined(__OAPI_ENHANCED_CPP)&&defined(__COUNTER__)
+#define __OAPI_USE_SHARED_COUNTER
+//If __OAPI_USE_SHARED_COUNTER is defined before the first use of__COUNTER__
+//Then __COUNTER__ values will be shared between files.
+#endif
 #define __UNIQUE__() CONCAT4(UID00AAKKZ09,__COUNTER__,__LINE__,QJJ)
 #endif
 #endif
+
 
 #ifndef UNIQUEID
 #define UNIQUEID(prefix) CONCAT3(prefix,__,__UNIQUE__())
@@ -106,28 +108,24 @@
 
 
 
-//Replace C assertion with a Throwing one. Disabled if __NOASSERTIONS or MINIMAL is defined
-#ifndef __NOASSERTIONS
-#ifndef ASSERT
-#define ASSERTION_MESSAGE(...) "Assertion Failure: " STRINGIFY(__VA_ARGS__)"@" __FILE__ STRINGIFY(__LINE__) ":"
-#define ASSERT(condition,...) if(!(condition))throw ASSERTION_MESSAGE(__VA_ARGS__);
-#endif
-#else
-#define ASSERT(conditon,...)
-#endif
-
 
 
 //Enable Contracts for catching Some UB If they are available.
 //Disabled if __NOCONTRACTS or MINIMAL is defined
 #if __has_cpp_attribute(assert)&& !defined(__NOCONTRACTS)
-#define CONTRACTASSERT(condition) [[assert:condition]]
+#define ASSERT(condition) [[assert:condition]]
 #else
-#define CONTRACTASSERT(condition)
+#define ASSERT(condition)
 #endif
 #if __has_cpp_attribute(expects)&& !defined(__NOCONTRACTS)
-#ifdef __CONTRACTS_AUDIT
+#ifdef CONTRACTS_LEVEL
+#if CONTRACTS_LEVEL ==1
 #define EXPECTS(condition) [[expects audit:condition]]
+#elif CONTRACTS_LEVEL ==-1
+#define EXPECTS(condition) [[expects axiom:condition]]
+#else
+#define EXPECTS(condition) [[expects:condition]]
+#endif
 #else
 #define EXPECTS(condition) [[expects:condition]]
 #endif

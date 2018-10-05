@@ -1,4 +1,5 @@
 #include <lclib-cxx/IOWrapper.hpp>
+#include <lclib-cxx/ThreadSafeIO.hpp>
 #include <string>
 #include <lclib-cxx/Vector.hpp>
 #include <cstring>
@@ -435,3 +436,87 @@ bool ZeroDeviceInputStream::checkError()const noexcept(true){
 	return false;
 }
 void ZeroDeviceInputStream::clearError()noexcept(true){}
+
+#include <chrono>
+using namespace std::chrono;
+
+TSOutputStream::TSOutputStream(OutputStream& out):
+		owned{&out},async{false},err{false},isBulkTransaction{false},asyncWriteSz{EOF}{}
+TSOutputStream::TSOutputStream(OutputStream& out,async_t):
+		owned(&out),async(true),err{false},isBulkTransaction{false},asyncWriteSz{EOF}{}
+TSOutputStream::~TSOutputStream(){
+	std::unique_lock<std::mutex> sync(lock);
+	if(!transactionThrew&&isBulkTransaction&&bulkTransactionOwner.load()!=&std::this_thread::get_id())
+		waitForBulkCompletion.wait(sync);
+	if(err)
+		owned->clearError();
+	owned->flush();
+}
+
+std::size_t TSOutputStream::write(const void* ptr,std::size_t sz){
+	return doTransaction([ptr,sz](TSOutputStream* out){
+		std::size_t retSz = out->owned->write(ptr,sz);
+		asyncWriteSz = retSz;
+	});
+}
+
+void TSOutputStream::write(uint8_t b){
+	doTransaction([b](TSOutputStream* out){
+		out->owned->write(b);
+		asyncWriteSz = 1;
+	});
+}
+
+void TSOutputStream::flush(){
+	doTransaction([](TSOutputStream* out){
+		out->owned->flush();
+		asyncWriteSz = 0;
+	});
+}
+
+void TSOutputStream::setSynchronous(){
+	doAtomic([](TSOutputStream* out){
+		async = false;
+	});
+}
+
+void TSOutputStream::setAsynchronous(){
+	doAtomic([](TSOutputStream* out){
+		async = true;
+	});
+}
+
+std::size_t TSOutputStream::getTransactionResult()const noexcept(true){
+	return doTransactionObserve(&TSOutputStream::asyncWriteSz);
+}
+
+bool TSOutputStream::checkError()const noexcept(true){
+	return doTransactionObserve(&TSOutputStream::err);
+}
+
+void TSOutputStream::clearError()noexcept(true){
+	doAtomic([](TSOutputStream* out){
+		out->owned->clearError();
+		out->err = out->owned->checkError();
+	});
+}
+
+bool TSOutputStream::waitFor()const{
+	return doTransactionObserve(&TSOutputStream::transactionThrew);
+}
+
+void TSOutputStream::startBulk(){
+	doAtomic([](TSOutputStream* out){
+		isBulkTransaction = true;
+		bulkTransactionOwner = std::this_thread::get_id();
+	});
+}
+
+void TSOutputStream::endBulk(){
+	std::unique_lock sync(lock);
+	if(!isBulkTransaction||bulkTransactionOwner.load()!=std::this_thread::get_id())
+		return;
+	isBulkTransaction = false;
+	waitForBulkCompletion.notify_all();
+}
+

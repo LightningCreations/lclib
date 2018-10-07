@@ -168,8 +168,9 @@ public:
 struct LinuxServerSocketImpl:public ServerSocketImpl{
 	socket_t sock;
 	std::recursive_mutex lock;
+	bool bound;
 public:
-	LinuxServerSocketImpl(socket_t sock):sock(sock){}
+	LinuxServerSocketImpl(socket_t sock):sock(sock),bound(false){}
 	LinuxServerSocketImpl():LinuxServerSocketImpl(socket(AF_INET,SOCK_STREAM,6)){}
 	~LinuxServerSocketImpl(){
 		shutdown(sock,SHUT_RDWR);
@@ -210,6 +211,9 @@ public:
 	}
 	OutputStream& getOutputStream(){
 		throw SocketOperationUnsupportedException();
+	}
+	bool isBound()const noexcept(true){
+		return bound;
 	}
 };
 

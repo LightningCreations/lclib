@@ -20,6 +20,20 @@ public:
 	virtual ~Hashable()=default;
 };
 
+struct HashSum{
+public:
+	constexpr HashSum()=default;
+	~HashSum()=default;
+	constexpr HashSum(const HashSum&)=default;
+	constexpr HashSum(HashSum&&)=default;
+	HashSum(const HashSum&&)=delete;
+	constexpr HashSum& operator=(const HashSum&)=default;
+	constexpr HashSum& operator=(HashSum&&)=default;
+	HashSum& operator=(const HashSum&&)=delete;
+	template<typename T> constexpr T operator()(T total,T next){
+		return total*31+next;
+	}
+};
 
   
 constexpr int32_t hashcode(int i){
@@ -28,14 +42,26 @@ constexpr int32_t hashcode(int i){
 constexpr int32_t hashcode(char c){
 	return int(c)|(c&0x80?0xffffff00:0);
 }
+constexpr int32_t hashcode(signed char c){
+	return int(c)|(c&0x80?0xffffff00:0);
+}
+constexpr int32_t hashcode(unsigned char c){
+	return int(c)&0xff;
+}
+constexpr int32_t hashcode(wchar_t c){
+	return int(c);
+}
+constexpr int32_t hashcode(char16_t c){
+	return int(c);
+}
+constexpr int32_t hashcode(char32_t c){
+	return int(c);
+}
 constexpr int32_t hashcode(short s){
 	return int(s)|(s&0x8000?0xffff0000:0);
 }
 constexpr int32_t hashcode(int64_t i){
 	return int(i)^int(i>>32);
-}
-constexpr int32_t hashcode(unsigned char c){
-	return int(c)&0xff;
 }
 constexpr int32_t hashcode(unsigned short s){
 	return int(s)&0xffff;
@@ -73,7 +99,21 @@ constexpr int32_t hashcode(const char* str){
 	return h;
 }
 
-LIBLCAPI int32_t hashcode(const std::string&);
+/**
+ * Fully Replace std::string with template because security::string
+ */
+template<typename CharT,typename CharTraits,typename Allocator> int32_t hashcode(const std::basic_string<CharT,CharTraits,Allocator>& s){
+	int32_t h = 0;
+	for(auto c:s)
+		(h*=31,h+=hashcode(c));
+	return h;
+}
+template<typename CharT,typename CharTraits> constexpr int32_t hashcode(const std::basic_string_view<CharT,CharTraits>& sv){
+	int32_t h = 0;
+	for(auto c:sv)
+		(h*=31,h+=hashcode(c));
+	return h;
+}
 LIBLCAPI int32_t hashcode(const std::type_info&);
 
 using std::vector;
@@ -143,6 +183,7 @@ template<typename... T> constexpr auto hashcode(const std::variant<T...>& var)->
 template<typename E> constexpr int32_t hashcode(typename std::enable_if<std::is_enum<E>::value,E>::type e){
 	return hashcode(static_cast<std::underlying_type_t<E>>(e));
 }
+
 
 
 

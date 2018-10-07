@@ -20,7 +20,7 @@ namespace detail{
 		hash *= 1027467391;
 		hash += n;
 		for(std::size_t q=0;q<(N-1);q++)
-			hash*=1027467391,hash+=~size_t{q},hash+=str[n],hash+=4186750049;
+			hash*=1027467391,hash+=~size_t{q},hash+=str[n];
 
 		return directory[hash%(sizeof(directory)-1)];
 	}
@@ -28,7 +28,7 @@ namespace detail{
 }
 
 
-template<std::size_t N> constexpr const char* nameHash(const char(&str)[N],char(&out)[25]){
+template<std::size_t N> constexpr const char* nameHash(const char(&str)[N],char out[]){
 	std::size_t prev = 2846782441;
 	for(std::size_t q=0;q<24;q++)
 		out[q] = detail::nameHashChar(prev,str,q);

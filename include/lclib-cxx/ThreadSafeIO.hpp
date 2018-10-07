@@ -62,7 +62,7 @@ public:
 class LIBLCAPI TSOutputStream:OutputStream{
 private:
 	OutputStream* owned;
-	mutable std::mutex lock;
+	mutable std::shared_mutex lock;
 	std::atomic<bool> isBulkTransaction;
 	std::atomic<std::thread::id> bulkTransactionOwner;
 	std::atomic<bool> isInDestruction;
@@ -70,12 +70,12 @@ private:
 	std::atomic<bool> async;
 	std::atomic<bool> transactionThrew;
 	std::atomic<std::size_t> asyncWriteSz;
-	std::condition_variable waitForCompletion;
-	std::condition_variable waitForBulkCompletion;
+	std::condition_variable_any waitForCompletion;
+	std::condition_variable_any waitForBulkCompletion;
 	template<typename F,typename... Args,typename=std::enable_if_t<std::is_invocable_v<F,TSOutputStream*,Args...>>>
 			std::size_t doTransaction(F&& f,Args&&... args){
-			std::unique_lock<std::mutex> sync(lock);
-			if(isBulkTransaction&&bulkTransactionOwner.load()!=&std::this_thread::get_id())
+			std::unique_lock sync(lock);
+			if(isBulkTransaction&&bulkTransactionOwner.load()!=std::this_thread::get_id())
 				waitForBulkCompletion.wait(sync);
 			if(async){
 				std::thread t([this,f,args...](){
@@ -97,7 +97,7 @@ private:
 				throw in_progress{};
 			}else{
 				try{
-					std::invoke(f,*this);
+					std::invoke(f,this,std::forward(args)...);
 					err = owned->checkError();
 					transactionThrew = false;
 					waitForCompletion.notify_all();
@@ -111,15 +111,15 @@ private:
 				return asyncWriteSz;
 			}
 		}
-	template<typename F,typename... Args,typename=std::enable_if_t<std::is_invocable_v<F,TSOutputStream*,Args...>>>
+	template<typename F,typename... Args,typename=std::enable_if_t<std::is_invocable_v<F,const TSOutputStream*,Args...>>>
 		auto doTransactionObserve(F&& f,Args&&... args)const
-		->std::invoke_result_t<F,TSOutputStream*,Args...>{
-			std::shared_lock<std::mutex> sync(lock);
+		->std::invoke_result_t<F,const TSOutputStream*,Args...>{
+			std::shared_lock sync(lock);
 			return std::invoke(f,this,std::forward(args)...);
 		}
 	template<typename F,typename... Args,typename=std::enable_if_t<std::is_invocable_v<F,TSOutputStream*,Args...>>>
 		void doAtomic(F&& f,Args&&... args){
-		std::unique_lock<std::mutex> sync(lock);
+		std::unique_lock sync(lock);
 		if(isBulkTransaction&&bulkTransactionOwner.load()!=std::this_thread::get_id())
 			waitForBulkCompletion.wait(sync);
 		std::invoke(f,this,std::forward(args)...);

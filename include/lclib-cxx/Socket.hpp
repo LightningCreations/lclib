@@ -208,7 +208,7 @@ public:
 	 */
 	virtual ~ServerSocketImpl()=default;
 
-	virtual bool isBound()const noexcept(true)=0
+	virtual bool isBound()const noexcept(true)=0;
 
 };
 

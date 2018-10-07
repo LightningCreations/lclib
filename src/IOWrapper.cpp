@@ -445,8 +445,8 @@ TSOutputStream::TSOutputStream(OutputStream& out):
 TSOutputStream::TSOutputStream(OutputStream& out,async_t):
 		owned(&out),async(true),err{false},isBulkTransaction{false},asyncWriteSz{EOF}{}
 TSOutputStream::~TSOutputStream(){
-	std::unique_lock<std::mutex> sync(lock);
-	if(!transactionThrew&&isBulkTransaction&&bulkTransactionOwner.load()!=&std::this_thread::get_id())
+	std::unique_lock sync(lock);
+	if(!transactionThrew&&isBulkTransaction&&bulkTransactionOwner.load()!=std::this_thread::get_id())
 		waitForBulkCompletion.wait(sync);
 	if(err)
 		owned->clearError();
@@ -456,33 +456,33 @@ TSOutputStream::~TSOutputStream(){
 std::size_t TSOutputStream::write(const void* ptr,std::size_t sz){
 	return doTransaction([ptr,sz](TSOutputStream* out){
 		std::size_t retSz = out->owned->write(ptr,sz);
-		asyncWriteSz = retSz;
+		out->asyncWriteSz = retSz;
 	});
 }
 
 void TSOutputStream::write(uint8_t b){
 	doTransaction([b](TSOutputStream* out){
 		out->owned->write(b);
-		asyncWriteSz = 1;
+		out->asyncWriteSz = 1;
 	});
 }
 
 void TSOutputStream::flush(){
 	doTransaction([](TSOutputStream* out){
 		out->owned->flush();
-		asyncWriteSz = 0;
+		out->asyncWriteSz = 0;
 	});
 }
 
 void TSOutputStream::setSynchronous(){
 	doAtomic([](TSOutputStream* out){
-		async = false;
+		out->async = false;
 	});
 }
 
 void TSOutputStream::setAsynchronous(){
 	doAtomic([](TSOutputStream* out){
-		async = true;
+		out->async = true;
 	});
 }
 
@@ -507,8 +507,8 @@ bool TSOutputStream::waitFor()const{
 
 void TSOutputStream::startBulk(){
 	doAtomic([](TSOutputStream* out){
-		isBulkTransaction = true;
-		bulkTransactionOwner = std::this_thread::get_id();
+		out->isBulkTransaction = true;
+		out->bulkTransactionOwner = std::this_thread::get_id();
 	});
 }
 

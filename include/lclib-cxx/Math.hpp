@@ -85,10 +85,19 @@ public:
 				ret *= t;
 			return ret;
 		}
-		return integrate(0,inf,[x](type t){
+		return integrate(0,inf<type>,[x](type t){
 			return std::pow(t,x-1)*std::exp(-t);
 		})();
 	}
 };
+
+template<typename Fn1,typename Fn2> constexpr auto convolution(Fn1&& f,Fn2&& g){
+	return [f,g](auto t){
+		using type = decltype(t);
+		return integrate(-inf<type>,inf<type>,[f,g,t](type x){
+			return f(x)*g(t-x);
+		})();
+	};
+}
 
 #endif /* __INCLUDE_LCLIB_CXX_MATH_HPP__2018_10_09_19_11_18 */

@@ -92,6 +92,10 @@ public:
     PolymorphicWrapper(value_type&& t,move_base=false)noexcept(std::is_nothrow_move_constructible_v<value_type>):val(new value_type(t)){}
 
     /**
+     * Delete move from const
+     */
+    PolymorphicWrapper(move_from_const_base)=delete;
+    /**
      * Constructs a new PolymorphicWrapper.
      * The owned object is allocated and constructed using the copy constructor of U, with U as its dynamic type
      * This constructor does not participate in overload resolution unless std::is_base_of_v<T,U>
@@ -112,8 +116,16 @@ public:
      */
     template<typename U,typename=move_derived<U>> PolymorphicWrapper(U&& u)noexcept(std::is_nothrow_move_constructible_v<U>):val(new derived_type<U>(u)){}
 
+    /**
+     * If the derived class has disabled move construction,
+     * prevent use of Move-derived.
+     */
     template<typename U,typename=disable_move_derived<U>> PolymorphicWrapper(U&& u)=delete;
 
+    /**
+     * Disable Move-from const for derived types.
+     */
+    template<typename U,typename=derived_type<U>> PolymorphicWrapper(const U&&)=delete;
     /**
      * Move Constructs a PolymorphicWrapper from a wrapper to a derived class.
      * The new PolymorphicWrapper takes ownership of the moved-from wrapper's owned object.

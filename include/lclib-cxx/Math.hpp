@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <cmath>
 #include <complex>
+#include <lclib-cxx/Callable.hpp>
 
 template<typename T,typename=void> struct dx_value{};
 template<typename T> struct dx_value<T,std::void_t<decltype(std::numeric_limits<T>::epsilon())>>{
@@ -92,9 +93,9 @@ public:
 };
 
 template<typename Fn1,typename Fn2> constexpr auto convolution(Fn1&& f,Fn2&& g){
-	return [f,g](auto t){
+	return [f,g](auto t)->decltype(integrate(-inf<decltype(t)>,inf<decltype(t)>,[](auto t){return t;})){
 		using type = decltype(t);
-		return integrate(-inf<type>,inf<type>,[f,g,t](type x){
+		return integrate(-inf<type>,inf<type>,[f,g,t](type x)->type{
 			return f(x)*g(t-x);
 		})();
 	};

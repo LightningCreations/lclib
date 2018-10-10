@@ -12,6 +12,17 @@
 #include <mutex>
 #include <lclib-cxx/Config.hpp>
 
+/**
+ * A type satisfying FunctionObject, which models the identity function,
+ *  that is, calling the function forwards its argument.
+ */
+class identity{
+public:
+	constexpr identity()=default;
+	template<typename T> constexpr T&& operator()(T&& t)const noexcept(true){
+		return std::forward(t);
+	}
+};
 
 
 /**
@@ -54,12 +65,5 @@ template<typename Mutex,typename Callable> constexpr auto forwardThreadSafe(Mute
 		return std::invoke(c,std::forward(args)...);
 	};
 }
-
-class identity{
-public:
-	template<typename T> constexpr T&& operator()(T&& t)const noexcept(true){
-		return std::forward(t);
-	}
-};
 
 #endif /* INCLUDE_CALLABLE_HPP_ */

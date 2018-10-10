@@ -31,7 +31,7 @@ public:
 template<typename T> struct dx_value<std::complex<T>,std::void_t<decltype(dx_value<T>::value)>>{
 public:
 	typedef dx_value type;
-	constexpr static std::complex<T> value = std::numeric_limits<T>::epsilon()+0i;
+	constexpr static std::complex<T> value = std::numeric_limits<T>::epsilon();
 	constexpr dx_value()=default;
 	constexpr dx_value(const dx_value&)=default;
 	constexpr dx_value& operator=(const dx_value&)=default;
@@ -54,8 +54,8 @@ template<typename Fn> constexpr auto differentiate(Fn&& f){
 	};
 }
 
-template<typename type,typename Fn> constexpr auto integrate(type lower,type upper,Fn&& f){
-	return [lower,upper,f]()->std::invoke_result_t<Fn,type>{
+template<typename type> constexpr auto integrate(type lower,type upper){
+	return [lower,upper](auto f)->std::invoke_result_t<decltype(f),type>{
 		type d = 0;
 		for(type i = 1;i<=(1/dx<type>);i++){
 			d += (f((upper-lower)*(dx<type>)*i))*(upper-lower)*dx<type>;
@@ -75,29 +75,22 @@ template<typename Fn> constexpr auto antiderivative(Fn&& f){
 
 struct Gamma{
 public:
+	using std::tgamma;
 	constexpr Gamma()=default;
 	constexpr Gamma(const Gamma&)=default;
 	constexpr Gamma& operator=(const Gamma&)=default;
 
-	template<typename type> constexpr type operator()(type x)const{
-		if(x>0&&std::round(x)==x){
-			type ret = 1;
-			for(type t = 1;t<x;t++)
-				ret *= t;
-			return ret;
-		}
-		return integrate(0,inf<type>,[x](type t){
-			return std::pow(t,x-1)*std::exp(-t);
-		})();
+	template<typename type> constexpr auto operator()(type x)const{
+		return tgamma(x);//(Use ADL if applicable, otherwise std::tgamma
 	}
 };
 
 template<typename Fn1,typename Fn2> constexpr auto convolution(Fn1&& f,Fn2&& g){
-	return [f,g](auto t)->decltype(integrate(-inf<decltype(t)>,inf<decltype(t)>,[](auto t){return t;})){
+	return [f,g](auto t)->decltype(integrate(-inf<decltype(t)>,inf<decltype(t)>)([](auto t){return t;})){
 		using type = decltype(t);
-		return integrate(-inf<type>,inf<type>,[f,g,t](type x)->type{
+		return integrate(-inf<type>,inf<type>)([f,g,t](type x)->type{
 			return f(x)*g(t-x);
-		})();
+		});
 	};
 }
 

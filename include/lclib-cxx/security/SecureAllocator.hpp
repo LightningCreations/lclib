@@ -56,17 +56,21 @@ namespace security{
 	template<typename T,typename Allocator=std::allocator<T>> struct SecureAllocator{
 	public:
 		static_assert(std::is_same_v<T,typename std::allocator_traits<Allocator>::value_type>,"Allocator must be for T");
-		using value_type = detail::value_type_t<Allocator>;
-		using pointer = detected_or_t<value_type*,detail::pointer_t,Allocator>;
-		using void_pointer = detected_or_t<void*,detail::void_pointer_t,Allocator>;
-		using const_void_pointer = detected_or_t<const void*,detail::const_void_pointer_t,Allocator>;
-		using const_pointer = detected_or_t<const value_type*,detail::const_pointer_t,Allocator>;
-		using size_type = detected_or_t<std::size_t,detail::size_type_t,Allocator>;
-		using difference_type = detected_or_t<std::ptrdiff_t,detail::difference_type_t,Allocator>;
-
+		using value_type = typename std::allocator_traits<Allocator>::value_type;
+		using pointer = typename std::allocator_traits<Allocator>::pointer;
+		using void_pointer = typename std::allocator_traits<Allocator>::const_pointer;
+		using const_void_pointer = typename std::allocator_traits<Allocator>::void_pointer;
+		using const_pointer = typename std::allocator_traits<Allocator>::const_void_pointer;
+		using size_type = typename std::allocator_traits<Allocator>::size_type;
+		using difference_type = typename std::allocator_traits<Allocator>::difference_type;
+		using is_always_equal = typename std::allocator_traits<Allocator>::is_always_equal;
+		using propagate_on_container_copy_assignment = typename std::allocator_traits<Allocator>::propagate_on_container_copy_assignment;
+		using propagate_on_container_move_assignment = typename std::allocator_traits<Allocator>::propagate_on_container_move_assignment;
+		using propagate_on_container_swap = typename std::allocator_traits<Allocator>::propagate_on_container_swap;
 		template<typename U> struct rebind{
-			using other = SecureAllocator<U,require_detected_t<typename detail::rebind_t,Allocator,U>>;
+			using other = SecureAllocator<U,typename std::allocator_traits<Allocator>::rebind_alloc<U>>;
 		};
+
 	private:
 		Allocator a;
 	public:
@@ -179,6 +183,12 @@ namespace security{
 		using unordered_multimap =std::unordered_multimap<K,V,Hash,Equals,SecureAllocator<std::pair<const K,V>,Allocator>>;
 	template<typename T,typename Allocator=std::allocator<T>>
 		using forward_list = std::forward_list<T,SecureAllocator<T,Allocator>>;
+
+	namespace string_literals{
+		template<typename CharT> security::basic_string<CharT> operator""ss(const CharT* c,std::size_t n){
+			return security::basic_string<CharT>{c,c+n};
+		}
+	}
 }
 
 #endif /* __INCLUDE_SECURITY_SECUREDELETER_HPP__2018_09_17_18_44_59 */

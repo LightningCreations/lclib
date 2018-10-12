@@ -13,27 +13,20 @@
 #include <lclib-cxx/Hash.hpp>
 #include <lclib-cxx/Config.hpp>
 #include <cmath>
+#include <stdexcept>
 
 #define VERSION_CONSTEXPR constexpr
 #define VERSION_DELETE =delete
 #define VERSION_DEFAULT =default;
 
-#ifdef _MSC_VER
-#if _MSC_VER < 1800
-#define VERSION_CONSTEXPR inline
-#define VERSION_CONSTEXPR_DISABLED
-#define VERSION_DELETE
-#define VERSION_DEFAULT {}
-#endif
-#endif
 
 #undef major 
 #undef minor
 
-using std::string;
 using std::istream;
 using std::ostream;
 
+using namespace std::string_literals;
 
 
 
@@ -50,6 +43,14 @@ class LIBLCAPI Version{
 private:
 	unsigned char major;
 	unsigned char minor;
+	static constexpr unsigned int fromString(std::string_view sv){
+		unsigned int ret{0};
+		for(char c:sv){
+			ret += c-'0';
+			ret *= 10;
+		}
+		return ret;
+	}
 public:
 	/*
 	 * Constructs an unknown (null) version.
@@ -63,17 +64,23 @@ public:
 	 * This follows the sentry format for encoding versions (2-bytes BE, High-byte is Major version -1, Low-byte is minor version)
 	 * This Constructor should be used only when you are dealing with Embedded and Encoded Version constants
 	 */
- 	constexpr Version(int encoded):major(encoded>>8),minor(encoded){}
+ 	constexpr Version(uint16_t encoded):major(encoded>>8),minor(encoded){}
 	/*
 	 * Parses a given string in the form <Mj>.<mi> and produces a version given those 2 inputs.
 	 * Both Mj and mi must be valid integers, with Mj being between 1 and 256 and Mi being between 0 and 255
 	 */
- 	Version(string);
+ 	constexpr Version(std::string_view sv):major{0},minor{0}{
+ 		std::string_view::size_type sz = sv.find(".");
+ 		if(sz==std::string_view::npos)
+ 			throw std::invalid_argument(std::string(sv)+" is an invalid string"s);
+ 		major = fromString(sv.substr(0,sz));
+ 		minor = fromString(sv.substr(sz));
+ 	}
 	/*
 	 * Obtains a version based on a given Major and minor version.
 	 * Major must be between 1 and 256 and minor must be between 0 and 255
 	 */
-	constexpr Version(int maj,int min):major(maj-1),minor(min){}
+	constexpr Version(uint32_t maj,uint32_t min):major(maj-1),minor(min){}
 	
 	constexpr Version(const Version&)=default;
 	constexpr Version(Version&&)=default;
@@ -85,14 +92,14 @@ public:
 	/*
 	 * Gets the major version, ranging from 1 to 256
 	 */
-	constexpr int getMajor()const{
-		return int(major)+1;
+	constexpr uint32_t getMajor()const{
+		return uint32_t(major)+1;
 	}
 	/*
 	 * Gets the minor version, ranging from 0 to 255
 	 */
-	constexpr int getMinor()const{
-		return minor;
+	constexpr uint32_t getMinor()const{
+		return uint32_t(minor);
 	}
 	/*
 	 * Returns the version in encoded form.
@@ -112,7 +119,7 @@ public:
 	 * Returns this Version as a string.
 	 * The Resultant String is in the form <major>.<minor>
 	 */
-	string toString()const;
+	explicit operator std::string()const;
 	/*
 	 * Computes the hashcode of this Version.
 	 * This is effectively major*31+minor
@@ -127,8 +134,8 @@ public:
 	constexpr bool operator==(const Version& v)const{
 		return major==v.major&&minor==v.minor;
 	}
-	constexpr bool operator!=(const Version& v)const{
-		return !(*this==v);
+	constexpr friend bool operator!=(const Version& v1,const Version& v2){
+		return !(v1==v2);
 	}
 	/*
 	 * Compares this version with another. A Version is less-than another if its major version is less
@@ -141,20 +148,20 @@ public:
 	 * Compares this version with another. A Version is Greater-than another if its major version is greater than
 	 * the other versions' major version, or they share the same origin, and the first version has a greater minor version
 	 */
-	constexpr bool operator>(const Version& v)const{
-		return major>v.major||(major==v.major&&minor>v.minor);
+	constexpr friend bool operator>(const Version& v1,const Version& v2){
+		return v2<v1;
 	}
 	/*
 	 * Compound Comparison <=
 	 */
-	constexpr bool operator<=(const Version& v) const{
-		return !(*this>v);
+	constexpr friend bool operator<=(const Version& v1,const Version& v2){
+		return !(v1>v2);
 	}
 	/*
 	 * Compound Comparison >=
 	 */
-	constexpr bool operator>=(const Version& v)const{
-		return !(*this<v);
+	constexpr friend bool operator>=(const Version& v1,const Version& v2){
+		return !(v1<v2);
 	}
 };
 
@@ -165,21 +172,22 @@ public:
  * and Constructing the associated version.
  *
  */
-istream& operator>>(istream&,Version&)LIBLCAPI;
+LIBLCAPI istream& operator>>(istream&,Version&);
 /*
  * Writes this string to a text stream.
- * The output text is will be in the fomr <Mj>.<mi>
- * This is effecitvely the same as writing that version's toString()
+ * The output text is will be in the form <Mj>.<mi>
+ * This is effectively the same as writing that version's toString()
  */
-ostream& operator<<(ostream&,const Version&)LIBLCAPI;
+LIBLCAPI ostream& operator<<(ostream&,const Version&);
 
-constexpr Version operator ""v(long double d){
-	int Mj{0};
-	double in = d;
-	double f=0;
-	Mj = modf(in,&f);
-	in*=1000;
-	return Version{Mj,int(in*1000)};
+namespace version_literals{
+	template<char... c> constexpr Version operator""v(){
+		char str[sizeof...(c)+1]{c...,0};
+		return Version{str};
+	}
+	constexpr Version operator""v(const char* str,std::size_t sz){
+		return Version{std::string_view{str,sz}};
+	}
 }
 
 

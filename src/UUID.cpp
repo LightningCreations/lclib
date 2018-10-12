@@ -8,8 +8,10 @@
 #include <lclib-cxx/ShadowRandom.hpp>
 #include <lclib-cxx/JTime.hpp>
 #include <chrono>
+#include <stdexcept>
 
 #include <openssl/sha.h>
+#include <openssl/md5.h>
 
 
 
@@ -30,27 +32,30 @@ static uint32_t clockSeq{3186784621};
 
 const uint32_t clockSeqInc{3885574061};
 
-
-
-UUID::UUID(string str){
-	string currPart;
-	string highPart;
-	string lowPart;
-
-	int i;
-	for(i = 0;i<5;i++)
-		currPart += tokenize(str,sep);
-	highPart.assign(currPart,0,16);
-	lowPart.assign(currPart,16,16);
-	high = stoull(highPart,nullptr,16);
-	low = stoull(lowPart,nullptr,16);
+static uint64_t toHex(std::string_view sv){
+	uint64_t v{0};
+	for(char c:sv){
+		if('A'<=c&&c<='F')
+			v|=(c-'A')+0xa;
+		else if('a'<=c&&c<='f')
+			v |=(c-'a')+0xa;
+		else if('0'<=c&&c<='9')
+			v |= c-'0';
+		else
+			throw std::invalid_argument(std::string(sv)+" is not a hexadecimal number");
+		v <<=4;
+	}
+	return v;
 }
 
-UUID::UUID(const char* str):UUID(string(str)){}
 
+UUID::UUID(std::string_view sv):high{toHex(sv.substr(0, 8))<<32|toHex(sv.substr(9,4))<<16|toHex(sv.substr(13,4))}
+	,low{toHex(sv.substr(17,4))<<48|toHex(sv.substr(21,12))}{}
 
-UUID UUID::fromString(const string& str){
-	return UUID(str);
+UUID::UUID(const char* str):UUID(std::string_view(str)){}
+
+UUID UUID::fromString(std::string_view sv){
+	return UUID{sv};
 }
 
 
@@ -75,20 +80,40 @@ ostream& operator<<(ostream& o,const UUID& id){
 	return o;
 }
 
+std::string fromHex(uint64_t u,int digits){
+	std::string ret;
+	for(;digits>0;digits--,u>>=4){
+		uint8_t v = u&0xf;
+		if(v<10)
+			ret += '0'+v;
+		else
+			ret += 'A'+(v-0xa);
+	}
+	return std::move(ret);
+}
+
 string UUID::toString()const{
-	ostringstream str;
-	str<<*this;
-	return str.str();
+	std::string ret{};
+	ret += fromHex(high>>32,8);
+	ret += '-';
+	ret += fromHex((high>>16)&0xffff,4);
+	ret += '-';
+	ret += fromHex(high&0xffff,4);
+	ret += '-';
+	ret += fromHex(low>>48,4);
+	ret += '-';
+	ret += fromHex(low&0xffffffffffff,12);
+	return std::move(ret);
 }
 
 istream& operator>>(istream& i,UUID& id){
-	string s;
+	std::string s;
 	i >> s;
 	id= UUID::fromString(s);
 	return i;
 }
 
-string operator+(const string& s,const UUID& id){
+std::string operator+(const std::string& s,const UUID& id){
 	return s+(id.toString());
 }
 
@@ -127,6 +152,11 @@ UUID UUID::ofNow(){
 	return UUID{high,low};
 }
 
+UUID::UUID(current_timestamp_t):UUID(ofNow()){}
+
+UUID::UUID(std::string_view sv,md5_namespace_t):UUID(uuidFromNamespace(sv)){}
+UUID::UUID(std::string_view sv,sha1_namespace_t):UUID(uuidFromSHA1Namespace(sv)){}
+
 UUID UUID::randomUUID(){
 	char bytes[32];
 	uint64_t longs[2];
@@ -143,4 +173,29 @@ UUID UUID::randomUUID(){
 			  |uint64_t(bytes[12])<<24|uint64_t(bytes[13])<<16|uint64_t(bytes[14])<<8|uint64_t(bytes[15]);
 	return UUID(longs[0],longs[1]);
 }
+
+UUID UUID::uuidFromNamespace(std::string_view sv){
+	unsigned char bytes[16];
+	MD5(reinterpret_cast<const unsigned char*>(sv.data()),sv.length(),bytes);
+	bytes[4] = (bytes[4]&0xf)|0x30;
+	bytes[8] = (bytes[8]&0xcf)|0x80;
+	uint64_t high = uint64_t(bytes[0])<<56|uint64_t(bytes[1])<<48|uint64_t(bytes[2])<<40|uint64_t(bytes[3])<<3
+		  |uint64_t(bytes[4])<<24|uint64_t(bytes[5])<<16|uint64_t(bytes[6])<<8|uint64_t(bytes[7]);
+	uint64_t low = uint64_t(bytes[8])<<56|uint64_t(bytes[9])<<48|uint64_t(bytes[10])<<40|uint64_t(bytes[11])<<3
+		  |uint64_t(bytes[12])<<24|uint64_t(bytes[13])<<16|uint64_t(bytes[14])<<8|uint64_t(bytes[15]);
+	return UUID{high,low};
+}
+
+UUID UUID::uuidFromSHA1Namespace(std::string_view sv){
+	unsigned char bytes[20];
+	SHA1(reinterpret_cast<const unsigned char*>(sv.data()),sv.length(),bytes);
+	bytes[4] = (bytes[4]&0xf)|0x30;
+	bytes[8] = (bytes[8]&0xcf)|0x80;
+	uint64_t high = uint64_t(bytes[0])<<56|uint64_t(bytes[1])<<48|uint64_t(bytes[2])<<40|uint64_t(bytes[3])<<3
+		  |uint64_t(bytes[4])<<24|uint64_t(bytes[5])<<16|uint64_t(bytes[6])<<8|uint64_t(bytes[7]);
+	uint64_t low = uint64_t(bytes[8])<<56|uint64_t(bytes[9])<<48|uint64_t(bytes[10])<<40|uint64_t(bytes[11])<<3
+		  |uint64_t(bytes[12])<<24|uint64_t(bytes[13])<<16|uint64_t(bytes[14])<<8|uint64_t(bytes[15]);
+	return UUID{high,low};
+}
+
 

@@ -59,7 +59,7 @@ constexpr nanos_t toNanos(uint64_t val,ChronoUnit unit){
 		return (val%1000)*1000000;
 	case ChronoUnit::MICROSECONDS:
 		return (val%1000000)*1000;
-	case ChronoUnit::MICROSECONDS:
+	case ChronoUnit::NANOSECONDS:
 		return val%1000000000;
 	}
 	return 0;
@@ -367,8 +367,8 @@ public:
      */
     template<typename Dur> Instant(std::chrono::time_point<instant_clock,Dur> tp){
     	const auto d{tp.time_since_epoch()};
-    	seconds = std::chrono::duration_cast<std::chrono::seconds>(d);
-    	nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(d)%NANOS_PER_SECOND;
+    	seconds = std::chrono::duration_cast<std::chrono::seconds>(d).count();
+    	nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(d).count()%NANOS_PER_SECOND;
     }
     /*
      * Constructs an instant from the current system time inline.
@@ -376,7 +376,7 @@ public:
      * This is a clock sensitive constructor.
      */
     Instant(now_t);
-    constexpr ~Instant()=default;
+    ~Instant()=default;
     constexpr Instant(const Instant&)=default;
     constexpr Instant(Instant&&)=default;
     Instant(const Instant&&)=delete;

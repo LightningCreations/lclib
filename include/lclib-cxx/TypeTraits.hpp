@@ -53,6 +53,8 @@ template<typename T,typename U> struct mirror_cv{
 };
 template<typename T,typename U> using mirror_cv_t = typename mirror_cv<T,U>::type;
 
+
+
 /**
  * Designates that an Object of U may contain an object of T as a subobject
  * By default:
@@ -68,13 +70,11 @@ template<typename T,typename U> using mirror_cv_t = typename mirror_cv<T,U>::typ
  * Note that Arrays of Unknown bound do not contain a T, nor do references to arrays.
  * Otherwise can_contain inherits from false_type.
  */
-template<typename T,typename U> struct can_contain:std::false_type{};
+template<typename T,typename U,typename=void> struct can_contain:std::false_type{};
 template<typename T> struct can_contain<T,T>:std::true_type{};
 template<typename T> struct can_contain<T,std::optional<T>>:std::true_type{};
 template<typename T,typename U> struct can_contain<T,std::optional<U>>:can_contain<T,U>{};
-template<typename T,typename... Ts> struct can_contain<T,std::tuple<Ts...>>:std::disjunction<can_contain<T,Ts>...>{};
 template<typename T,typename... Ts> struct can_contain<T,std::variant<Ts...>>:std::disjunction<can_contain<T,Ts>...>{};
-template<typename T,typename U,typename V> struct can_contain<T,std::pair<U,V>>:std::disjunction<can_contain<T,U>,can_contain<T,V>>{};
 template<typename T> struct can_contain<const T,T>:std::true_type{};
 template<typename T> struct can_contain<volatile T,T>:std::true_type{};
 template<typename T> struct can_contain<const volatile T,T>:std::true_type{};
@@ -88,6 +88,17 @@ template<typename T,size_t N> struct can_contain<T,T[N]>:std::true_type{};
 template<typename T,typename U,size_t N> struct can_contain<T,U[N]>:can_contain<T,U>{};
 template<typename T,size_t N> struct can_contain<T,std::array<T,N>>:std::true_type{};
 template<typename T,typename U,size_t N> struct can_contain<T,std::array<U,N>>:can_contain<T,U>{};
+
+namespace detail{
+	template<typename T,typename Tuple,std::size_t... Ids> auto can_contain_tuple_helper_f(const T&,const Tuple& t,std::index_sequence<Ids...>)
+		-> std::conjunction<std::bool_constant<(std::tuple_size_v<Tuple>!=0)>,
+			std::disjunction<can_contain<T,std::tuple_element_t<Ids,Tuple>>...>
+		>;
+	template<typename T,typename U> using can_contain_tuple_helper = decltype(can_contain_helper_tuple_f(std::declval<const T&>(),std::declval<const U&>(),std::make_index_sequence<std::tuple_size_v<U>>{}));
+}
+
+template<typename T,typename U> struct can_contain<T,U,std::void_t<decltype(std::tuple_size_v<U>)>>:detail::can_contain_tuple_helper<T,U>{};
+
 template<typename T,typename U> constexpr const bool can_contain_v = can_contain<T,U>::value;
 
 /**
@@ -111,7 +122,7 @@ template<typename T> constexpr const bool is_byte_v = is_byte<T>::value;
 template<typename T> struct remove_cvptr:type_identity<std::remove_cv_t<std::remove_pointer_t<T>>>{};
 template<typename T> using remove_cvptr_t = typename remove_cvptr<T>::type;
 
-template<typename T> struct is_char:std::false_type{};
+template<typename T,typename=void> struct is_char:std::false_type{};
 template<> struct is_char<char>:std::true_type{};
 template<> struct is_char<wchar_t>:std::true_type{};
 template<> struct is_char<char16_t>:std::true_type{};
@@ -124,6 +135,8 @@ template<typename T> constexpr const bool is_char_v = is_char<T>::value;
 template<typename T> struct is_cstring:std::false_type{};
 template<typename T,std::size_t N> struct is_cstring<T[N]>:is_char<T>{};
 template<typename T> struct is_cstring<T[]>:is_char<T>{};
+template<typename T,std::size_t N> struct is_cstring<T(*)[N]>:is_char<T>{};
+template<typename T> struct is_cstring<T(*)[]>:is_char<T>{};
 template<typename T> struct is_cstring<T*>:is_char<T>{};
 template<typename T> struct is_cstring<T&>:is_cstring<T>{};
 template<typename T> struct is_cstring<const T>:is_cstring<T>{};

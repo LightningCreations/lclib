@@ -1,28 +1,21 @@
 #include <lclib-cxx/Random.hpp>
-#include <lclib-cxx/JTime.hpp>
+#include <chrono>
 #include <algorithm>
 
-using std::min;
-LIBLCHIDE seed_t number{32};
-LIBLCHIDE const seed_t cprime{4989641};
+
+static seed_t number{876730097};
+const seed_t cprime{2227123637};
 
 
-LIBLCHIDE seed_t highResTime(){
-	Instant i = Instant::now();
-	return i.get(ChronoUnit::MILISECONDS);
+static seed_t highResTime(){
+	const auto tp{std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())};
+	return tp.time_since_epoch().count();
 }
 
-LIBLCHIDE seed_t nextMultiplier(){
+static seed_t nextMultiplier(){
 	seed_t val = number;
-	number*=2;
-	if(val%10==2)
-		val--;//Adjacent prime is likely 1 less than val, if it exists
-	else if(val%10==4)
-		return nextMultiplier();//Probably doesn't have an adjacent prime
-	else if(val%10==6)
-		val++;//Adjacent prime is likely 1 more than val, if it exists
-	else if(val%8==8)
-		return nextMultiplier();//Probably doesn't have an adjacent prime
+	number *= cprime;
+	number += 1;
 	return val*cprime;
 }
 LIBLCHIDE seed_t genUniqueSeed(){
@@ -75,17 +68,17 @@ double Random::nextGuassian(){
 			haveNextNextGaussian = false;
 			return nextNextGaussian;
 	} else {
-			double v1, v2, s;
-			do {
-				v1 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
-				v2 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
-				s = v1 * v1 + v2 * v2;
-			} while (s >= 1 || s == 0);
-			double multiplier = sqrt(-2 * log(s)/s);
-			nextNextGaussian = v2 * multiplier;
-			haveNextNextGaussian = true;
-			return v1 * multiplier;
-		}
+		double v1, v2, s;
+		do {
+			v1 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
+			v2 = 2 * nextDouble() - 1;   // between -1.0 and 1.0
+			s = v1 * v1 + v2 * v2;
+		} while (s >= 1 || s == 0);
+		double multiplier = sqrt(-2 * log(s)/s); // @suppress("Invalid arguments")
+		nextNextGaussian = v2 * multiplier;
+		haveNextNextGaussian = true;
+		return v1 * multiplier;
+	}
 }
 int64_t Random::nextLong(){
 	return nextInt()<<32LL+nextInt();
@@ -101,7 +94,7 @@ double Random::nextDouble(){
 
 void Random::nextBytes(uint8_t* out,size_t size){
 	for (int i = 0; i < size; )
-		for (int rnd = nextInt(), n = min<size_t>(size - i, 4);
+		for (int rnd = nextInt(), n = std::min<size_t>(size - i, 4);
         	  n-- > 0; rnd >>= 8)
       		 out[i++] = (char)rnd;
 }

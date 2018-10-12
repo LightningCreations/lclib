@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <lclib-cxx/ShadowRandom.hpp>
 #include <lclib-cxx/JTime.hpp>
-
+#include <chrono>
 
 #include <openssl/sha.h>
 
@@ -26,8 +26,9 @@ using std::istream;
 const string sep("-");
 const int sizes[] = {8,4,4,4,12};
 
-LIBLCHIDE uint32_t clockSeq{0};
+static uint32_t clockSeq{3186784621};
 
+const uint32_t clockSeqInc{3885574061};
 
 
 
@@ -91,15 +92,39 @@ string operator+(const string& s,const UUID& id){
 	return s+(id.toString());
 }
 
-const Instant UUID_EPOCH{Instant::fromEpochSecond(-12244089600)};
+#include <ratio>
 
+using namespace std::chrono_literals;
+
+using uuid_hnanos =
+		std::chrono::duration<uint64_t,std::ratio<1,10000000>>;
+
+using uuid_clock = std::chrono::system_clock;
+
+using uuid_epoch_tp = std::chrono::time_point<uuid_clock,uuid_hnanos>;
+
+const std::chrono::time_point<uuid_clock,std::chrono::seconds> epochSeconds{-12219292800s};
+const auto uuidEpoch{std::chrono::time_point_cast<uuid_hnanos>(epochSeconds)};
+
+const uint64_t now_version{0x1000};
+const uint64_t now_variant{0xC000000000000000};
+const uint64_t low_mask{0xffffffff00000000};
+const uint64_t mid_mask{0xffff0000};
+const uint64_t high_mask{0xfff};
+
+const uint64_t seq_mask{0x1fff000000000000};
+const uint64_t node_mask{0x7fffffffffffffff};
+const uint64_t mcast_bit{0x8000000000000000};
 UUID UUID::ofNow(){
-	Duration d = Duration::between(UUID_EPOCH,Instant::now());
-	uint64_t ts = d.getSeconds()*10000000+d.getNanos()/100;
-	uint64_t rnode = (uuidRandom.nextLong()&0x7FFFFFFFFFFF)|0x800000000000;
-	uint64_t low = rnode|((uint64_t)(0xE000|((clockSeq+=257)&0xCFFF)))<<56LL;
-	uint64_t high = (ts&0xFFFFFFFF)<<32|((ts>>32)&0xFFFF)<<16|0x1000|((ts>>48)&0xFFF);
-	return UUID(high,low);
+	const auto now{std::chrono::time_point_cast<uuid_hnanos>(uuid_clock::now())};
+	const auto dur = now-uuidEpoch;
+	const uint64_t node = mcast_bit|(uuidRandom.nextLong()&(node_mask));
+	const int64_t ts = dur.count();
+	const uint64_t high = ((ts<<32)&low_mask)|((ts<<16)&mid_mask)|now_version|((ts>>48)&high_mask);
+	uint64_t seq{clockSeq};
+	clockSeq+=clockSeqInc;
+	const uint64_t low = ((seq<<48)&seq_mask)|now_variant|node;
+	return UUID{high,low};
 }
 
 UUID UUID::randomUUID(){

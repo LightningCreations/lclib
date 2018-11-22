@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 CXX := clang++5.0
 CC := clang5.0
+=======
+CXX := g++-8
+CC := gcc-8
+>>>>>>> refs/remotes/lclib-cxx/master
 
 OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.o
 OBJECT_FILES += out/json/json_reader.o out/json/json_value.o out/json/json_writer.o

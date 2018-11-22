@@ -5,7 +5,6 @@ using std::string;
 using std::to_string;
 
 
-
     LIBLCAPI TextComponent::TextComponent():__tab(false),text(),c(Color::NONE),endl(false),bg(false){}
     LIBLCAPI TextComponent::TextComponent(const string& text):__tab(false),text(text),c(Color::NONE),endl(false),bg(false){}
     LIBLCAPI TextComponent::TextComponent(string&& text):__tab(false),text(text),c(Color::NONE),endl(false),bg(false){}

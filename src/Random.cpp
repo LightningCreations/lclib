@@ -1,6 +1,7 @@
 #include <lclib-cxx/Random.hpp>
 #include <chrono>
 #include <algorithm>
+
 #include <atomic>
 
 
@@ -22,7 +23,18 @@ static seed_t nextMultiplier(){
 static seed_t genUniqueSeed(){
 	return highResTime()*nextMultiplier();
 }
-static seed_t initRandomizeSeed(seed_t seed){
+
+
+
+static seed_t number{876730097};
+const seed_t cprime{2227123637};
+
+
+
+LIBLCHIDE seed_t genUniqueSeed(){
+	return highResTime()*nextMultiplier();
+}
+LIBLCHIDE seed_t initRandomizeSeed(seed_t seed){
 	return (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
 }
 

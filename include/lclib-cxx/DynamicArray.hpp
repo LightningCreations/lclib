@@ -168,9 +168,15 @@ template<typename T,typename Allocator=std::allocator<T>>
 			auto operator()(size_type i,T&& t)->decltype(p[i][std::forward(t)]){
 				return p[i][std::forward(t)];
 			}
+<<<<<<< HEAD
 		template<typename U>
 			auto operator()(size_type i,U&& t)const->decltype(const_cast<const T*>(p)[i][std::forward<U>(t)]){
 				return const_cast<const T*>(p)[i][std::forward<U>(t)];
+=======
+		template<typename T>
+			auto operator()(size_type i,T&& t)const->decltype(const_cast<const T*>(p)[i][std::forward(t)]){
+				return const_cast<const T*>(p)[i][std::forward(t)];
+>>>>>>> refs/remotes/lclib-cxx/master
 			}
 
 		const_reference operator()(size_type i)const{

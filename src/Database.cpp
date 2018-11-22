@@ -274,6 +274,117 @@ Transaction::~Transaction(){
 		conn->rollback();
 	else
 		conn->commit();
+=======
+void DirectStatement::setInt(int,int){}
+void DirectStatement::setFloat(int,float){}
+void DirectStatement::setDouble(int,double){}
+void DirectStatement::setString(int,std::string_view){}
+Rowset& DirectStatement::executePreparedQuery(){
+	throw SQLException("No such query");
+}
+int DirectStatement::executePreparedUpdate(){
+	throw SQLException("No such update");
+}
+
+bool ConnectionProvider::operator ==(const ConnectionProvider& p)const{
+	return this==&p;
+}
+bool ConnectionProvider::operator!=(const ConnectionProvider& p)const{
+	return this!=&p;
+}
+
+std::shared_mutex providersLock;
+
+std::vector<ConnectionProvider*> providers;
+
+void registerProvider(ConnectionProvider& provider){
+	std::unique_lock sync(providersLock);
+	providers.push_back(&provider);
+}
+
+void unregisterProvider(ConnectionProvider& provider){
+	for(auto& a:providers)
+		if(a==&provider){
+			a = nullptr;
+			return;
+		}
+}
+
+const std::vector<ConnectionProvider*>& getProviderList(){
+	std::shared_lock sync(providersLock);
+	return providers;
+}
+
+std::unique_ptr<Connection> open(std::string_view uri){
+	std::shared_lock sync(providersLock);
+	for(auto a:providers)
+		if(a&&a->supports(uri))
+			return a->open(uri);
+	return {};
+}
+#include <lclib-cxx/database/DatabaseWrappers.hpp>
+SQLStatement::SQLStatement(std::unique_ptr<Statement> stat):underlying(std::move(stat)){}
+Rowset& SQLStatement::executeQuery(std::string_view q){
+	return underlying->executeQuery(q);
+}
+
+int SQLStatement::executeUpdate(std::string_view q){
+	return underlying->executeUpdate(q);
+}
+
+SQLPreparedStatement::SQLPreparedStatement(std::unique_ptr<PreparedStatement> stat):underlying(std::move(stat)){}
+
+void SQLPreparedStatement::setInt(int i,int v){
+	underlying->setInt(i,v);
+}
+
+void SQLPreparedStatement::setString(int i,std::string_view sv){
+	underlying->setString(i,sv);
+}
+void SQLPreparedStatement::setLong(int i,int64_t l){
+	underlying->setLong(i,l);
+}
+
+void SQLPreparedStatement::setFloat(int i,float f){
+	underlying->setFloat(i,f);
+}
+
+void SQLPreparedStatement::setDouble(int i,double d){
+	underlying->setDouble(i,d);
+}
+
+Rowset& SQLPreparedStatement::executePreparedQuery(){
+	return underlying->executePreparedQuery();
+}
+
+int SQLPreparedStatement::executePreparedUpdate(){
+	return underlying->executePreparedUpdate();
+}
+
+DBConnection::DBConnection(std::string_view uri):underlying(open(uri)){
+	if(!underlying)
+		throw SQLException("Failed to open Connection.");
+}
+
+void DBConnection::beginTransaction(){
+	underlying->beginTransaction();
+}
+
+void DBConnection::commit(){
+	underlying->commit();
+}
+
+void DBConnection::rollback(){
+	underlying->rollback();
+}
+
+SQLStatement DBConnection::createStatement(){
+	return SQLStatement(underlying->newStatement());
+}
+
+SQLPreparedStatement DBConnection::prepareStatement(std::string_view q){
+	return SQLPreparedStatement(underlying->newPreparedStatement(q));
+
 }
 
 

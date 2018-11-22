@@ -1,12 +1,12 @@
-#include <lclib-cxx/UUID.hpp>
+#include <lclib/UUID.hpp>
 #include <string>
-#include <lclib-cxx/Hash.hpp>
+#include <lclib/Hash.hpp>
 #include <iomanip>
 #include <sstream>
-#include <lclib-cxx/StringHelper.hpp>
+#include <lclib/StringHelper.hpp>
 #include <cstdlib>
-#include <lclib-cxx/ShadowRandom.hpp>
-#include <lclib-cxx/JTime.hpp>
+#include <lclib/ShadowRandom.hpp>
+#include <lclib/JTime.hpp>
 #include <chrono>
 #include <stdexcept>
 

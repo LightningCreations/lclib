@@ -1,4 +1,4 @@
-#include <lclib-cxx/Hash.hpp>
+#include <lclib/Hash.hpp>
 #include <array>
 #include <utility>
 #include <string>

@@ -4,8 +4,8 @@
  *  Created on: Sep 5, 2018
  *      Author: connor
  */
-#include <lclib-cxx/Socket.hpp>
-#include <lclib-cxx/IOWrapper.hpp>
+#include <lclib/Socket.hpp>
+#include <lclib/IOWrapper.hpp>
 #include <memory>
 
 

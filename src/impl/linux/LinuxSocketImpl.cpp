@@ -12,16 +12,16 @@ extern "C"{
 #include <netdb.h>
 };
 #include <cstdio>
-#include <lclib-cxx/Socket.hpp>
-#include <lclib-cxx/IOWrapper.hpp>
+#include <lclib/Socket.hpp>
+#include <lclib/IOWrapper.hpp>
 #include <mutex>
 #include <atomic>
 #include <chrono>
 #include <thread>
-#include <lclib-cxx/Types.hpp>
+#include <lclib/Types.hpp>
 #include <cstring>
 #include <cstdlib>
-#include <lclib-cxx/Callable.hpp>
+#include <lclib/Callable.hpp>
 extern int errno;
 using namespace std::chrono_literals;
 typedef decltype(socket(0,0,0)) socket_t;

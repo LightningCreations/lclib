@@ -4,11 +4,11 @@
  *  Created on: Sep 10, 2018
  *      Author: connor
  */
-#include <lclib-cxx/UI/GraphicsBase.hpp>
+#include <lclib/UI/GraphicsBase.hpp>
 #include <type_traits>
 #include <algorithm>
 #include <cmath>
-#include <lclib-cxx/Config.hpp>
+#include <lclib/Config.hpp>
 
 namespace graphics{
 	namespace detail{

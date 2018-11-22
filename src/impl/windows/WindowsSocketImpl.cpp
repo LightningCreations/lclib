@@ -7,8 +7,8 @@
 extern "C"{
 #include <winsock2.h>
 };
-#include <lclib-cxx/Socket.hpp>
-#include <lclib-cxx/Config.hpp>
+#include <lclib/Socket.hpp>
+#include <lclib/Config.hpp>
 #include <mutex>
 
 class WSAError:public SocketException{

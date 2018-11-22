@@ -6,7 +6,7 @@
  */
 
 
-#include <lclib-cxx/UI/Shape.hpp>
+#include <lclib/UI/Shape.hpp>
 #include <cmath>
 
 namespace graphics{

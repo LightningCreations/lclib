@@ -8,14 +8,14 @@ OBJECT_FILES += out/TextComponent.o out/UUID.o out/Version.o
 OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
 
 
-COMPILE_FLAGS = -g -fvisibility=hidden -fvisibility-inlines-hidden -std=c++2a -fpic -w -fpermissive 
+COMPILE_FLAGS = -g -fvisibility=hidden -fvisibility-inlines-hidden -std=c++17 -fPIC -w -fpermissive 
 LINKER_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden -shared -fpic -flinker-output=dyn -pthread 
 LIBS = -lssl
 OUTPUT = liblc-cxx.so
 INCLUDE = -I./ -I./include
 DEFINES = -DLCLIB_CXX_DEFINITION
 
-LIBNAME = -Wl,-soname,liblc-cxx.so
+LIBNAME = -Wl,-soname,liblc.so
 
 DIRS := out/ out/impl/linux out/json out/UI
 
@@ -29,12 +29,12 @@ $(OUTPUT): out $(OBJECT_FILES)
 
 install:$(OUTPUT)
 	install $(OUTPUT) /usr/lib/
-	install --mode=755 -d -v /usr/include/lclib-cxx include/lclib-cxx
+	install --mode=755 -d -v /usr/include/lclib include/lclib
 	install --mode=755 -d -v /usr/include/json include/json
-	cp -R include/lclib-cxx /usr/include
+	cp -R include/lclib /usr/include
 	cp -R include/json /usr/include
 	chmod -R 755 /usr/include/json
-	chmod -R 755 /usr/include/lclib-cxx
+	chmod -R 755 /usr/include/lclib
 
 uninstall:
 	rm -rf /usr/include/lclib-cxx

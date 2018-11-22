@@ -1,4 +1,4 @@
-#include <lclib-cxx/Text.hpp>
+#include <lclib/Text.hpp>
 #include <string>
 
 using std::string;

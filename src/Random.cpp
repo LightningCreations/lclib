@@ -1,4 +1,4 @@
-#include <lclib-cxx/Random.hpp>
+#include <lclib/Random.hpp>
 #include <chrono>
 #include <algorithm>
 

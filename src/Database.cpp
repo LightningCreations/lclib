@@ -5,8 +5,8 @@
  *      Author: connor
  */
 
-#include <lclib-cxx/database/Database.hpp>
-#include <lclib-cxx/database/Exceptions.hpp>
+#include <lclib/database/Database.hpp>
+#include <lclib/database/Exceptions.hpp>
 #include <shared_mutex>
 #include <mutex>
 
@@ -188,7 +188,7 @@ std::unique_ptr<Connection> open(std::string_view uri){
 			return a->open(uri);
 	return {};
 }
-#include <lclib-cxx/database/DatabaseWrappers.hpp>
+#include <lclib/database/DatabaseWrappers.hpp>
 SQLStatement::SQLStatement(std::unique_ptr<Statement> stat):underlying(std::move(stat)){}
 Rowset& SQLStatement::executeQuery(std::string_view q){
 	return underlying->executeQuery(q);

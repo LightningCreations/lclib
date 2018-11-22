@@ -1,7 +1,7 @@
-#include <lclib-cxx/IOWrapper.hpp>
-#include <lclib-cxx/ThreadSafeIO.hpp>
+#include <lclib/IOWrapper.hpp>
+#include <lclib/ThreadSafeIO.hpp>
 #include <string>
-#include <lclib-cxx/Vector.hpp>
+#include <lclib/Vector.hpp>
 #include <cstring>
 
 InputStream::operator bool()const noexcept(true){
@@ -113,7 +113,7 @@ std::string DataInputStream::readString(){
     uint16_t len = this->readUnsignedShort();
     char* str = new char[len];
     read(str,len);
-    string ret(str,len);
+    std::string ret(str,len);
     delete[] str;
     return std::move(ret);
 }

@@ -1,4 +1,4 @@
-#include <lclib-cxx/ShadowRandom.hpp>
+#include <lclib/ShadowRandom.hpp>
 #include <random>
 
 extern "C"{

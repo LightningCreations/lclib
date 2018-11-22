@@ -4,8 +4,8 @@
  *  Created on: Apr 4, 2018
  *      Author: Connor Horman
  */
-#include <lclib-cxx/Version.hpp>
-#include <lclib-cxx/StringHelper.hpp>
+#include <lclib/Version.hpp>
+#include <lclib/StringHelper.hpp>
 #include <string>
 #include <stdexcept>
 

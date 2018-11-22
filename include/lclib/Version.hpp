@@ -23,7 +23,8 @@ using std::ostream;
 
 using namespace std::string_literals;
 
-
+#undef major
+#undef minor
 
 /*
  * Represents a version of the code.

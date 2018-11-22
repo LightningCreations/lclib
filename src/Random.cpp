@@ -20,9 +20,6 @@ static seed_t nextMultiplier(){
 	while(number.compare_exchange_strong(val, val*cprime+1));
 	return val;
 }
-static seed_t genUniqueSeed(){
-	return highResTime()*nextMultiplier();
-}
 
 
 

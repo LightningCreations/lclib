@@ -20,7 +20,7 @@ namespace security{
 	private:
 		Digest target;
 	public:
-		static_assert(traits::is_message_digest_algorithm_v<Digest>,"MessageDigest Requires MessageDigestAlgorithm");
+		static_assert(security::traits::is_message_digest_algorithm_v<Digest>,"MessageDigest Requires MessageDigestAlgorithm");
 		using algorithm = Digest;
 		using byte_type = typename Digest::byte_type;
 		using input_type = typename Digest::input_type;
@@ -31,13 +31,13 @@ namespace security{
 		MessageDigest(MessageDigest&&)=default;
 		void digest(input_type in,std::size_t sz,output_type out){
 			target.init();
-			target.update(in,sz);
+			target.update(&in,sz);
 			target.doFinal(out);
 		}
 		void operator()(input_type in,std::size_t sz,output_type out){
 			target.init();
-			target.update(in,sz);
-			target.doFinal(out);
+			target.update(&in,sz);
+			target.doFinal(&out);
 		}
 	};
 }

@@ -63,12 +63,6 @@ LIBLCAPI Terminal::~Terminal(){
 
 
 
-Terminal::Terminal(){
-    clear();
-}
-
-
-
 Terminal& Terminal::print(const TextComponent& t)noexcept(true){
     std::lock_guard<std::recursive_mutex> sync(lock);
     Color c = t.getColor();

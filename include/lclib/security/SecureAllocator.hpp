@@ -9,6 +9,7 @@
 #define __INCLUDE_SECURITY_SECUREDELETER_HPP__2018_09_17_18_44_59
 #include <utility>
 #include <memory>
+#include <cstring>
 #include <string>
 #include <set>
 #include <vector>

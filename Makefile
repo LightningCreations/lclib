@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-CXX := clang++5.0
-CC := clang5.0
-=======
 CXX := g++-8
 CC := gcc-8
->>>>>>> refs/remotes/lclib-cxx/master
 
 OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.o
 OBJECT_FILES += out/json/json_reader.o out/json/json_value.o out/json/json_writer.o
@@ -16,14 +11,14 @@ OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
 OBJECT_FILES += out/Database.o out/ThreadLocalRandom.o out/LibraryInfo.o
 
 CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -fpic -w -fwrapv
-COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++2a -fpic -w -fpermissive -fwrapv
-LINKER_FLAGS = -static-libstdc++ -shared -fpic -flinker-output=dyn -pthread 
+COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -fpic -w -fpermissive -fwrapv
+LINKER_FLAGS = -static-libstdc++ -shared -fpic -flinker-output=dyn -pthread
 LIBS = -lssl
 OUTPUT = liblc-cxx.so
 INCLUDE = -I./ -I./include
 DEFINES = -DLCLIB_CXX_DEFINITION
 
-LIBNAME = -Wl,-soname,liblc-cxx.so
+LIBNAME = -Wl,-soname,liblc.so
 
 DIRS := out/ out/impl/linux out/json out/UI
 
@@ -37,12 +32,12 @@ $(OUTPUT): out $(OBJECT_FILES)
 
 install:$(OUTPUT)
 	install $(OUTPUT) /usr/lib/
-	install --mode=755 -d -v /usr/include/lclib-cxx include/lclib-cxx
+	install --mode=755 -d -v /usr/include/lclib include/lclib
 	install --mode=755 -d -v /usr/include/json include/json
-	cp -R include/lclib-cxx /usr/include
+	cp -R include/lclib /usr/include
 	cp -R include/json /usr/include
 	chmod -R 755 /usr/include/json
-	chmod -R 755 /usr/include/lclib-cxx
+	chmod -R 755 /usr/include/lclib
 
 uninstall:
 	rm -rf /usr/include/lclib-cxx

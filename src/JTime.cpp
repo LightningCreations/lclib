@@ -1,5 +1,5 @@
 #include <chrono>
-#include <lclib-cxx/JTime.hpp>
+#include <lclib/JTime.hpp>
 
 
 const extern int32_t hashPrime;

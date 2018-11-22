@@ -1,5 +1,5 @@
-#include <lclib-cxx/Menu.hpp>
-#include <lclib-cxx/Random.hpp>
+#include <lclib/Menu.hpp>
+#include <lclib/Random.hpp>
 #include <iostream>
 #include <cstdlib>
 

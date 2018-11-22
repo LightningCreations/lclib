@@ -4,7 +4,7 @@
  *  Created on: Apr 4, 2018
  *      Author: Connor Horman
  */
-#include <lclib-cxx/Version.hpp>
+#include <lclib/Version.hpp>
 #include <string>
 #include <stdexcept>
 

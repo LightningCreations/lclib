@@ -1,4 +1,4 @@
-#include <lclib-cxx/Random.hpp>
+#include <lclib/Random.hpp>
 #include <chrono>
 #include <algorithm>
 
@@ -19,9 +19,6 @@ static seed_t nextMultiplier(){
 	seed_t val = number.load();
 	while(number.compare_exchange_strong(val, val*cprime+1));
 	return val;
-}
-static seed_t genUniqueSeed(){
-	return highResTime()*nextMultiplier();
 }
 
 

@@ -1,15 +1,15 @@
-#include <lclib-cxx/UUID.hpp>
+#include <lclib/UUID.hpp>
 #include <string>
-#include <lclib-cxx/Hash.hpp>
+#include <lclib/Hash.hpp>
 #include <iomanip>
 #include <sstream>
 #include <cstdlib>
-#include <lclib-cxx/ShadowRandom.hpp>
-#include <lclib-cxx/JTime.hpp>
+#include <lclib/ShadowRandom.hpp>
+#include <lclib/JTime.hpp>
 #include <chrono>
 #include <stdexcept>
-#include <lclib-cxx/security/SHA.hpp>
-#include <lclib-cxx/security/MessageDigest.hpp>
+#include <lclib/security/SHA.hpp>
+#include <lclib/security/MessageDigest.hpp>
 
 #include <openssl/md5.h>
 
@@ -188,7 +188,7 @@ LIBLCAPI UUID UUID::uuidFromNamespace(std::string_view sv){
 
 LIBLCAPI UUID UUID::uuidFromSHA1Namespace(std::string_view sv){
 	char bytes[20];
-	MessageDigest<SHA<1,char>>{}(sv.data(),sv.length(),bytes);
+	security::MessageDigest<security::SHA<1,char>>{}(sv.data(),sv.length(),bytes);
 	bytes[4] = (bytes[4]&0xf)|0x30;
 	bytes[8] = (bytes[8]&0xcf)|0x80;
 	uint64_t high = uint64_t(bytes[0])<<56|uint64_t(bytes[1])<<48|uint64_t(bytes[2])<<40|uint64_t(bytes[3])<<3

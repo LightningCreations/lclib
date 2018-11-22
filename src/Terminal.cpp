@@ -1,4 +1,4 @@
-#include <lclib-cxx/Text.hpp>
+#include <lclib/Text.hpp>
 #include <iostream>
 #include <string>
 
@@ -58,12 +58,6 @@ LIBLCAPI Terminal::Terminal(){
 }
 
 LIBLCAPI Terminal::~Terminal(){
-    clear();
-}
-
-
-
-Terminal::Terminal(){
     clear();
 }
 

@@ -1,6 +1,13 @@
 CXX := g++-8
 CC := gcc-8
 
+INCLUDE_PATH := include
+
+CXXHEAD := $(foreach ipath,$(INCLUDE_PATH),$(wildcard $(ipath)/**/*.hpp) $(wildcard $(ipath)/**/*.inl))
+CCHEAD := $(foreach ipath,$(INCLUDE_PATH),$(wildcard $(ipath)/**/*.h)))
+
+
+
 OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.o
 OBJECT_FILES += out/json/json_reader.o out/json/json_value.o out/json/json_writer.o
 OBJECT_FILES += out/Hash.o out/IOWrapper.o out/JTime.o
@@ -8,60 +15,86 @@ OBJECT_FILES += out/Menu.o out/Random.o out/ShadowRandom.o
 OBJECT_FILES += out/SocketCommon.o out/Terminal.o
 OBJECT_FILES += out/TextComponent.o out/UUID.o out/Version.o
 OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
-OBJECT_FILES += out/Database.o out/ThreadLocalRandom.o out/LibraryInfo.o
+OBJECT_FILES += out/Database.o out/ThreadLocalRandom.o
+OBJECT_FILES += out/UniqueRandomEngine.o
+
+LINFO_OBJ := out/LibraryInfo.o
 
 CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -fpic -w -fwrapv
 COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -fpic -w -fpermissive -fwrapv
 LINKER_FLAGS = -static-libstdc++ -shared -fpic -flinker-output=dyn -pthread
 LIBS = -lssl
 OUTPUT = liblc.so
-INCLUDE = -I./ -I./include
+INCLUDE = $(foreach ipath,$(INCLUDE_PATH),-I$(ipath))
 DEFINES = -DLCLIB_CXX_DEFINITION
 
 LIBNAME = -Wl,-soname,liblc.so
 
-DIRS := out/ out/impl/linux out/json out/UI
+DIRS := out/ out/UI/ out/impl/ out/impl/linux/
+
+.PHONY: all FORCE install uninstall clean rebuild relink cxxheaders cheaders out
+.DEFAULT: all
+.IGNORE: $(DIRS)
+.PRECIOUS: Makefile $(DIRS)
+.DELETE_ON_ERROR:
 
 all: $(OUTPUT)
 
-out:
-	mkdir -p $(DIRS)
+FORCE: ;
 
-$(OUTPUT): out $(OBJECT_FILES)
-	$(CXX) $(LINKER_FLAGS) $(LIBNAME) -o $@ $(LIBS) $(OBJECT_FILES) 
+$(OUTPUT): $(OBJECT_FILES) $(LINFO_OBJ)
+	$(CXX) $(LINKER_FLAGS) $(LIBNAME) -o $@ $(LIBS) $^
+
+out/: 
+	mkdir $@/
+	$(MAKE) $(DIRS)
+	
+out/%/: out
+	mkdir $@
+
+
 
 install:$(OUTPUT)
 	install $(OUTPUT) /usr/lib/
 	install --mode=755 -d -v /usr/include/lclib include/lclib
-	install --mode=755 -d -v /usr/include/json include/json
 	cp -R include/lclib /usr/include
-	cp -R include/json /usr/include
-	chmod -R 755 /usr/include/json
 	chmod -R 755 /usr/include/lclib
+	cp -R include/json /usr/include
+	install --mode=755 -d -v /usr/include/json include/json
+	chmod -R 755 /usr/include/json
+	install --mode=755 -d -v /usr/include/detail include/lclib/detail
+	cp -R include/detail /usr/include
+	chmod -R 755 /usr/include/detail
 
 uninstall:
-	rm -rf /usr/include/lclib-cxx
+	rm -rf /usr/include/lclib
 	rm -rf /usr/lib/$(OUTPUT)
-	rm -f ./install
 
 relink:
 	rm -rf $(OUTPUT)
-	make $(OUTPUT)
+	$(MAKE) $(OUTPUT)
 
 
 clean:
-	rm -rf out
+	rm -rf $(OBJECT_FILES)
+	rm -rf $(LINFO_OBJ)
 	rm -f $(OUTPUT)
 	rm -f init
 
 rebuild:
-	make clean
-	make $(OUTPUT)
+	$(MAKE) clean
+	$(MAKE) $(OUTPUT)
 
-out/%.o: src/%.cpp
+cxxheaders: cheaders $(INCLUDE_PATH) $(CXXHEAD)
+
+cheaders: $(INCLUDE_PATH) $(CCHEAD)
+
+out/%.o: src/%.cpp $(D@) cxxheaders
 	$(CXX) $(COMPILE_FLAGS) -c $(INCLUDE) -o $@ $<
 
-out/%.o: src/%.c
+out/%.o: src/%.c $(D@) cheaders
 	$(CC) $(CC_FLAGS) -c $(INCLUDE) -o $@ $<
 	
-	
+$(LINFO_OBJ): $(LINFO_OBJ cxxheaders out/ $(OBJECT_FILES)
+	$(CXX) $(COMPILE_FLAGS) -c $(INCLUDE) -o $@ $<
+

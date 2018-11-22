@@ -4,6 +4,8 @@
  *  Created on: Sep 5, 2018
  *      Author: connor
  */
+#include <lclib/Config.hpp>
+#ifdef LIBLCCXX_POSIX
 extern "C"{
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -239,5 +241,5 @@ std::unique_ptr<ServerSocketImpl> newServerSocketHandle(){
 }
 
 
-
+#endif
 

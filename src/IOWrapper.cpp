@@ -3,6 +3,7 @@
 #include <string>
 #include <lclib/Vector.hpp>
 #include <cstring>
+#include <utility>
 
 InputStream::operator bool()const noexcept(true){
 	return !checkError();

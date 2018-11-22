@@ -127,6 +127,13 @@ namespace graphics{
 	bool Color::operator==(Color c)const noexcept(true){
 		return r==c.r&&g==c.g&&b==c.b&&a==c.a;
 	}
+
+	bool Color::operator ==(TGIColor c)const noexcept(true){
+		return r==(static_cast<uint32_t>(c)>>16)&&g==((static_cast<uint32_t>(c)>>8)&0xff)&&b==(static_cast<uint32_t>(c)&0xff)&&a==0;
+	}
+	bool Color::operator!=(TGIColor c)const noexcept(true){
+		return !(*this==c);
+	}
 	bool Color::operator!=(Color c)const noexcept(true){
 		return !(*this==c);
 	}

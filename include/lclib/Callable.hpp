@@ -11,6 +11,9 @@
 #include <type_traits>
 #include <mutex>
 #include <lclib/Config.hpp>
+#include <tuple>
+#include <cstddef>
+#include <lclib/TypeTraits.hpp>
 
 /**
  * A type satisfying FunctionObject, which models the identity function,
@@ -24,46 +27,33 @@ public:
 	}
 };
 
+namespace detail{
 
-/**
- * Returns a forwarding Callable, that is, a ForwardingFunctionObject, that when called
- * with valid arguments for the source callable, yields the same result as INVOKE(c,std::forward(args)...)
- * Arguments are captured via perfect forwarding so lvalues are passed by reference.
- * Note that because the source may be any callable, and the result is a FunctionObject,
- * this function makes it possible to wrap Callables that do not provide the function call operator into a single object.
- * This is less constrained then wrapping it into a std::function as std::function constrains the call signature.
- * Given any args, which are perfectly forwarded as though by a template parameter pack,
- * Let INVOKE be some invoke expression which accepts a callable object, and parameters for the invocation
- * (which includes std::invoke, std::bind (which does not invoke the function, but wraps parameters), std::apply (where args are stored in a single tuple), and std::visit (where all the arguments are passed in a variant))
- * Also let c be some lvalue callable (which may or may not be const-qualified), and f be the result of forwardCall(c)
- * If INVOKE(c,std::forward(args)...) is well formed, then INVOKE(f,std::forward(args)...) is also well formed (otherwise it is ill-formed),
- * If INVOKE(c,std::forward(args)...) is non-throwing, then INVOKE(f,std::forward(args)...) is non-throwing (otherwise potentially throwing),
- * If INVOKE(c,std::forward(args)...) is a constant expression, then INVOKE(f,std::forward(args)...) is a constant expression.
- * In addition, the result of INVOKE(c,std::forward(args)...) is semantically equivalent (though may not be the same as), the result of INVOKE(f,std::forward(args)...),
- * the same applies to the observable side-effects of INVOKE(c,std::forward(args)...)
- * A Callable Satisfies ForwardingFunctionObject if, by design, all of the above conditions are satisfied
- */
-template<typename Callable> constexpr auto forwardCall(Callable& c){
-	return  [&c](auto&&... args)mutable noexcept(noexcept(std::invoke(c,std::forward(args)...)))->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
-		return std::invoke(c,std::forward(args)...);
-	};
+	template<typename Func,typename Tuple,std::size_t... Is>
+		using rebind_tuple_result = std::tuple<std::invoke_result_t<Func,std::tuple_element<Is,Tuple>>...>;
+	template<typename Func,typename Tuple,std::size_t... Is>
+		constexpr bool rebind_tuple_nothrow =
+					std::conjunction_v<std::is_nothrow_invocable<Func,std::tuple_element<Is,Tuple>>...>;
+
+template<typename Tuple,typename Func,std::size_t... Is>
+	auto rebindTuple_helper(Tuple&& t,Func&& f,std::index_sequence<Is...>)
+		noexcept(rebind_tuple_nothrow<Tuple,Func,Is...>) -> rebind_tuple_result<Func,Tuple,Is...>
+		{
+			return std::forward_as_tuple(std::forward<Func>(f)(std::get<Is>(std::forward<Tuple>(t)))...);
+		}
 }
 
-/**
- * Returns a forwarding Callable, which forwards function calls to the underlying object,
- * in a thread-safe way, by locking the specified mutex.
- * If the mutex is locked (and not owned by the current thread) when this function is called, the behavior is undefined
- * The result is a FunctionalObject which forwards invocations to the underlying object, after locking the supplied mutex.
- * \Mutex must satisfy BasicMutex
- * \Callable must statisfy Invocable
- * Note: If the Callable is a Pointer to member object, access and mutation of the underlying object is not thread-safe
- * Only the actually invocation of the Invocable is guaranteed to be thread-safe
- */
-template<typename Mutex,typename Callable> constexpr auto forwardThreadSafe(Mutex& m,Callable& c){
-	return [&m,&c](auto&&... args)mutable->std::invoke_result_t<Callable,decltype(std::forward(args))...>{
-		std::lock_guard<Mutex> lock(m);
-		return std::invoke(c,std::forward(args)...);
-	};
+template<typename Tuple,typename Func>
+	auto rebindTuple(Tuple&& t,Func&& f)
+		noexcept(rebindTuple_helper(std::declval<Tuple>(),std::declval<Func>(),std::make_index_sequence<std::tuple_size_v<Tuple>>{}))
+		->decltype(rebindTuple_helper(std::forward<Tuple>(t),std::forward(f),std::make_index_sequence<std::tuple_size_v<Tuple>>{}))
+		{
+			return rebindTuple_helper(std::forward<Tuple>(t),std::forward(f),std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+		}
+
+template<typename T,typename U> copy_category<U&&,T> forward_from(U&& u,T&& val){
+	return static_cast<copy_category<U&&,T>>(val);
 }
+
 
 #endif /* INCLUDE_CALLABLE_HPP_ */

@@ -5,6 +5,8 @@
 #include <lclib/Hash.hpp>
 #include <iostream>
 #include <codecvt>
+#include <lclib/Operations.hpp>
+#include <tuple>
 
 using std::ostream;
 using std::istream;
@@ -27,7 +29,7 @@ struct sha1_namespace_t{
 
 const sha1_namespace_t sha1_namespace{};
 
-class LIBLCAPI UUID{
+class LIBLCAPI UUID:private RelOps<UUID>,private StrictOrder<UUID>{
 private:
 	uint64_t high;
 	uint64_t low;
@@ -65,29 +67,14 @@ public:
 	}
 	std::string toString()const;
 	operator std::string()const;
-	constexpr bool operator==(const UUID& u)const{
-		return high==u.high&&low==u.low;
-	}
-	constexpr bool operator!=(const UUID& u)const{
-		return !(*this==u);
-	}
 	constexpr bool operator< (const UUID& u)const{
-		return high<u.high||(high==u.high&&low<u.low);
-	}
-	constexpr bool operator> (const UUID& u)const{
-		return !(*this<=u);
-	}
-	constexpr bool operator<=(const UUID& u)const{
-		return *this<u||*this==u;
-	}
-	constexpr bool operator>=(const UUID& u)const{
-		return !(*this<u);
+		return std::tie(high,low)<std::tie(u.high,u.low);
 	}
 	
 };
 
-LIBLCAPI ostream& operator<<(ostream&,const UUID&);
-LIBLCAPI istream& operator>>(istream&,UUID&);
+LIBLCAPI std::ostream& operator<<(ostream&,const UUID&);
+LIBLCAPI std::istream& operator>>(istream&,UUID&);
 LIBLCAPI std::string   operator+(const std::string&,const UUID&);
 
 constexpr int32_t hashcode(const UUID& u){

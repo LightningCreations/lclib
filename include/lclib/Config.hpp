@@ -73,6 +73,8 @@
 #define LCLIBCXX_HAS_CLI
 #endif
 
+#define __EVAL0(m) m
+#define __EVAL(m) __EVAL0(m)
 
 #define __CONCAT2A(a,b) a##b
 #define __CONCAT3A(a,b,c) a##b##c
@@ -92,7 +94,7 @@
 //__UNIQUE__() expands to the same, except that in a Function-like macro, it expands recursively.
 #define __OAPI_USE_SHARED_COUNTER
 #else
-#ifdef defined(__OAPI_ENHANCED_CPP)&&defined(__COUNTER__)
+#if defined(__OAPI_ENHANCED_CPP)&&defined(__COUNTER__)
 #define __OAPI_USE_SHARED_COUNTER
 //If __OAPI_USE_SHARED_COUNTER is defined before the first use of__COUNTER__
 //Then __COUNTER__ values will be shared between files.
@@ -133,6 +135,22 @@
 #define EXPECTS(condition)
 #endif
 
+#if __has_cpp_attribute(ensures)&& !defined(__NOCONTRACTS)
+#ifdef CONTRACTS_LEVEL
+#if CONTRACTS_LEVEL==1
+#define ENSURES(condition,...) [[ensures audit __VA_ARGS__:condition]]
+#elif CONTRACTS_LEVEL==-1
+#define ENSURES(condition,...) [[ensures axiom __VA_ARGS__:condition]]
+#else
+#define ENSURES(condition,...) [[ensures __VA_ARGS__:condition]]
+#endif
+#else
+#define ENSURES(condition,...) [[ensures __VA_ARGS__:condition]]
+#endif
+#else
+#define ENSURES(condition,...)
+#endif
+
 #if __has_include(<concepts>)&&(__cplusplus>201803L)
 #include <concepts>
 #if defined(__cpp_lib_concepts) &&(__cpp_lib_concepts>=201806L)
@@ -144,5 +162,55 @@
 #define INCLUDE_WARNING(...) static_assert(false,STRINGIFY(Including __FILE__ is not enabled: __VA_ARGS__))
 #else
 #define INCLUDE_WARNING(...) _Pragma(message STRINGIFY(Including __FILE__ is not enabled: __VA_ARGS__))
+#endif
+
+#if defined(_MSC_VER)
+#define LIBLCCXX_IS_MSVCXX
+#elif defined(__GNUC__)
+#define LIBLCCXX_IS_GLIBCXX
+#elif define(__clang__)
+#define LIBLCCXX_IS_CLANG
+#endif
+
+#if defined(__WIN32)
+#define LIBLCCXX_IS_WIN32
+#define LIBLCCXX_OS_NAME "windows"
+#define LIBLCCXX_OS_CODE 0
+#elif defined(__linux__)
+#define LIBLCCXX_OS_LINUX
+#define LIBLCCXX_POSIX
+#define LIBLCCXX_OS_NAME "linux"
+#define LIBLCCXX_OS_CODE 1
+#elif defined(__APPLE__)
+#define LIBLCCXX_OS_APPLE
+#define LIBLCCXX_OS_NAME "apple"
+#define LIBLCCXX_OS_CODE 2
+#elif defined(__snesos__)
+#define LIBLCCXX_OS_SNES
+#define LIBLCCXX_POSIX
+#define LIBLCCXX_OS_NAME "snesos"
+#define LIBLCCXX_OS_CODE 3
+#elif defined(__ANDROID__)
+#define LIBLCCXX_OS_ANDROID
+#define LIBLCCXX_OS_NAME "android"
+#define LIBLCCXX_OS_CODE 4
+#elif defined(__unix__)
+#define LIBLCCXX_OS_UNIX
+#define LIBLCCXX_POSIX
+#define LIBLCCXX_OS_NAME "unix"
+#define LIBLCCXX_OS_CODE 5
+#elif defined(__POSIX_VERSION)
+#define LIBLCCXX_POSIX
+#define LIBLCCXX_OS_NAME "posix"
+#else
+#define LIBLCCXX_OS_NAME "unknown"
+#endif
+
+#ifdef LIBLCCXX_OS_WINDOWS
+#ifdef __WIN64
+#define LIBLCCXX_ARCH_64
+#else
+#define LIBLCCXX_ARCH_32
+#endif
 #endif
 #endif /* INCLUDE_CONFIG_HPP_ */

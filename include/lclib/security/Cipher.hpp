@@ -7,11 +7,11 @@
 
 #ifndef __INCLUDE_SECURITY_CIPHER_HPP__2018_09_18_08_41_26
 #define __INCLUDE_SECURITY_CIPHER_HPP__2018_09_18_08_41_26
-#include <Config.hpp>
-#include <security/Concepts.hpp>
-#include <IOWrapper.hpp>
+#include <lclib/Config.hpp>
+#include <lclib/security/Concepts.hpp>
+#include <lclib/IOWrapper.hpp>
 namespace security{
-	template<typename Algorithm> class CipherOutputStream:public FilterOutputStream{
+	template<typename Algorithm> class CipherOutputStream final:public FilterOutputStream{
 	public:
 		static_assert(traits::is_cipher_algorithm_v<Algorithm>,"CipherOutputStream requires CipherAlgorithm");
 		using byte_type = typename Algorithm::byte_type;
@@ -58,7 +58,7 @@ namespace security{
 			this->FilterOutputStream::flush();
 		}
 	};
-	template<typename Algorithm> class CipherInputStream:public FilterInputStream{
+	template<typename Algorithm> class CipherInputStream final:public FilterInputStream{
 	private:
 		Algorithm underlying;
 	public:

@@ -13,6 +13,7 @@
 #include <lclib/Config.hpp>
 #include <lclib/TypeTraits.hpp>
 #include <algorithm>
+#include <array>
 constexpr const std::ptrdiff_t dynamic_extent{-1};
 
 namespace detail{
@@ -20,31 +21,43 @@ namespace detail{
 		explicit constexpr enabled_ctor_token_t()=default;
 	};
 	constexpr const enabled_ctor_token_t enabled_ctor_token{};
-	template<typename T,typename Container> constexpr auto enable_ctor_helper(Container& c)
-		->require_types<enabled_ctor_token_t,
-			decltype(std::data(c)), decltype(std::size(c)),
+	template<typename T,typename Container> constexpr auto enable_ctor_helper()
+		->require_types_t<enabled_ctor_token_t,
+			decltype(std::data(std::declval<Container&>())), decltype(std::size(std::declval<Container&>())),
 			std::enable_if_t<std::is_convertible_v<
-				std::remove_pointer_t<decltype(std::data(c))>(*)[],
+				std::remove_pointer_t<decltype(std::data(std::declval<Container&>()))>(*)[],
 				T(*)[]
 			 >>
 		>
 	{
 		return enabled_ctor_token;
 	}
-	template<typename T> constexpr T& index_empty_span(){
-		return *((T*)nullptr);//Shortcut to UB indecies in empty spans
+	template<typename T> constexpr inline T& index_empty_span(){
+		return *((T*)nullptr);//Shortcut to UB indexing empty spans
 	}
 }
 
+/**
+ * Implements span.
+ * A Span is a View to a complete or part of a complete contiguous container.
+ * All Iterators satisfy ContiguousIterator, ConstexprIterator, and RandomAccessIterator.
+ * Span itself satisfies ContigousContainer, SequenceContainer, TriviallyCopyable, and LiteralType
+ * By default, the extent of a span is unknown or dynamic.
+ * If the extent of the span is known, use span<T,extent>.
+ * Because a span does not own the memory it views,
+ * there is no direct distinction between const-qualfied spans.
+ * All Non-const iterators are mutable unless T is const-qualified.
+ */
 template<typename T,std::ptrdiff_t extent=dynamic_extent> struct span{
 public:
+	static_assert(extent>0,"Extent must be 0, positive, or dynamic_extent");
 	using element_type = T;
 	using value_type = std::remove_cv_t<T>;
 	using index_type = std::ptrdiff_t;
 	using difference_type = std::ptrdiff_t;
 	using pointer = T*;
 	using reference = T&;
-	using iterator = T*;
+	using iterator = element_type*;
 	using const_iterator = const T*;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -54,54 +67,54 @@ public:
 	constexpr span(pointer start,index_type count) EXPECTS(start!=nullptr&&count==extent):__ptr(start){}
 	constexpr span(pointer begin,pointer end) EXPECTS(start!=nullptr&&end!=nullptr&&(end-begin)==extent):__ptr(begin){}
 	constexpr span(element_type(&arr)[extent],
-			  detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(arr))noexcept(true):__ptr(arr){}
+			  detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(arr)>())noexcept(true):__ptr(arr){}
 	constexpr span(std::array<value_type,extent>& arr,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(arr))noexcept(true):__ptr(std::data(arr)){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(arr)>())noexcept(true):__ptr(std::data(arr)){}
 	constexpr span(const std::array<value_type,extent>& arr,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(arr))noexcept(true):__ptr(std::data(arr)){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(arr)>())noexcept(true):__ptr(std::data(arr)){}
 	template<typename Container>
 		constexpr span(Container& c,
-				detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(c)) EXPECTS(std::size(c)==extent):__ptr(std::data(c)){}
+				detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(c)>()) EXPECTS(std::size(c)==extent):__ptr(std::data(c)){}
 	template<typename Container>
 			constexpr span(const Container& c,
-					detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(c)) EXPECTS(std::size(c)==extent):__ptr(std::data(c)){}
+					detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(c)>()) EXPECTS(std::size(c)==extent):__ptr(std::data(c)){}
 	template<typename U,typename=std::enable_if_t<std::is_convertible_v<U(*)[],T(*)[]>>>
 		constexpr span(const span<U,extent>& e)noexcept(true):__ptr(e.__ptr){}
 	constexpr span(const span&)noexcept(true)=default;
-	iterator begin()const noexcept(true){
+	constexpr iterator begin()const noexcept(true){
 		return __ptr;
 	}
-	iterator end()const noexcept(true){
+	constexpr iterator end()const noexcept(true){
 		return __ptr+extent;
 	}
-	const_iterator cbegin()const noexcept(true){
+	constexpr const_iterator cbegin()const noexcept(true){
 		return __ptr;
 	}
-	const_iterator cend()const noexcept(true){
+	constexpr const_iterator cend()const noexcept(true){
 		return __ptr+std::size_t(extent);
 	}
-	reverse_iterator rbegin()const noexcept(true){
+	constexpr reverse_iterator rbegin()const noexcept(true){
 		return reverse_iterator{end()};
 	}
-	reverse_iterator rend()const noexcept(true){
+	constexpr reverse_iterator rend()const noexcept(true){
 		return reverse_iterator{begin()};
 	}
-	const_reverse_iterator crbegin()const noexcept(true){
+	constexpr const_reverse_iterator crbegin()const noexcept(true){
 		return const_reverse_iterator{cend()};
 	}
-	const_reverse_iterator crend()const noexcept(true){
+	constexpr const_reverse_iterator crend()const noexcept(true){
 		return const_reverse_iterator{cbegin()};
 	}
-	pointer data()const noexcept(true){
+	constexpr pointer data()const noexcept(true){
 		return __ptr;
 	}
-	index_type size()const noexcept(true){
+	constexpr index_type size()const noexcept(true){
 		return extent;
 	}
-	index_type size_bytes()const noexcept(true){
+	constexpr index_type size_bytes()const noexcept(true){
 		return extent*sizeof(T);
 	}
-	bool empty()const noexcept(true){
+	constexpr bool empty()const noexcept(true){
 		return false;
 	}
 	template<std::ptrdiff_t Count> constexpr span<element_type,Count> first()const EXPECTS(Count<=extent){
@@ -153,9 +166,9 @@ public:
 	constexpr span(pointer start,index_type size) EXPECTS(size==0){}
 	constexpr span(pointer begin,pointer end) EXPECTS(begin==end){}
 	template<typename Container> constexpr span(Container& c,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(c)) EXPECTS(std::size(c)==0){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(c)>()) EXPECTS(std::size(c)==0){}
 	template<typename Container> constexpr span(const Container& c,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(c)) EXPECTS(std::size(c)==0){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(c)>()) EXPECTS(std::size(c)==0){}
 	template<typename U,typename=std::enable_if_t<std::is_convertible_v<U(*)[],T(*)[]>>>
 			constexpr span(const span<U,0>&)noexcept(true){}
 	constexpr span(const span&)noexcept(true)=default;
@@ -211,7 +224,7 @@ public:
 	template<std::ptrdiff_t Offset,std::ptrdiff_t Count=dynamic_extent>
 		constexpr span<element_type,Count==dynamic_extent?0:Count> subspan()const EXPECTS(Offset==0&&(Count==0||Count==dynamic_extent)){
 		if constexpr(Count==dynamic_extent)
-			return this;
+			return *this;
 		return first<Count>();
 	}
 	constexpr span<element_type,dynamic_extent> subspan(std::ptrdiff_t off,std::ptrdiff_t count=dynamic_extent)const EXPECTS(off==0&&(count==0||count==dynamic_extent)){
@@ -239,17 +252,17 @@ public:
 	constexpr span(pointer start,index_type sz) EXPECTS(sz>=0&&(sz!=0||start!=nullptr)):__ptr(start),__size(sz){}
 	constexpr span(pointer start,pointer end) EXPECTS(end>=start&&(end==start||(end!=nullptr&&start!=null))):__ptr(start),__size(end-start){}
 	template<std::size_t N> constexpr span(element_type(&arr)[N],
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(arr))noexcept(true):__ptr(arr),__size(N){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(arr)>())noexcept(true):__ptr(arr),__size(N){}
 	template<std::size_t N> constexpr span(std::array<value_type,N>& arr,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(arr))noexcept(true):__ptr(arr),__size(N){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(arr)>())noexcept(true):__ptr(arr),__size(N){}
 	template<std::size_t N> constexpr span(const std::array<value_type,N>& arr,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(arr))noexcept(true):__ptr(arr),__size(N){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(arr)>())noexcept(true):__ptr(arr),__size(N){}
 	template<typename Container> constexpr span(Container& c,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(c)):__ptr(std::data(c)),__size(std::size(c)){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(c)>()):__ptr(std::data(c)),__size(std::size(c)){}
 	template<typename Container> constexpr span(const Container& c,
-				detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(c)):__ptr(std::data(c)),__size(std::size(c)){}
+				detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(c)>()):__ptr(std::data(c)),__size(std::size(c)){}
 	template<typename U,std::ptrdiff_t extent> constexpr span(const span<U,extent>& s,
-			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T>(s))noexcept(true):__ptr(std::data(s)),__size(std::size(s)){}
+			detail::enabled_ctor_token_t=detail::enable_ctor_helper<T,decltype(s)>())noexcept(true):__ptr(std::data(s)),__size(std::size(s)){}
 	constexpr span(const span&)noexcept(true)=default;
 
 	constexpr pointer data()const noexcept(true){

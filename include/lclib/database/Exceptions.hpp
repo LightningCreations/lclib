@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 namespace db{
-	class SQLException:std::runtime_error{
+	class LIBLCAPI SQLException:std::runtime_error{
 	public:
 		using runtime_error::runtime_error;
 	};

@@ -48,10 +48,10 @@ public:
 	using move_base = std::enable_if_t<std::is_move_constructible_v<T>,bool>;
 	using move_assign_base = std::enable_if_t<std::is_move_constructible_v<T>,PolymorphicWrapper&>;
 	using move_from_const_base = const value_type&&;
-	template<typename U> using copy_derived = std::enable_if_t<std::is_copy_constructible_v<derived_type<U>>>;
-	template<typename U> using disable_copy_derived = std::enable_if_t<!std::is_default_constructible_v<derived_type<U>>>;
-	template<typename U> using move_derived = std::enable_if_t<std::is_move_constructible_v<derived_type<U>>>;
-	template<typename U> using disable_move_derived = std::enable_if_t<!std::is_move_constructible_v<derived_type<U>>>;
+	template<typename U> using copy_derived = std::enable_if_t<std::is_copy_constructible_v<derived_type<U>>>*;
+	template<typename U> using disable_copy_derived = std::enable_if_t<!std::is_default_constructible_v<derived_type<U>>>*;
+	template<typename U> using move_derived = std::enable_if_t<std::is_move_constructible_v<derived_type<U>>>*;
+	template<typename U> using disable_move_derived = std::enable_if_t<!std::is_move_constructible_v<derived_type<U>>>*;
 	template<typename U> using move_from_const_derived = require_types_t<bool,const derived_type<U>&&>;
 	template<typename U> using instanceof_type = require_types_t<bool,derived_type<U>>;
 	template<typename U> using default_in_place = std::enable_if_t<std::is_default_constructible_v<derived_type<U>>>;
@@ -102,11 +102,11 @@ public:
      *  and std::is_copy_constructible_v<U> are both true.
      * \Exceptions: Throws any exceptions thrown by U's Copy Constructor (noexcept if the selected constructor is non-throwing)
      */
-    template<typename U,typename=copy_derived<U>> PolymorphicWrapper(const U& u)noexcept(std::is_nothrow_copy_constructible_v<U>):val(new derived_type<U>(u)){}
+    template<typename U,copy_derived<U> =0> PolymorphicWrapper(const U& u)noexcept(std::is_nothrow_copy_constructible_v<U>):val(new derived_type<U>(u)){}
     /**
      * If A Derived type disables copy construction, prevent it from selecting Copy-base overload
      */
-    template<typename U,typename=disable_copy_derived<U>> PolymorphicWrapper(const U&)=delete;
+    template<typename U,disable_copy_derived<U> =0> PolymorphicWrapper(const U&)=delete;
     /**
      * Constructs a new PolymorphicWrapper.
      * The owned object is allocated and constructed using the move constructor of U, with U as its dynamic type
@@ -114,13 +114,13 @@ public:
      *  and std::is_move_constructible_v<U> are both true.
      * \Exceptions: Throws any exception thrown by U's Move Constructor (noexcept if the selected constructor is non-throwing)
      */
-    template<typename U,typename=move_derived<U>> PolymorphicWrapper(U&& u)noexcept(std::is_nothrow_move_constructible_v<U>):val(new derived_type<U>(u)){}
+    template<typename U,move_derived<U> =0> PolymorphicWrapper(U&& u)noexcept(std::is_nothrow_move_constructible_v<U>):val(new derived_type<U>(u)){}
 
     /**
      * If the derived class has disabled move construction,
-     * prevent use of Move-derived.
+     * prevent use of Move-derived through move-base
      */
-    template<typename U,typename=disable_move_derived<U>> PolymorphicWrapper(U&& u)=delete;
+    template<typename U,disable_move_derived<U> =0> PolymorphicWrapper(U&& u)=delete;
 
     /**
      * Disable Move-from const for derived types.
@@ -229,7 +229,7 @@ public:
      * \Exceptions: Throws std::bad_cast if the dynamic type of the owned value is not U or a subclass of U.
      */
     template<typename U>
-        const_derived_reference checkedcast()const{
+        const_derived_reference<U> checkedcast()const&{
             return dynamic_cast<const_derived_reference<U>>(*val);
         }
     /**
@@ -257,7 +257,7 @@ public:
     /**
      * Obtains the owned value. (Same as implicit cast to const T&)
      */
-    const_reference operator*()const noexcept(true){
+    const_reference operator*()const& noexcept(true){
         return *val;
     }
     /**
@@ -290,13 +290,18 @@ public:
         val = std::exchange(r.val,nullptr);
         return *this;
     }
+    friend void swap(PolymorphicWrapper& w1,PolymorphicWrapper& w2){
+    	std::swap(w1.val,w2.val);
+    }
 };
+
 
 
 template<typename T> PolymorphicWrapper(T&&) ->PolymorphicWrapper<T>;
 template<typename T> PolymorphicWrapper(const T&) -> PolymorphicWrapper<T>;
 template<typename T> PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicWrapper<T>;
 template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>,Args&&...) -> PolymorphicWrapper<T>;
+
 
 
 

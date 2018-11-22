@@ -7,12 +7,12 @@
 
 #ifndef __INCLUDE_SECURITY_CONCEPTS_HPP__2018_09_17_17_02_39
 #define __INCLUDE_SECURITY_CONCEPTS_HPP__2018_09_17_17_02_39
-#include <Config.hpp>
+#include <lclib/Config.hpp>
 #include <cstddef>
-#include <TypeTraits.hpp>
-#include <ShadowRandom.hpp>
+#include <lclib/TypeTraits.hpp>
+#include <lclib/ShadowRandom.hpp>
 #ifdef LIBLCCXX_HAS_CONCEPTS
-#include <Concepts.hpp>
+#include <lclib/Concepts.hpp>
 #endif
 namespace security{
 	constexpr const std::size_t dynamicSize{-1};
@@ -35,7 +35,7 @@ namespace security{
 	template<typename byte> class Key{
 	public:
 		static_assert(is_byte_v<byte>,"Key must be instantiated with a byte type");
-		static constexpr const char algorithm[0];
+		static constexpr const char algorithm[0]{};
 		static constexpr std::size_t keySize{0};
 		using byte_type = byte;
 		using data_type = const byte_type*;

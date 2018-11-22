@@ -14,7 +14,7 @@ using std::void_t;
 
 namespace pkmcom{
 
-    template<typename T> struct pkmcom_traits{
+    template<typename T,typename=void> struct pkmcom_traits{
     };
     typedef int32_t pkmcom_hash;
     typedef uint32_t pkmcom_size;
@@ -55,7 +55,7 @@ namespace pkmcom{
         pkmcom_size getSize()const;
     };
 
-    template<typename E> struct pkmcom_traits<std::enable_if_t<std::is_enum_v<E>,E>>{
+    template<typename E> struct pkmcom_traits<E,std::enable_if_t<std::is_enum_v<E>>>{
     public:
         using underlying_type = std::underlying_type_t<E>;
         using underlying_traits = pkmcom_traits<underlying_type>;
@@ -96,10 +96,10 @@ namespace pkmcom{
         constexpr static pkmcom_byte size(pkmcom_byte b)noexcept(true){
             return 1;
         }
-        static void write(pkmcom_byte b,PacketBuffer& buff){
+        inline static void write(pkmcom_byte b,PacketBuffer& buff){
             buff.writeByte(b);
         }
-        static void read(pkmcom_byte& b,PacketBuffer& buff){
+        inline static void read(pkmcom_byte& b,PacketBuffer& buff){
             b = buff.readByte();
         }
     };
@@ -111,11 +111,26 @@ namespace pkmcom{
         constexpr static pkmcom_hash size(pkmcom_sbyte s)noexcept(true){
             return 1;
         }
+        inline static void write(pkmcom_sbyte b,PacketBuffer& buff){
+        	buff.writeByte(b);
+        }
+        inline static void read(pkmcom_sbyte& b,PacketBuffer& buff){
+        	b = buff.readByte();
+        }
+    };
+    template<> struct pkmcom_traits<pkmcom_short>{
+    public:
+    	constexpr static pkmcom_hash hashcode(pkmcom_short s){
+    		return pkmcom_hash(s)|(s&0x8000?0xffff0000:0);
+    	}
+    	constexpr static pkmcom_size size(pkmcom_short s){
+    		return 2;
+    	}
     };
 
     template<typename T,typename=void> struct is_packet:std::false_type{};
     template<typename T>
-    struct is_packet<T,std::void_t<decltype(std::declval<const T>().size()),
+    struct is_packet<T,std::void_t<decltype(T::packetId),decltype(std::declval<const T>().size()),
 	decltype(std::declval<const T>().hashCode()),
 			decltype(std::declval<const T>().write(std::declval<PacketBuffer&>()))
 		,decltype(std::declval<T&>().read(std::declval<PacketBuffer&>()))>>:std::true_type{};
@@ -133,19 +148,19 @@ namespace pkmcom{
 				decltype(pkmcom_traits<T>::read(std::declval<T&>(),std::declval<PacketBuffer&>()))>>:std::true_type{};
     template<typename T> constexpr const bool is_pkmcom_type_v = is_pkmcom_type<T>::value;
 
-    template<typename T> struct pkmcom_traits<std::enable_if_t<is_packet_v<T>,T>>{
+    template<typename T> struct pkmcom_traits<T,std::enable_if_t<is_packet_v<T>>>{
     public:
     	using packet_type = std::remove_cv_t<T>;
     	constexpr static pkmcom_hash hashcode(const packet_type& t)noexcept(noexcept(std::declval<const packet_type>().hashCode())){
-    		return t.hashCode();
+    		return packet_type::packetId*31+t.hashCode();
     	}
     	constexpr static pkmcom_size size(const packet_type& t)noexcept(noexcept(std::declval<const packet_type>().size())){
     		return t.size();
     	}
-    	void write(const packet_type& t,PacketBuffer& b){
+    	inline static void write(const packet_type& t,PacketBuffer& b){
     		t.write(b);
     	}
-    	void read(packet_type& t,PacketBuffer& b){
+    	inline static void read(packet_type& t,PacketBuffer& b){
     		t.read(b);
     	}
     };

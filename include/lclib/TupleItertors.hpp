@@ -96,12 +96,12 @@ template<typename T> tuple_iterator(const T&) -> tuple_iterator<T>;
 template<typename T> tuple_iterator(const T&,std::size_t) -> tuple_iterator<T>; 
 
 template<typename T,typename=std::enable_if_t<std::is_constructible_v<tuple_iterator<T>,const T&>>>
-	struct tuple_iterable{
+	struct tuple_range{
 	private:
 		const T& t;
 	public:
-		tuple_iterable(const T& t):t(t){}
-		tuple_iterable(T&&)=delete;
+		tuple_range(const T& t):t(t){}
+		tuple_range(const T&&)=delete;
 		tuple_iterator<T> begin()const{
 			return tuple_iterator(t);
 		}

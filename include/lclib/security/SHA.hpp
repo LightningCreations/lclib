@@ -7,11 +7,12 @@
 
 #ifndef __INCLUDE_SECURITY_SHA_HPP__2018_09_18_10_25_35
 #define __INCLUDE_SECURITY_SHA_HPP__2018_09_18_10_25_35
-#include <TypeTraits.hpp>
-#include <security/Concepts.hpp>
+#include <lclib/TypeTraits.hpp>
+#include <lclib/security/Concepts.hpp>
 #include <openssl/sha.h>
 #include <cstddef>
-#include <SecureAllocator.hpp>
+#include <lclib/security/SecureAllocator.hpp>
+#include <detail/SHA2.hpp>
 
 namespace security{
 	/**

@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}",
+                "/usr/include/",
+                "/usr/local/include/c++/9.0.0/",
+                "/home/connor/Rem/gcc-master/libstdc++-v3/include/c_compatibility/"
+            ],
+            "defines": [
+                "LCLIB_CXX_DEFINITION",
+                "__cplusplus=201806L"
+            ],
+            "compilerPath": "/usr/bin/g++ -std=c++2a",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

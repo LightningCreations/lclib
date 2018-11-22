@@ -1,10 +1,11 @@
 #ifndef __NBTCompound_hpp_2018_08_26_21_41
 #define __NBTCompound_hpp_2018_08_26_21_41
-#include <Config.hpp>
-#include <nbt/NBTBase.hpp>
-#include <nbt/NBTPrimitive.hpp>
-#include <UUID.hpp>
-#include <Version.hpp>
+#include <lclib/Config.hpp>
+#include <lclib/nbt/NBTBase.hpp>
+#include <lclib/nbt/NBTPrimitive.hpp>
+#include <lclib/UUID.hpp>
+#include <lclib/Version.hpp>
+#include <map>
 namespace nbt{
     LIBLCAPI class NBTTagEnd:public NBTTagBase{
     public:

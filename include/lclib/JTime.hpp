@@ -4,6 +4,9 @@
 #include <lclib/Hash.hpp>
 #include <stdint.h>
 #include <chrono>
+#include <limits>
+#include <tuple>
+#include <lclib/Operations.hpp>
 enum class ChronoUnit{
     NANOSECONDS, MICROSECONDS, MILISECONDS, SECONDS,
     MINUTES, HOURS
@@ -103,13 +106,13 @@ constexpr nanos_t toNanos(chrono_value_t val,ChronoUnit unit){
 		return toNanos(uint64_t(val),unit);
 }
 
-constexpr const int NANOS_PER_SECOND = 1000000000;
+constexpr const nanos_t NANOS_PER_SECOND = 1000000000;
 
 /*
     A class that represents a Duration between 2 Instants.
     This Duration is precise to Nanoseconds and stores 64-bit seconds with 32-bit nanoseconds.
 */
-class LIBLCAPI Duration{
+class LIBLCAPI Duration:private StrictOrder<Duration>,private RelOps<Duration>{
 private:
     seconds_t seconds;
     nanos_t nanos;
@@ -240,52 +243,18 @@ public:
     }
     /*
         Adds a Duration to this Duration.
-        Effectively the same as the same call to add.
+        Effectively the same as the same call to subtract.
     */
     constexpr Duration operator-(const Duration& d)const{
     	return subtract(d);
     }
-    /*
-        Compares this duration to annother.
-        For any Duration d and e, d==e is effectively equivalent to d.compareTo(e)==0
-    */
-    constexpr bool operator==(const Duration& d)const{
-    	return seconds==d.seconds&&nanos==d.nanos;
-    }
+
     /*
         Compares this duration to annother.
         For any Duration d and e, d<e is effectively equivalent to d.compareTo(e)<0
     */
     constexpr bool operator<(const Duration& d)const{
-    	return seconds<d.seconds||(seconds==d.seconds&&nanos<d.nanos);
-    }
-    /*
-        Compares this duration to annother.
-        For any Duration d and e, d>e is effectively equivalent to d.compareTo(e)>0
-    */
-    constexpr friend bool operator>(const Duration d1,const Duration& d2){
-    	return d2 < d1;
-    }
-    /*
-        Compares this duration to annother.
-        For any Duration d and e, d<=e is effectively equivalent to d.compareTo(e)<=0
-    */
-    constexpr friend bool operator<=(const Duration& d1,const Duration& d2){
-    	return !(d2 < d1);
-    }
-    /*
-        Compares this duration to annother.
-        For any Duration d and e, d>=e is effectively equivalent to d.compareTo(e)>=0
-    */
-    constexpr friend bool operator>=(const Duration& d1,const Duration& d2){
-    	return !(d1 < d2);
-    }
-    /*
-        Compares this duration to annother.
-        For any Duration d and e, d!=e is effectively equivalent to d.compareTo(e)!=0
-    */
-    constexpr friend bool operator!=(const Duration& d1,const Duration& d2){
-    	return !(d1==d2);
+    	return std::tie(seconds,d.seconds)<std::tie(nanos,d.nanos);
     }
 
     /*
@@ -309,12 +278,12 @@ public:
 
 /**
  * The type which represents the clock used by Instants.
- * Note: Prior to C++20 it is assumed that this clock (notably std::chrono::system_clock)
- *  uses The Unix Epoch as Its Origin/Epoch (January 1st, 1970 at 00:00:00.000000000 UTC).
- * The behavior is undefined if clock sensitve constructors/factory methods are used,
- *  when this assumption does not hold. This may change in the future.
- * This assumption is unecessary as of C++20 because the C++20 Standard Working Draft specifies
- *  that std::chrono::system_clock uses the Unix Epoch as its Origin.
+ * Note: Prior to C++20, time points from this clock were not guaranteed
+ * 	to be relative to the unix epoch. (January 1st, 1970 at 12:00:00.0000000000 UTC)
+ * Instants defined in any other version are relative to the epoch of the system clock.
+ *
+ * Interoperation with Other Instances of LCLib is only well defined if both uses the same epoch.
+ * Interoperation with Java is only well defined if this epoch holds.
  */
 using instant_clock = std::chrono::system_clock;
 
@@ -337,7 +306,7 @@ const now_t now{};
     The Instant class tracks signed 64-bit integer for seconds and 32-bit nanoseconds. (0-999999999)
     This represents a time since the Unix EPOCH, or 1970-01-01T00:00:00.000000000Z (January 1st, 1970, at 12:00:00 exactly, UTC)
 */
-class LIBLCAPI Instant{
+class LIBLCAPI Instant:private StrictOrder<Instant>,private RelOps<Instant>{
 private:
     seconds_t seconds;
     nanos_t nanos;
@@ -368,7 +337,7 @@ public:
     template<typename Dur> Instant(std::chrono::time_point<instant_clock,Dur> tp){
     	const auto d{tp.time_since_epoch()};
     	seconds = std::chrono::duration_cast<std::chrono::seconds>(d).count();
-    	nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(d).count()%NANOS_PER_SECOND;
+    	nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(d%1000000000s).count();
     }
     /*
      * Constructs an instant from the current system time inline.
@@ -452,54 +421,16 @@ public:
     	else
     		return 0;
     }
-    /*
-        Compares this instant to another for equality.
-        For any Instants i and j, i==j is effecitvely equivalent to i.compareTo(j)==0.
-        2 instants are equal if they occur at the same point in time, precise to nanoseconds.
-    */
-    constexpr friend bool operator==(const Instant& i1,const Instant& i2){
-    	return i1.seconds==i2.seconds&&i1.nanos==i2.nanos;
-    }
+
     /*
         Compares this instant to another.
         For any Instants i and j, i<j is effectively equivalent to i.compareTo(j)<0.
         An instant is greater than another if it occurs before the other in time.
     */
     constexpr friend bool operator<(const Instant& i1,const Instant& i2){
-    	return i1.seconds<i2.seconds||(i1.seconds==i2.seconds&&i1.nanos<i2.nanos);
+    	return std::tie(i1.seconds,i1.nanos)<std::tie(i2.seconds,i2.nanos);
     }
-    /*
-        Compares this instant to another.
-        For any Instants i and j, i<=j is effecitvely equivalent to i.compareTo(j)<=0.
-        An instant is greater than another if it occurs before the other in time, or both occur at the same point in time.
-    */
-    constexpr friend bool operator<=(const Instant& i1,const Instant& i2){
-    	return !(i2 < i1);
-    }
-    /*
-        Compares this instant to another.
-        For any Instants i and j, i>j is effecitvely equivalent to i.compareTo(j)>0.
-        An instant is greater than another if it occurs after the other in time.
-    */
-    constexpr friend bool operator>(const Instant& i1,const Instant& i2){
-    	return i2 < i1;
-    }
-    /*
-        Compares this instant to another.
-        For any Instants i and j, i>=j is effecitvely equivalent to i.compareTo(j)>=0.
-        An instant is greater than another if it occurs after the other in time, or both occur at the same point in time.
-    */
-    constexpr friend bool operator>=(const Instant& i1,const Instant& i2){
-    	return !(i1 < i2);
-    }
-    /*
-        Compares this instant to another.
-        For any Instants i and j, i!=j is effecitvely equivalent to i.compareTo(j)!=0.
-        An instant is not-equal to another if they do not occur at the same point in time.
-    */
-    constexpr friend bool operator!=(const Instant& i1,const Instant& i2){
-    	return !(i1==i2);
-    }
+
     /*
         Add d to i.
         For Any Instant i and Duration d, i+d is effectively equivalent to i.add(d) and result in the same Instant
@@ -550,15 +481,15 @@ public:
 /*
     Instant Constant Representing the Epoch (January 01, 1970 at 00:00:00 Exactly UTC)
 */
-const Instant EPOCH{};
+constexpr Instant EPOCH{};
 /*
     Instant Constant Holding the Effective Max value for an instant (1<<63-1 seconds, 999999999 nanoseconds)
 */
-const Instant MAX{31556889864401399LL,999999999};
+constexpr Instant MAX{31556889864401399LL,999999999};
 /*
     Instant Constant Holding the Effective Minimum value for an instant (-1<<63 seconds)
 */
-const Instant MIN{-31556889864401400LL};
+constexpr Instant MIN{-31556889864401400LL};
 
 
 constexpr int hashcode(const Instant& i){
@@ -569,9 +500,9 @@ constexpr int hashcode(const Duration& d){
 	return d.hashCode();
 }
 
-const Duration ZERO{};
-const Duration MAX_DURATION{31556889864401399,999999999};
-const Duration MIN_DURATION{-31556889864401400};
+constexpr Duration ZERO{};
+constexpr Duration MAX_DURATION{31556889864401399,999999999};
+constexpr Duration MIN_DURATION{-31556889864401400};
 
 namespace std{
 	template<> struct hash<Instant>{

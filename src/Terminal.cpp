@@ -50,15 +50,24 @@ LIBLCHIDE string toCommandCode(Color c){
             return "\x1b[21m"s;
         break;
     }
+    return "";
 }
+
+LIBLCAPI Terminal::Terminal(){
+    clear();
+}
+
+LIBLCAPI Terminal::~Terminal(){
+    clear();
+}
+
+
 
 Terminal::Terminal(){
     clear();
 }
 
-Terminal::~Terminal(){
-    clear();
-}
+
 
 Terminal& Terminal::print(const TextComponent& t)noexcept(true){
     std::lock_guard<std::recursive_mutex> sync(lock);

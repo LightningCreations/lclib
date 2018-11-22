@@ -5,7 +5,6 @@
  *      Author: Connor Horman
  */
 #include <lclib/Version.hpp>
-#include <lclib/StringHelper.hpp>
 #include <string>
 #include <stdexcept>
 

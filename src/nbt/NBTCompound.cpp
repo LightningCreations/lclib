@@ -1,8 +1,12 @@
-#include <nbt/NBTBase.hpp>
-#include <nbt/NBTArray.hpp>
-#include <nbt/NBTPrimitive.hpp>
-#include <nbt/NBTList.hpp>
-#include <nbt/NBTCompound.hpp>
+
+#include <lclib-cxx/nbt/NBTBase.hpp>
+#include <lclib-cxx/nbt/NBTArray.hpp>
+#include <lclib-cxx/nbt/NBTPrimitive.hpp>
+#include <lclib-cxx/nbt/NBTList.hpp>
+#include <lclib-cxx/nbt/NBTCompound.hpp>
+#include <lclib-cxx/IOWrapper.hpp>
+#include <lclib-cxx/Wrappers.hpp>
+
 
 using namespace nbt;
 using namespace std::string_literals;

@@ -18,6 +18,7 @@ namespace security{
 <h2>Classes</h2>
 
 <h3>SHA</h3>
+
 Default template class for the SHA. Specialized on Target for various SHA implementations. When specialized, SHA satisfies MessageDigestAlgorithm.
 The byte parameter specifies which "byte" type is used by the algorithm.
 A program which instantiates SHA with a Target that is not specialized, or with a type which does not satisfy Byte is ill formed.
@@ -39,7 +40,7 @@ using output_type = byte*; //(3)
 constexpr static const std::size_t digestSize;
 ```
 
-Specified By MessageDigestAlgorithm. Returns the 
+Specified By MessageDigestAlgorithm. 
  
 
 

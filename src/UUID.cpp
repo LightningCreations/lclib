@@ -3,19 +3,19 @@
 #include <lclib/Hash.hpp>
 #include <iomanip>
 #include <sstream>
-#include <lclib/StringHelper.hpp>
 #include <cstdlib>
 #include <lclib/ShadowRandom.hpp>
 #include <lclib/JTime.hpp>
 #include <chrono>
 #include <stdexcept>
+#include <lclib-cxx/security/SHA.hpp>
+#include <lclib-cxx/security/MessageDigest.hpp>
 
-#include <openssl/sha.h>
 #include <openssl/md5.h>
 
 
 
-LIBLCHIDE ShadowRandom uuidRandom{};
+static ShadowRandom uuidRandom{};
 
 
 
@@ -49,12 +49,12 @@ static uint64_t toHex(std::string_view sv){
 }
 
 
-UUID::UUID(std::string_view sv):high{toHex(sv.substr(0, 8))<<32|toHex(sv.substr(9,4))<<16|toHex(sv.substr(13,4))}
+LIBLCAPI UUID::UUID(std::string_view sv):high{toHex(sv.substr(0, 8))<<32|toHex(sv.substr(9,4))<<16|toHex(sv.substr(13,4))}
 	,low{toHex(sv.substr(17,4))<<48|toHex(sv.substr(21,12))}{}
 
-UUID::UUID(const char* str):UUID(std::string_view(str)){}
+LIBLCAPI UUID::UUID(const char* str):UUID(std::string_view(str)){}
 
-UUID UUID::fromString(std::string_view sv){
+LIBLCAPI UUID UUID::fromString(std::string_view sv){
 	return UUID{sv};
 }
 
@@ -64,7 +64,7 @@ uint64_t versionMask = 0xf000;
 
 
 
-ostream& operator<<(ostream& o,const UUID& id){
+LIBLCAPI ostream& operator<<(ostream& o,const UUID& id){
 	uint64_t high = id.getHigh();
 	uint64_t low = id.getLow();
 	uint64_t high1 = high>>32;
@@ -92,7 +92,7 @@ std::string fromHex(uint64_t u,int digits){
 	return std::move(ret);
 }
 
-string UUID::toString()const{
+LIBLCAPI string UUID::toString()const{
 	std::string ret{};
 	ret += fromHex(high>>32,8);
 	ret += '-';
@@ -106,7 +106,7 @@ string UUID::toString()const{
 	return std::move(ret);
 }
 
-istream& operator>>(istream& i,UUID& id){
+LIBLCAPI istream& operator>>(istream& i,UUID& id){
 	std::string s;
 	i >> s;
 	id= UUID::fromString(s);
@@ -140,7 +140,7 @@ const uint64_t high_mask{0xfff};
 const uint64_t seq_mask{0x1fff000000000000};
 const uint64_t node_mask{0x7fffffffffffffff};
 const uint64_t mcast_bit{0x8000000000000000};
-UUID UUID::ofNow(){
+LIBLCAPI UUID UUID::ofNow(){
 	const auto now{std::chrono::time_point_cast<uuid_hnanos>(uuid_clock::now())};
 	const auto dur = now-uuidEpoch;
 	const uint64_t node = mcast_bit|(uuidRandom.nextLong()&(node_mask));
@@ -152,12 +152,12 @@ UUID UUID::ofNow(){
 	return UUID{high,low};
 }
 
-UUID::UUID(current_timestamp_t):UUID(ofNow()){}
+LIBLCAPI UUID::UUID(current_timestamp_t):UUID(ofNow()){}
 
-UUID::UUID(std::string_view sv,md5_namespace_t):UUID(uuidFromNamespace(sv)){}
-UUID::UUID(std::string_view sv,sha1_namespace_t):UUID(uuidFromSHA1Namespace(sv)){}
+LIBLCAPI UUID::UUID(std::string_view sv,md5_namespace_t):UUID(uuidFromNamespace(sv)){}
+LIBLCAPI UUID::UUID(std::string_view sv,sha1_namespace_t):UUID(uuidFromSHA1Namespace(sv)){}
 
-UUID UUID::randomUUID(){
+LIBLCAPI UUID UUID::randomUUID(){
 	char bytes[32];
 	uint64_t longs[2];
 	uuidRandom.nextBytes(reinterpret_cast<uint8_t*>(bytes),32);
@@ -174,7 +174,7 @@ UUID UUID::randomUUID(){
 	return UUID(longs[0],longs[1]);
 }
 
-UUID UUID::uuidFromNamespace(std::string_view sv){
+LIBLCAPI UUID UUID::uuidFromNamespace(std::string_view sv){
 	unsigned char bytes[16];
 	MD5(reinterpret_cast<const unsigned char*>(sv.data()),sv.length(),bytes);
 	bytes[4] = (bytes[4]&0xf)|0x30;
@@ -186,9 +186,9 @@ UUID UUID::uuidFromNamespace(std::string_view sv){
 	return UUID{high,low};
 }
 
-UUID UUID::uuidFromSHA1Namespace(std::string_view sv){
-	unsigned char bytes[20];
-	SHA1(reinterpret_cast<const unsigned char*>(sv.data()),sv.length(),bytes);
+LIBLCAPI UUID UUID::uuidFromSHA1Namespace(std::string_view sv){
+	char bytes[20];
+	MessageDigest<SHA<1,char>>{}(sv.data(),sv.length(),bytes);
 	bytes[4] = (bytes[4]&0xf)|0x30;
 	bytes[8] = (bytes[8]&0xcf)|0x80;
 	uint64_t high = uint64_t(bytes[0])<<56|uint64_t(bytes[1])<<48|uint64_t(bytes[2])<<40|uint64_t(bytes[3])<<3

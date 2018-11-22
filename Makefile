@@ -1,15 +1,18 @@
-CXX = g++
+CXX := g++-8
+CC := gcc-8
+
 OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.o
 OBJECT_FILES += out/json/json_reader.o out/json/json_value.o out/json/json_writer.o
 OBJECT_FILES += out/Hash.o out/IOWrapper.o out/JTime.o
 OBJECT_FILES += out/Menu.o out/Random.o out/ShadowRandom.o
-OBJECT_FILES += out/SocketCommon.o out/StringHelper.o out/Terminal.o
+OBJECT_FILES += out/SocketCommon.o out/Terminal.o
 OBJECT_FILES += out/TextComponent.o out/UUID.o out/Version.o
 OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
+OBJECT_FILES += out/Database.o out/ThreadLocalRandom.o out/LibraryInfo.o
 
-
-COMPILE_FLAGS = -g -fvisibility=hidden -fvisibility-inlines-hidden -std=c++17 -fPIC -w -fpermissive 
-LINKER_FLAGS = -fvisibility=hidden -fvisibility-inlines-hidden -shared -fpic -flinker-output=dyn -pthread 
+CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -fpic -w -fwrapv
+COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -fpic -w -fpermissive -fwrapv
+LINKER_FLAGS = -static-libstdc++ -shared -fpic -flinker-output=dyn -pthread
 LIBS = -lssl
 OUTPUT = liblc-cxx.so
 INCLUDE = -I./ -I./include
@@ -25,7 +28,7 @@ out:
 	mkdir -p $(DIRS)
 
 $(OUTPUT): out $(OBJECT_FILES)
-	$(CXX) $(LINKER_FLAGS) $(LIBNAME) -o $(OUTPUT) $(LIBS) $(OBJECT_FILES) 
+	$(CXX) $(LINKER_FLAGS) $(LIBNAME) -o $@ $(LIBS) $(OBJECT_FILES) 
 
 install:$(OUTPUT)
 	install $(OUTPUT) /usr/lib/
@@ -39,6 +42,7 @@ install:$(OUTPUT)
 uninstall:
 	rm -rf /usr/include/lclib-cxx
 	rm -rf /usr/lib/$(OUTPUT)
+	rm -f ./install
 
 relink:
 	rm -rf $(OUTPUT)
@@ -56,4 +60,8 @@ rebuild:
 
 out/%.o: src/%.cpp
 	$(CXX) $(COMPILE_FLAGS) -c $(INCLUDE) -o $@ $<
+
+out/%.o: src/%.c
+	$(CC) $(CC_FLAGS) -c $(INCLUDE) -o $@ $<
+	
 	

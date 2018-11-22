@@ -2,9 +2,10 @@
 #include <chrono>
 #include <algorithm>
 
+#include <atomic>
 
-static seed_t number{876730097};
-const seed_t cprime{2227123637};
+
+
 
 
 static seed_t highResTime(){
@@ -13,11 +14,23 @@ static seed_t highResTime(){
 }
 
 static seed_t nextMultiplier(){
-	seed_t val = number;
-	number *= cprime;
-	number += 1;
-	return val*cprime;
+	static std::atomic<seed_t> number{876730097};
+	const seed_t cprime{2227123637};
+	seed_t val = number.load();
+	while(number.compare_exchange_strong(val, val*cprime+1));
+	return val;
 }
+static seed_t genUniqueSeed(){
+	return highResTime()*nextMultiplier();
+}
+
+
+
+static seed_t number{876730097};
+const seed_t cprime{2227123637};
+
+
+
 LIBLCHIDE seed_t genUniqueSeed(){
 	return highResTime()*nextMultiplier();
 }

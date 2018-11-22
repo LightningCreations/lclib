@@ -102,8 +102,10 @@ namespace detail{
 /**
  * Returns a function of x, which is equivalent to (df/dx)(f).
  * If adl lookup finds a definition of d for Fn, returns the result of that.
- * Otherwise, if Fn has a member function
+ * Otherwise, if Fn has a member function d()
  * Otherwise, returns g(x) where g(x)=lim[h->0+](f(x+h)-f(x))/(h)
+ *
+ * Requires: Fn is Differentiable
  */
 template<typename Fn> constexpr auto differentiate(Fn&& f){
 	using detail::d;
@@ -192,6 +194,22 @@ template<typename Fn1,typename Fn2> constexpr auto convolution(Fn1&& f,Fn2&& g){
 	};
 }
 
+template<typename Fn1,typename Fn2> constexpr auto compose(Fn1&& f,Fn2&& g){
+	return [f,g](auto x)->decltype(f(g(x))){
+		return f(g(x));
+	};
+}
+template<typename Fn1,typename Fn2> constexpr auto multiply(Fn1&& f,Fn2& g){
+	return [f,g](auto x)->decltype(f(x)*g(x)){
+		return f(x)*g(x);
+	};
+}
+template<typename Fn1,typename Fn2> constexpr auto add(Fn1&& f,Fn2&& g){
+	return [f,g](auto x)->decltype(f(x)+g(x)){
+		return f(x)+g(x);
+	};
+}
+
 
 
 template<typename type> constexpr auto sum(type start,type max) EXPECTS(ceil(max-start)==(max-start)){
@@ -210,5 +228,22 @@ template<typename type> constexpr auto product(type start,type max) EXPECTS(ceil
 		return p;
 	};
 }
+
+
+
+struct tetration{
+	using std::pow;
+	constexpr tetration()=default;
+	constexpr tetration(const tetration&)=default;
+	constexpr tetration& operator=(const tetration&)=default;
+	template<typename type> constexpr type operator()(type val,int rep)const{
+		type t = val;
+		for(int i =1;i<rep;i++)
+			t = pow(val,t);
+		return t;
+	}
+};
+
+
 
 #endif /* __INCLUDE_LCLIB_CXX_MATH_HPP__2018_10_09_19_11_18 */

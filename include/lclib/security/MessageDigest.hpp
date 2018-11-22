@@ -7,9 +7,9 @@
 
 #ifndef __INCLUDE_SECURITY_MESSAGEDIGEST_HPP__2018_09_18_10_52_58
 #define __INCLUDE_SECURITY_MESSAGEDIGEST_HPP__2018_09_18_10_52_58
-#include <security/Concepts.hpp>
+#include <lclib/security/Concepts.hpp>
 #include <type_traits>
-#include <TypeTraits.hpp>
+#include <lclib/TypeTraits.hpp>
 
 namespace security{
 	/**

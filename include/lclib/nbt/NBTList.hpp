@@ -1,7 +1,8 @@
 #ifndef __NBTList_hpp_2018_08_26_21_40
 #define __NBTList_hpp_2018_08_26_21_40
-#include <Config.hpp>
-#include <nbt/NBTBase.hpp>
+#include <lclib/Config.hpp>
+#include <lclib/nbt/NBTBase.hpp>
+#include <lclib/Wrappers.hpp>
 #include <vector>
 #include <initializer_list>
 #include <type_traits>
@@ -34,8 +35,16 @@ namespace nbt{
                     return false;
                 if(listTagType==TAG_END)
                     listTagType = t.getTagType();
-                underlying.emplace_back(PolymorphicWrapper(t));
+                underlying.emplace_back(t);
             }
+        template<typename T,typename=std::enable_if_t<std::is_base_of_v<NBTTagBase,T>>>
+			bool add(T&& t){
+				if(t.getTagType()==TAG_END||(listTagType!=TAG_END&&t.getTagType()!=listTagType))
+					return false;
+				if(listTagType==TAG_END)
+					listTagType = t.getTagType();
+				underlying.emplace_back(std::move(t));
+        }
         pointer data();
         const_pointer data()const;
         iterator begin();

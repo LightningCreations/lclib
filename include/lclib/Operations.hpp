@@ -1,6 +1,7 @@
 #ifndef __Operations_hpp_2018_08_07_10_37
 #define __Operations_hpp_2018_08_07_10_37
 
+#include <lclib/TypeTraits.hpp>
 
 class NotCopyable{
 private:
@@ -40,5 +41,28 @@ private:
     Disable()=delete;
     ~Disable()=delete;
 };
+
+template<typename T> class RelOps{
+	constexpr friend bool operator<=(const T& lhs,const T& rhs){
+		return (lhs<rhs)||(lhs==rhs);
+	}
+	constexpr friend bool operator>=(const T& lhs,const T& rhs){
+		return (rhs<=lhs);
+	}
+	constexpr friend bool operator> (const T& lhs,const T& rhs){
+		return (rhs<lhs);
+	}
+	constexpr friend bool operator!=(const T& lhs,const T& rhs){
+		return !(lhs==rhs);
+	}
+};
+
+template<typename T> class StrictOrder{
+	constexpr friend bool operator==(const T& lhs,const T& rhs){
+		return !(lhs<rhs)&&!(rhs<lhs);
+	}
+};
+
+
 
 #endif

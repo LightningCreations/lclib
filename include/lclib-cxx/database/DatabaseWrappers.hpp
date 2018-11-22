@@ -13,7 +13,7 @@
 
 namespace db{
 	class DBConnection;
-	class SQLStatement:public db::DirectStatement{
+	class LIBLCAPI SQLStatement:public db::DirectStatement{
 	private:
 		friend class DBConnection;
 		std::unique_ptr<db::Statement> underlying;
@@ -23,7 +23,7 @@ namespace db{
 		int executeUpdate(std::string_view);
 		db::Connection& getConnection();
 	};
-	class SQLPreparedStatement:public db::PreparedStatement{
+	class LIBLCAPI SQLPreparedStatement:public db::PreparedStatement{
 	private:
 		friend class DBConnection;
 		std::unique_ptr<db::PreparedStatement> underlying;
@@ -38,7 +38,7 @@ namespace db{
 		int executePreparedUpdate();
 		db::Connection& getConnection();
 	};
-	class DBConnection{
+	class LIBLCAPI DBConnection{
 	private:
 		std::unique_ptr<db::Connection> underlying;
 	public:
@@ -49,6 +49,21 @@ namespace db{
 		SQLStatement createStatement();
 		SQLPreparedStatement prepareStatement(std::string_view);
 	};
+	/**
+	 * Immobile RAII Wrapper that manages a transaction,
+	 * committing it if the destructor is called at end of scope,
+	 * or rolling it  back if an exception was thrown.
+	 */
+	class LIBLCAPI Transaction{
+	private:
+		DBConnection* conn;
+		Transaction(const Transaction&)=delete;
+		Transaction& operator=(const Transaction&)=delete;
+	public:
+		Transaction(DBConnection&);
+		~Transaction();
+	};
+
 }
 
 

@@ -28,7 +28,7 @@ using std::array;
 	Compatibility Notice: Instances of the Random Class given the same seed,
 	with the same method calls as an instances of java.util.Random will generate the same sequence of return values.
 	Instances of the Random class cannot be copied (but can be Moved).
-	The Specification of the Random class detailed in the documentation is effectively the same as the one in the above documentation
+	The Specification of the Random class detailed in the documentation is effectively the same as the one in the above documentation.
 */
 
 class LIBLCAPI Random{
@@ -52,15 +52,14 @@ public:
         This generate seeds the generator with a seed that is almost guarenteed to be unique from other 
         invocations of this constructor
 	*/
-    Random();
+    explicit Random();
     /*
         Constructs a Pseudorandom Number Generator with a given seed.
         The Pseudorandom Number Generator is initialized with the seed as though it was passed to setSeed.
     */
-    Random(seed_t);
+    explicit Random(seed_t);
     Random(Random&&)=default;
     virtual ~Random()=default;
-    Random& operator=(Random&&)=default;
     /*
         Sets the Seed of the Pseudorandom Number Generator.
         This method also has the side effect of clearing the nextNextGaussian.
@@ -116,10 +115,10 @@ public:
     /*
         Fills an array with its size known at compile time with a bunch of psuedo-random bytes.
     */
-	template<size_t size> void nextBytes(array<uint8_t,size>& bytes){
+	template<typename byte, size_t size> std::enable_if_t<is_byte_v<byte>> nextBytes(array<byte,size>& bytes){
         this->nextBytes(bytes.data(),size);
     }
-	template<typename byte,size_t N> void nextBytes(std::enable_if_t<is_byte_v<byte>,byte>(&arr)[N]){
+	template<typename byte,size_t N> std::enable_if_t<is_byte_v<byte>> nextBytes(byte(&arr)[N]){
 		this->nextBytes(reinterpret_cast<uint8_t*>(arr),N);
 	}
 	/**

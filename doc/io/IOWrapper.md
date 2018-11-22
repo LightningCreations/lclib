@@ -1,5 +1,6 @@
 <h1>IOWrapper</h1>
-<b>Included by `<lclib-cxx/IOWrapper.hpp>`</b><br/>
+
+Included by `<lclib-cxx/IOWrapper.hpp>`<br/>
 Part of The IO Library<br/>
 <h2>Synopsis</h2>
 
@@ -34,7 +35,9 @@ class ByteArrayOutputStream:public OuputStream;
 <h2>Overview</h2>
 
 The IOWrapper library provides an OO, Generic, and Extensible interface for reading and writing data.
-The Interface of the IOWrapper library is designed to be consistent with java's Stream IO Library (java.io). Only InputStream/OutputStreams are provided, Writers/Readers, and PrintStream are not supported. Character IO should be preformed using C++ &lt;iostream&gt; library. 
+The Interface of the IOWrapper library is designed to be consistent with java's Stream IO Library (java.io). 
+Only InputStream/OutputStreams are provided, Writers/Readers, and PrintStream are not supported. 
+Character IO should be preformed using C++ &lt;iostream&gt; library. 
 
 <h2>Classes</h2>
 <h3>class FileNotFoundException</h3>
@@ -133,9 +136,12 @@ If there exists a complete (that is, well-formed object) at the address given by
 </ul>
 Further, if the object or any of its sub-objects are a multibyte scalar data-type, the byte order of those values is unspecified. If the byte-order 
 In addition, subclasses of InputStream may impose other restrictions on objects which can be written. If a subclass imposes additional restrictions, they must be clearly detailed including the result of violating such a restriction, whether it be undefined, unspecified, implementation defined, or it results in an exception.
-If the number of bytes read is less then size, this will be indicated in the return value. If an unexpected number of bytes was read, the object is invalidated, and using the object is undefined behavior (except for assignment operators and destructors), unless the object is char, unsigned char, signed char, or std::byte or an array there of, or the object is an array. If the object is an array of any type except for char, unsigned char, signed char, or std::byte, then the total number of valid elements in the array is the number of complete elements read, and using elements passed this point in any way except the above is undefined behavior. If the object is an array of char, unsigned char, signed char, or std::byte, then all elements of the array are valid, and the elements passed the end of the read retain the value which they held before the call to read. 
+If the number of bytes read is less then size, this will be indicated in the return value. If an unexpected number of bytes was read, the object is invalidated, and using the object is undefined behavior (except for assignment operators and destructors), unless the object is char, unsigned char, signed char, or std::byte or an array there of, or the object is an array. 
+If the object is an array of any type except for char, unsigned char, signed char, or std::byte, then the total number of valid elements in the array is the number of complete elements read, and using elements passed this point in any way except the above is undefined behavior. 
+If the object is an array of char, unsigned char, signed char, or std::byte, then all elements of the array are valid, and the elements passed the end of the read retain the value which they held before the call to read. 
+If 0 or EOF is returned, no objects were modified and all are valid.  
 If there is not a complete object at the address given by ptr, then ptr must refer to a pointer returned from an allocation function (such as operator new, malloc, calloc, etc.), which was allocated with at least size bytes, or the behavior is undefined. Passing a null pointer to read is undefined behavior.
-If the size of the object indicated by ptr is not at least size, the behavior is undefined.
+If the size of the object indicated by ptr is not at least size, the behavior is undefined. 
 <br/><br/>
 
 (2): int read()<br/>
@@ -710,6 +716,46 @@ void clearError()noexcept(true); //(2)
 (1): Checks if there is an error on stream. As no writes actually take place, this method unconditionally returns false. 
 (2): Clears any error on the stream. As no errors are reported, this method has no effect.
 
+
+<h3>class NullDeviceInputStream</h3>
+A special InputStream that reads from the null device. 
+All reads unconditionally return EOF. 
+
+Note that despite referencing the null device, no actual reads are performed. Read calls have no effect. 
+
+<h4>Read methods</h4>
+
+```cpp
+std::size_t read(void* ptr,std::size_t); //(1)
+int read(); //(2)
+```
+
+(1): Reads from the null device. 
+Does not affect the object at ptr, and returns EOF unconditionally. 
+Despite no reads taking place, the object at ptr must still Satisfy the BytesReadable concept. 
+
+(2): Reads a single byte from the null device. Returns EOF unconditionally. 
+
+<h5>Exceptions</h5>
+Neither method will throw any exceptions. 
+
+<h4>Stream Error Analysis</h4>
+
+```cpp
+bool checkError()const noexcept(true); //(1)
+void clearError()noexcept(true); //(2)
+```
+(1): Checks if there is an error on stream. As no writes actually take place, this method unconditionally returns false. 
+(2): Clears any error on the stream. As no errors are reported, this method has no effect.
+
+<h3>class ZeroDeviceInputStream</h3>
+A special Input Stream that reads from the Zero Device. 
+Reading into an object will set every byte in that object to 0. 
+This might not be implemented in terms of an actual device. 
+
+
+
+
 <h3>class ByteArrayOutputStream</h3>
 Inverse of ByteArrayInputStream. ByteArrayOutputStream writes bytes to an internal resizable buffer, which can be accessed by the program. ByteArrayOutputStream will not buffer writes.
 
@@ -749,4 +795,4 @@ const std::size_t EOF{-1}; //(3)
 
 (1): Tag for FileOutputStream constructors to disambugate the overloads that open the file in append mode instead of write mode.
 (2): Tag for DataOutputStream/DataInputStream constructors to disambugate overloads that write/read in little-endian byte order mode instead of Big-Endian byte order mode
-(3): Value returned from read() to indicate that the end-of-file was reached.
+(3): Value returned from read() to indicate that the end-of-file was reached. 

@@ -5,14 +5,15 @@
 #include <cstdint>
 #include <type_traits>
 #include <typeinfo>
-#include <vector>
 #include <memory>
 #include <utility>
-#include <map>
 #include <array>
 #include <variant>
 #include <lclib-cxx/Vector.hpp>
-
+#include <lclib-cxx/TypeTraits.hpp>
+#include <numeric>
+#include <algorithm>
+#include <cstdint>
 
 class LIBLCAPI Hashable{
 public:
@@ -30,17 +31,27 @@ public:
 	constexpr HashSum& operator=(const HashSum&)=default;
 	constexpr HashSum& operator=(HashSum&&)=default;
 	HashSum& operator=(const HashSum&&)=delete;
-	template<typename T> constexpr T operator()(T total,T next){
-		return total*31+next;
+	template<typename T> constexpr int32_t operator()(int32_t total,const T& next){
+		return total*31+hashcode(next);
 	}
 };
 
+template<typename T> struct LCLibHash{
+public:
+	constexpr LCLibHash()=default;
+	~LCLibHash()=default;
+	constexpr LCLibHash(const LCLibHash&)=default;
+	constexpr LCLibHash& operator=(const LCLibHash&)=default;
+	constexpr std::size_t operator()(const T& t){
+		return hashcode(t);
+	}
+};
   
 constexpr int32_t hashcode(int i){
 	return i;
 }
 constexpr int32_t hashcode(char c){
-	return int(c)|(c&0x80?0xffffff00:0);
+	return int(c);
 }
 constexpr int32_t hashcode(signed char c){
 	return int(c)|(c&0x80?0xffffff00:0);
@@ -72,6 +83,7 @@ constexpr int32_t hashcode(unsigned int i){
 constexpr int32_t hashcode(uint64_t i){
 	return int(i)^int(i>>32);
 }
+
 constexpr int32_t hashcode(float f){
 	union{
 		float f1;
@@ -87,7 +99,7 @@ constexpr int32_t hashcode(double d){
 	return hashcode(u.bits);
 }
 constexpr int32_t hashcode(const void* v){
-	return int32_t(v);
+	return hashcode(reinterpret_cast<std::uintptr_t>(v));
 }
 constexpr int32_t hashcode(nullptr_t n){
 	return 0;
@@ -98,6 +110,28 @@ constexpr int32_t hashcode(const char* str){
 		(h*=31,h+=hashcode(*str),str++);
 	return h;
 }
+
+constexpr int32_t hashcode(const char16_t* str){
+	int32_t h = 0;
+	while(*str!=0)
+		(h*=31,h+=hashcode(*str),str++);
+	return h;
+}
+
+constexpr int32_t hashcode(const wchar_t* str){
+	int32_t h = 0;
+	while(*str!=0)
+		(h*=31,h+=hashcode(*str),str++);
+	return h;
+}
+
+constexpr int32_t hashcode(const char32_t* str){
+	int32_t h = 0;
+	while(*str!=0)
+		(h*=31,h+=hashcode(*str),str++);
+	return h;
+}
+
 
 /**
  * Fully Replace std::string with template because security::string
@@ -114,18 +148,20 @@ template<typename CharT,typename CharTraits> constexpr int32_t hashcode(const st
 		(h*=31,h+=hashcode(c));
 	return h;
 }
-LIBLCAPI int32_t hashcode(const std::type_info&);
-
-using std::vector;
-
-template<typename T> auto hashcode(const vector<T>& v)->decltype(hashcode(v[0])){
-	int32_t h = 0;
-	for(int i = 0;i<v.size();i++){
-		h*=31;
-		h+=hashcode(v[i]);
+inline int32_t hashcode(const std::type_info& t){
+	std::size_t hash = 0xf194be82;
+	const std::size_t p1 = 2583988571;
+	const std::size_t p2 =  606598079;
+	for(const char* _c=t.name();*_c!=0;_c++){
+		char q = *_c;
+		hash *= p1;
+		hash = hash<<1|hash>>31;
+		hash += q*p2;
 	}
-	return h;
+	return hash;
 }
+
+
 
 using std::array;
 
@@ -147,35 +183,36 @@ template<typename T,size_t size> constexpr auto hashcode(const T(&a)[size])->dec
 	return h;
 }
 
-using std::unique_ptr;
-using std::shared_ptr;
+
 
 const int32_t uniqueSmartPrime = 11443717;
 const int32_t sharedSmartPrime = 540283;
+const int32_t weakSmartPrime = 53569;
 
-template<typename T> auto hashcode(const unique_ptr<T>&ptr)->decltype(hashcode(ptr.get())){
+template<typename T,typename Deleter> auto hashcode(const std::unique_ptr<T,Deleter>&ptr)->decltype(hashcode(ptr.get())){
 	return hashcode(ptr.get())*uniqueSmartPrime;
 }
 
-template<typename T> auto hashcode(const shared_ptr<T>& ptr)->decltype(hashcode(ptr.get())){
+template<typename T> auto hashcode(const std::shared_ptr<T>& ptr)->decltype(hashcode(ptr.get())){
 	return hashcode(ptr.get())*sharedSmartPrime;
 }
 
+template<typename T> auto hashcode(const std::weak_ptr<T>& ptr)->decltype(hashcode(ptr.get())){
+	return hashcode(ptr.get())*weakSmartPrime;
+}
+
 using std::pair;
-template<typename T,typename U> auto hashcode(const pair<T,U>& p)->std::common_type_t<decltype(hashcode(p.first)),decltype(hashcode(p.second))>{
+template<typename T,typename U> auto hashcode(const std::pair<T,U>& p)->std::common_type_t<decltype(hashcode(p.first)),decltype(hashcode(p.second))>{
 	return hashcode(p.first)*31+hashcode(p.second);
 }
 
-using std::map;
 
-template<typename K,typename V> int32_t hashcode(const map<K,V>& m){
-	int32_t hash = 0;
-	for(const pair<K,V>& p:m){
-		hash*=31;
-		hash+=hashcode(p);
-	}
-	return hash;
+using std::begin;
+
+template<typename Container> constexpr auto hashcode(const Container& c)->require_types<int32_t,decltype(hashcode(*begin(c))),decltype(end(c))>{
+	return std::accumulate(begin(c),end(c),0,HashSum{});
 }
+
 template<typename... T> constexpr auto hashcode(const std::variant<T...>& var)->std::common_type_t<decltype(hashcode(std::declval<T>()))...>{
 	return std::visit([](auto&& a)->std::common_type_t<decltype(hashcode(std::declval<T>()))...>{return hashcode(std::forward(a));},var);
 }

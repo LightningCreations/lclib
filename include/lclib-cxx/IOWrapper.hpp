@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <lclib-cxx/Vector.hpp>
 #include <lclib-cxx/Config.hpp>
+#include <lclib-cxx/Span.hpp>
 #if __has_include(<filesystem>)
 #include <filesystem>
 #define USE_PATH_CTORS
@@ -50,9 +51,11 @@ const std::size_t EOF=-1;
 class LIBLCAPI InputStream{
     InputStream(const InputStream&)=delete;
     InputStream& operator=(const InputStream&)=delete;
+protected:
+    ~InputStream()=default;
 public:
     InputStream()=default;
-    virtual ~InputStream()=default;
+
     InputStream(InputStream&&)=default;
     InputStream& operator=(InputStream&&)=default;
     /**
@@ -115,7 +118,7 @@ public:
  * This class can be constructed from an existing file, a c-style string, or a
  * std::string.
  */
-class LIBLCAPI FileInputStream:public InputStream{
+class LIBLCAPI FileInputStream final:public InputStream{
 private:
     FILE* underlying;
 public:
@@ -141,10 +144,11 @@ public:
      * \Exceptions: This constructor throws a FileNotFoundException if the file cannot be found or opened for any reason.
      */
     FileInputStream(const std::string&);
+
 #ifdef USE_PATH_CTORS
     /**
      * Constructs a FileInputStream from a std::filesystem::path
-     * The stream is constructed as if by FileInputStream(fopen(p.c_str(),"rb"))
+     * The stream is constructed as if by FileInputStream(fopen(p.u8string().c_str(),"rb"))
      * \Exceptions: If the path cannot be opened in read mode (it does not exist or you do not have read access to the file), a FileNotFoundException is thrown
      */
     FileInputStream(const std::filesystem::path&);
@@ -165,7 +169,7 @@ public:
     /**
      * Closes the underlying file if it exists. Otherwise does nothing
      */
-    ~FileInputStream();
+    ~FileInputStream(); // @suppress("Class has a virtual method and non-virtual destructor")
     /**
      * Reads bytes from the underlying file into the given array.
      * The Requirements and Restrictions are the same as in InputStream.
@@ -195,9 +199,11 @@ public:
  class FilterInputStream:public InputStream{
 private:
 	InputStream* underlying;
+protected:
+	 ~FilterInputStream();//Force Abstract
 public:
 	FilterInputStream(InputStream&);
-	 ~FilterInputStream()=0;//Force Abstract
+
 	 size_t read(void*,size_t);
 	 int read();
 	 bool checkError()const noexcept(true);
@@ -211,7 +217,7 @@ public:
  * The behavior is undefined if the Target InputStream's lifetime ends before
  * this object's (even if no read methods are used between those points)
  */
-class LIBLCAPI DataInputStream:public FilterInputStream{
+class LIBLCAPI DataInputStream final:public FilterInputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 private:
     bool little;
     LIBLCHIDE int readSingle();
@@ -449,18 +455,21 @@ class LIBLCAPI OutputStream{
 private:
     OutputStream(const OutputStream&)=delete;
     OutputStream& operator=(const OutputStream&)=delete;
+protected:
+    /**
+	 * Destroys the OutputStream.
+	 * This should free any resources used, and if the stream is buffered, the buffer must be flushed.
+	 * If this causes an exception to be thrown, it may not propagate outside of the destructor.
+	 * If this occurs the stream must be placed in a valid but unspecified state as described by flush,
+	 * the buffer may or may not be flushed if this occurs however. It is unspecified how or if
+	 * it is noted that such an error occurred.
+	 */
+    ~OutputStream()=default;
 public:
     OutputStream()=default;
     OutputStream(OutputStream&&)=default;
-    /**
-     * Destroys the OutputStream.
-     * This should free any resources used, and if the stream is buffered, the buffer must be flushed.
-     * If this causes an exception to be thrown, it may not propagate outside of the destructor.
-     * If this occurs the stream must be placed in a valid but unspecified state as described by flush,
-     * the buffer may or may not be flushed if this occurs however. It is unspecified how or if
-     * it is noted that such an error occurred.
-     */
-    virtual ~OutputStream()=default;
+
+
     /**
      * Writes an object to the stream, then returns the number of byte written.
      * It is undefined behavior to write any object, unless the object is a TriviallyCopyable type
@@ -516,9 +525,10 @@ public:
 class LIBLCAPI FilterOutputStream:public OutputStream{
 private:
 	OutputStream* underlying;
+protected:
+	~FilterOutputStream();
 public:
 	 FilterOutputStream(OutputStream&);
-	 ~FilterOutputStream()=0;
 	 size_t write(const void*,size_t);
 	 void write(uint8_t);
 	 void flush();
@@ -608,7 +618,7 @@ public:
      * Destroys this stream.
      * If this has an underlying file, that file is closed
      */
-     ~FileOutputStream();
+     ~FileOutputStream(); // @suppress("Class has a virtual method and non-virtual destructor")
     /**
      * Moves an existing FileOutputStream.
      * If this has an underlying file, that file is closed.
@@ -652,7 +662,7 @@ public:
  * flush is overridden as a convenience method for underlying->close();
  * The destructor of DataOutputStream will NOT flush the underlying stream.
  */
-class LIBLCAPI DataOutputStream:public FilterOutputStream{
+class LIBLCAPI DataOutputStream final:public FilterOutputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 private:
     bool little;
 public:
@@ -748,7 +758,7 @@ public:
 
 };
 
-class LIBLCAPI ByteArrayInputStream:public InputStream{
+class LIBLCAPI ByteArrayInputStream final:public InputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 private:
 	const std::byte* buffer;
 	std::size_t bufferSize;
@@ -760,23 +770,28 @@ public:
 	template<typename byte,std::size_t N,typename=std::enable_if_t<is_byte_v<byte>>>
 		ByteArrayInputStream(const byte(&arr)[N]):buffer{reinterpret_cast<const std::byte*>(arr)},bufferSize{N},
 		bufferPosition{0}{}
+	template<typename byte,std::ptrdiff_t extent,typename=std::enable_if_t<is_byte_v<byte>>>
+			ByteArrayInputStream(span<const byte,extent> s):buffer{reinterpret_cast<const std::byte*>(s.data())},bufferSize{s.size()},
+			bufferPosition{0}{}
+
 	std::size_t read(void*,std::size_t);
 	int read();
 	bool checkError()const noexcept(true);
 	void clearError()noexcept(true);
 };
-class LIBLCAPI ByteArrayOutputStream:public OutputStream{
+#include <vector>
+class LIBLCAPI ByteArrayOutputStream final:public OutputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 private:
 	std::vector<std::byte> buffer;
 public:
 	std::size_t write(const void*,std::size_t);
 	void write(uint8_t);
-	const std::byte* getBuffer()const;
+	span<const std::byte> getBuffer()const;
 	bool checkError()const noexcept(true);
 	void clearError()noexcept(true);
 };
 
-class LIBLCAPI NullDeviceOutputStream:public OutputStream{
+class LIBLCAPI NullDeviceOutputStream final:public OutputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 public:
 	std::size_t write(const void*,std::size_t);
 	void write(uint8_t);
@@ -784,7 +799,7 @@ public:
 	void clearError()noexcept(true);
 };
 
-class LIBLCAPI NullDeviceInputStream:public InputStream{
+class LIBLCAPI NullDeviceInputStream final:public InputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 public:
 	std::size_t read(void*,std::size_t);
 	int read();
@@ -792,12 +807,18 @@ public:
 	void clearError()noexcept(true);
 };
 
-class LIBLCAPI ZeroDeviceInputStream:public InputStream{
+class LIBLCAPI ZeroDeviceInputStream final:public InputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 public:
 	std::size_t read(void*,std::size_t);
 	int read();
 	bool checkError()const noexcept(true);
 	void clearError()noexcept(true);
 };
+
+
+
+
+
+#undef USE_PATH_CTORS
 
 #endif

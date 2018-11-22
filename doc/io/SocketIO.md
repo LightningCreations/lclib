@@ -1,6 +1,16 @@
 <h1>SocketIO Library</h1>
 Included by `<Socket.hpp>`<br/>
-Part of the io library.<br/>
+Part of the io library and the Networking Library<br/>
+
+<h2>Deprecation</h2>
+
+This library is deprecated for the new Template Based Networking Library. 
+
+This library was based heavily on having a single implementation, using a Service Provider Interface system, and runtime polymorphism. 
+
+The New Networking Library uses Template based SPIs, and static polymorphism to implement generic services. It also supports extended socket interfaces, such as Datagram Sockets, and Non IP Based Sockets. 
+
+
 
 <h2>Synopsis</h2>
 

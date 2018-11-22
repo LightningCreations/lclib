@@ -6,7 +6,7 @@
 #include <optional>
 #include <cstddef>
 
-
+template<auto val> using auto_constant = std::integral_constant<decltype(val),val>;
 
 template <typename T,typename=void>
 struct is_complete : std::false_type  {};
@@ -154,5 +154,21 @@ template<template<typename> class Trait,typename... Ts> struct any_match: std::c
 template<template<typename> class Trait,typename... Ts> constexpr const bool any_match_v = any_match<Trait,Ts...>::value;
 template<template<typename> class Trait,typename... Ts> struct none_match:std::conjunction<std::negation<Trait<Ts>>...>{};
 template<template<typename> class Trait,typename... Ts> constexpr const bool none_match_v = none_match<Trait,Ts...>::value;
+
+template<typename T,typename U> struct copy_category:type_identity<U>{};
+template<typename T,typename U> struct copy_category<T&,U>:type_identity<U&>{};
+template<typename T,typename U> struct copy_category<T&&,U>:type_identity<U&&>{};
+
+template<typename T,typename U> using copy_category_t = typename copy_category<T,U>::type;
+
+#include <lclib-cxx/Detectors.hpp>
+
+namespace detail{
+	template<typename T,typename... Args> using detect_list_constructible = decltype(T{std::declval<Args>()...});
+};
+
+template<typename T,typename... Args> struct is_list_constructible:is_detected<detail::detect_list_constructible,T,Args...>{};
+
+template<typename T,typename... Args> constexpr bool is_list_constructible_v = is_list_constructible<T,Args...>::value;
 
 #endif

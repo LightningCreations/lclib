@@ -9,6 +9,7 @@
 #include <mutex>
 #include <lclib-cxx/Config.hpp>
 #include <json/json.h>
+#include <utility>
 using std::initializer_list;
 using std::vector;
 using std::shared_ptr;
@@ -134,12 +135,12 @@ public:
      * Constructs a Text Component from a given string.
      * Printing this component will result in the string being printed to the screen
      */
-    TextComponent(const string&);
+    TextComponent(const std::string&);
     /**
      * Constructs a Text Component from a given string.
      * Printing this component will result in the string being printed to the screen
      */
-    TextComponent(string&&);
+    TextComponent(std::string&&);
     /**
      * Constructs a Text Component from a given string.
      * Printing this component will result in the string being printed to the screen
@@ -255,11 +256,13 @@ public:
      * \Returns: the current object, for chaining
      * \Exception Guarantee: this method will not throw an exception
      */
-    template<typename... Args> auto print(const TextComponent& first,const TextComponent& second,Args&&... rest)noexcept(true)-> decltype(print(second,rest...))
+    template<typename... Args> std::enable_if_t<std::conjunction_v<std::is_convertible<Args,TextComponent>...>,Terminal>& print(Args&&... rest)noexcept(true)
 	{
         std::lock_guard<std::recursive_mutex> sync(lock);
-    	print(first);
-        return print(second,rest...);
+        const TextComponent comp[]{std::forward<Args>(rest)...};
+    	for(const TextComponent& a:comp)
+    		print(a);
+    	return *this;
     }
     /**
      * Clears the terminal and resets the formatting.

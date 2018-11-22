@@ -35,6 +35,7 @@ namespace security{
 			std::void_t<decltype(std::declval<Allocator>().destroy(std::declval<pointer_t<Allocator>>()))>;
 		template<typename Allocator> using size_type_t = typename std::allocator_traits<Allocator>::size_type;
 		template<typename Allocator> using difference_type_t = typename std::allocator_traits<Allocator>::difference_type;
+		template<typename T> using detect_allow_security_clear_loop = typename T::allow_security_clear_loop;
 	}
 	template<typename T> struct SecureDeleter{
 	public:
@@ -68,7 +69,7 @@ namespace security{
 		using propagate_on_container_move_assignment = typename std::allocator_traits<Allocator>::propagate_on_container_move_assignment;
 		using propagate_on_container_swap = typename std::allocator_traits<Allocator>::propagate_on_container_swap;
 		template<typename U> struct rebind{
-			using other = SecureAllocator<U,typename std::allocator_traits<Allocator>::rebind_alloc<U>>;
+			using other = SecureAllocator<U,typename std::allocator_traits<Allocator>::template rebind_alloc<U>>;
 		};
 
 	private:
@@ -78,36 +79,26 @@ namespace security{
 		SecureAllocator(Args&&... args)
 				noexcept(std::is_nothrow_constructible_v<Allocator,Args...>):
 				a(std::forward(args)...){}
-		template<typename=std::enable_if_t<std::is_default_constructible_v<Allocator>>>
-				SecureAllocator()=default;
-		SecureAllocator(const std::enable_if_t<std::is_copy_constructible_v<Allocator>,SecureAllocator>&)=default;
-		SecureAllocator(std::enable_if_t<std::is_move_constructible_v<Allocator>,SecureAllocator>&&)=default;
+		SecureAllocator()=default;
+		SecureAllocator(const SecureAllocator&)=default;
+		SecureAllocator(SecureAllocator&&)=default;
 		SecureAllocator(const SecureAllocator&&)=delete;
-		SecureAllocator& operator=(const std::enable_if_t<std::is_copy_assignable_v<Allocator>,SecureAllocator>&)=default;
-		SecureAllocator& operator=(std::enable_if_t<std::is_move_assignable_v<Allocator>,SecureAllocator>&&)=default;
+		SecureAllocator& operator=(const SecureAllocator&)=default;
+		SecureAllocator& operator=(SecureAllocator&&)=default;
+		SecureAllocator& operator=(const SecureAllocator&&)=delete;
 		pointer allocate(size_type n){
-			return a.allocate(n);
+			return std::allocator_traits<Allocator>::allocate(n);
 		}
 		void deallocate(pointer t,size_type n){
-			a.deallocate(t,n);
+			std::allocator_traits<Allocator>::deallocate(t,n);
 		}
 		template<typename... Args,typename=require_detected_t<detail::construct_detector,Allocator,Args...>>
 			void construct(pointer p,Args&&... args){
 				std::memset(p,0,sizeof(T));
-				a.construct(p,std::forward(args)...);
+				std::allocator_traits<Allocator>::construct(p,std::forward(args)...);
 			}
-		template<typename... Args,typename=std::enable_if_t<
-			!is_detected_v<detail::construct_detector,Allocator,Args...>&&
-			std::is_constructible_v<T,Args>>> void construct(pointer p,Args&& args){
-				std::memset(p,0,sizeof(T));
-				new(p) T(std::forward(args)...);
-			}
-		std::void_t<require_detected_t<detail::destroy_detector,Allocator>> destroy(pointer p){
-			a.destroy(p);
-			std::memset(p,0,sizeof(T));
-		}
-		void destroy(std::enable_if_t<!is_detected_v<detail::destroy_detector,Allocator>,pointer> p){
-			std::destroy_at(p);
+		void destroy(pointer p){
+			std::allocator_traits<Allocator>::destroy(p);
 			std::memset(p,0,sizeof(T));
 		}
 	};
@@ -137,7 +128,7 @@ namespace security{
 		pointer allocate(std::size_t n){
 			return (pointer)operator new(n*sizeof(T));
 		}
-		void deallocate(pointer p){
+		void deallocate(pointer p,std::size_t n){
 			operator delete(p);
 		}
 
@@ -147,10 +138,26 @@ namespace security{
 	template<typename T,typename... Args> unique_ptr<T> make_unique(Args&&... args){
 		return unique_ptr<T>{new T{std::forward(args)...}};
 	}
-	template<typename T> std::enable_if_t<std::is_trivially_copyable_v<T>> clear(T* t){
-		const std::size_t sz = sizeof(t);
-		memset((void*)t,0,sz);
+	//Unoptimizable Memory Clear loops (volatile access)
+	template<typename Byte,std::size_t N> std::enable_if_t<is_byte_v<Byte>> clear(volatile Byte(&t)[N]){
+		for(std::size_t s=(N-1);s>=0;s--)
+			reinterpret_cast<volatile unsigned char&>(t[s]) = 0;
 	}
+
+	template<typename T,
+	typename AllowSecurityClear=detected_or_t<std::is_trivially_copyable<T>,detail::detect_allow_security_clear_loop,T>>
+		std::enable_if_t<AllowSecurityClear::value> clear(volatile T* t){
+			const std::size_t sz = sizeof(t);
+			for(std::size_t s=(sz-1);s>=0;s--)
+				reinterpret_cast<volatile unsigned char*>(t)[s] = 0;
+		}
+	template<typename T,std::size_t N,
+		typename AllowSecurityClear=detected_or_t<std::is_trivially_copyable<T>,detail::detect_allow_security_clear_loop,T>>
+			std::enable_if_t<AllowSecurityClear::value> clear(volatile T(&t)[N]){
+				const std::size_t sz = sizeof(t);
+				for(std::size_t s=(sz-1);s>=0;s--)
+					reinterpret_cast<volatile unsigned char*>(&t)[s] = 0;
+			}
 	/**
 	 * A basic_string using the Secure Allocator
 	 */
@@ -185,8 +192,17 @@ namespace security{
 		using forward_list = std::forward_list<T,SecureAllocator<T,Allocator>>;
 
 	namespace string_literals{
-		template<typename CharT> security::basic_string<CharT> operator""ss(const CharT* c,std::size_t n){
-			return security::basic_string<CharT>{c,c+n};
+		inline security::basic_string<char> operator""ss(const char* c,std::size_t n){
+			return security::basic_string<char>{c,c+n};
+		}
+		inline security::basic_string<wchar_t> operator""ss(const wchar_t* c,std::size_t n){
+			return security::basic_string<wchar_t>{c,c+n};
+		}
+		inline security::basic_string<char16_t> operator""ss(const char16_t* c,std::size_t n){
+			return security::basic_string<char16_t>{c,c+n};
+		}
+		inline security::basic_string<char32_t> operator""ss(const char32_t* c,std::size_t n){
+			return security::basic_string<char32_t>{c,c+n};
 		}
 	}
 }

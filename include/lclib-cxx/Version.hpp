@@ -14,10 +14,9 @@
 #include <lclib-cxx/Config.hpp>
 #include <cmath>
 #include <stdexcept>
+#include <lclib-cxx/Operations.hpp>
+#include <tuple>
 
-#define VERSION_CONSTEXPR constexpr
-#define VERSION_DELETE =delete
-#define VERSION_DEFAULT =default;
 
 
 #undef major 
@@ -39,7 +38,7 @@ using namespace std::string_literals;
  * The Version class provides both the read from (istream >>) and the write to (ostream <<) operators
  * To write in string form.
  */
-class LIBLCAPI Version{
+class LIBLCAPI Version:private RelOps<Version>,private StrictOrder<Version>{
 private:
 	unsigned char major;
 	unsigned char minor;
@@ -53,10 +52,9 @@ private:
 	}
 public:
 	/*
-	 * Constructs an unknown (null) version.
-	 * The default Version produced is 1.0
+	 * Constructs the Default Version (1.0)
 	 */
-	constexpr Version():major(0),minor(0){
+	constexpr Version():major{0},minor{0}{
 
 	}
 	/*
@@ -64,7 +62,7 @@ public:
 	 * This follows the sentry format for encoding versions (2-bytes BE, High-byte is Major version -1, Low-byte is minor version)
 	 * This Constructor should be used only when you are dealing with Embedded and Encoded Version constants
 	 */
- 	constexpr Version(uint16_t encoded):major(encoded>>8),minor(encoded){}
+ 	constexpr explicit Version(uint16_t encoded):major(encoded>>8),minor(encoded){}
 	/*
 	 * Parses a given string in the form <Mj>.<mi> and produces a version given those 2 inputs.
 	 * Both Mj and mi must be valid integers, with Mj being between 1 and 256 and Mi being between 0 and 255
@@ -80,7 +78,7 @@ public:
 	 * Obtains a version based on a given Major and minor version.
 	 * Major must be between 1 and 256 and minor must be between 0 and 255
 	 */
-	constexpr Version(uint32_t maj,uint32_t min):major(maj-1),minor(min){}
+	constexpr Version(uint32_t maj,uint8_t min):major(maj-1),minor{min}{}
 	
 	constexpr Version(const Version&)=default;
 	constexpr Version(Version&&)=default;
@@ -112,7 +110,7 @@ public:
 	 * Obtains the Origin of this Version. The origin of a Version is equal to the Version
 	 * that has the same Major version, but a minor version of 0.
 	 */
-	VERSION_CONSTEXPR Version getOrigin()const{
+	constexpr Version getOrigin()const{
 		return Version(int(major)+1,0);
 	}
 	/*
@@ -124,45 +122,14 @@ public:
 	 * Computes the hashcode of this Version.
 	 * This is effectively major*31+minor
 	 */
-	VERSION_CONSTEXPR int32_t hashCode()const{
-		return int(major)*31+int(minor);
+	constexpr int32_t hashCode()const{
+		return (int(major)+1)*31+int(minor);
 	}
-	/*
-	 * Compares this version with annother. A Version is the same if its Major version and
-	 * Minor version are exactly the same
-	 */
-	constexpr bool operator==(const Version& v)const{
-		return major==v.major&&minor==v.minor;
-	}
-	constexpr friend bool operator!=(const Version& v1,const Version& v2){
-		return !(v1==v2);
-	}
-	/*
-	 * Compares this version with another. A Version is less-than another if its major version is less
-	 * than the other version's major version, or they share the same origin, and the first has a lower minor version
-	 */
+
 	constexpr bool operator<(const Version& v)const{
-		return major<v.major||(major==v.major&&minor<v.minor);
+		return std::tie(major,minor)<std::tie(v.major,v.minor);
 	}
-	/*
-	 * Compares this version with another. A Version is Greater-than another if its major version is greater than
-	 * the other versions' major version, or they share the same origin, and the first version has a greater minor version
-	 */
-	constexpr friend bool operator>(const Version& v1,const Version& v2){
-		return v2<v1;
-	}
-	/*
-	 * Compound Comparison <=
-	 */
-	constexpr friend bool operator<=(const Version& v1,const Version& v2){
-		return !(v1>v2);
-	}
-	/*
-	 * Compound Comparison >=
-	 */
-	constexpr friend bool operator>=(const Version& v1,const Version& v2){
-		return !(v1<v2);
-	}
+
 };
 
 /*
@@ -197,7 +164,8 @@ constexpr int32_t hashcode(Version v){
 
 namespace std{
 	template<> struct hash<Version>{
-		size_t operator()(Version v){
+		constexpr hash()=default;
+		constexpr size_t operator()(Version v){
 			return v.hashCode();
 		}
 	};

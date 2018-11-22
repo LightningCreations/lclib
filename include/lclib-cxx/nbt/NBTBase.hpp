@@ -1,10 +1,10 @@
 #ifndef __NBTTags_hpp_2018_08_26_00_42
 #define __NBTTags_hpp_2018_08_26_00_42
-#include <Hash.hpp>
-#include <IOWrapper.hpp>
+#include <lclib-cxx/Hash.hpp>
+#include <lclib-cxx/IOWrapper.hpp>
 #include <string>
 #include <cstdint>
-#include <Wrappers.hpp>
+#include <lclib-cxx/Wrappers.hpp>
 namespace nbt{
     class NBTTagBase:public Hashable{
     public:

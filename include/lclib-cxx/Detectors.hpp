@@ -30,7 +30,7 @@ template<template<typename...> class Op,class... Args> using detected_t = typena
 template<typename Default,template<typename...> class Op,class... Args> struct detected_or: detail::detector<Default,void,Op,Args...>{};
 
 template<template<typename...> class Op,class... Args> constexpr const bool is_detected_v = is_detected<Op,Args...>::value;
-template<typename Default,template<typename...> class Op,class... Args> using detected_or_t = typename detected_or<Op,Args...>::type;
+template<typename Default,template<typename...> class Op,class... Args> using detected_or_t = typename detected_or<Default,Op,Args...>::type;
 template<typename Expected,template<typename...> class Op,class... Args> using is_detected_exact = typename std::is_same<Expected,detected_t<Op,Args...>>::type;
 template<typename Expected,template<typename...> class Op,class... Args> using is_detected_convertible = typename std::is_convertible<Expected,detected_t<Op,Args...>>::type;
 

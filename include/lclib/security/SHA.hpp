@@ -43,10 +43,10 @@ namespace security{
 		void init(){
 			SHA1_Init(&ctx);
 		}
-		void update(input_type* buff,std::size_t sz){
+		void update(input_type buff,std::size_t sz){
 			SHA1_Update(&ctx,buff,sz);
 		}
-		void doFinal(output_type* buff){
+		void doFinal(output_type buff){
 			SHA1_Final(reinterpret_cast<unsigned char*>(buff),&ctx);
 		}
 	};

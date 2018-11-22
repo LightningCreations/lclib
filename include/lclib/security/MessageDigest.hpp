@@ -20,7 +20,7 @@ namespace security{
 	private:
 		Digest target;
 	public:
-//		static_assert(security::traits::is_message_digest_algorithm_v<Digest>,"MessageDigest Requires MessageDigestAlgorithm");
+		static_assert(security::traits::is_message_digest_algorithm_v<Digest>,"MessageDigest Requires MessageDigestAlgorithm");
 		using algorithm = Digest;
 		using byte_type = typename Digest::byte_type;
 		using input_type = typename Digest::input_type;

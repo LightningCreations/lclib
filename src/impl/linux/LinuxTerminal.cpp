@@ -4,12 +4,13 @@
  *  Created on: Sep 20, 2018
  *      Author: connor
  */
-
+#include <lclib/Config.hpp>
+#ifdef LIBLCCXX_POSIX
 #include <lclib/Text.hpp>
 
 #include <iostream>
 
-#define RESET "\x1b[0m"
+const char RESET[]{"\x1b[0m"};
 
 
 using std::to_string;
@@ -65,4 +66,4 @@ Terminal& Terminal::wait()noexcept(true){
 	return *this;
 }
 
-
+#endif

@@ -9,6 +9,7 @@ OBJECT_FILES += out/SocketCommon.o out/Terminal.o
 OBJECT_FILES += out/TextComponent.o out/UUID.o out/Version.o
 OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
 OBJECT_FILES += out/Database.o out/ThreadLocalRandom.o out/LibraryInfo.o
+OBJECT_FILES += out/UniqueRandomEngine.o
 
 CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -fpic -w -fwrapv
 COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -fpic -w -fpermissive -fwrapv
@@ -33,14 +34,17 @@ $(OUTPUT): out $(OBJECT_FILES)
 install:$(OUTPUT)
 	install $(OUTPUT) /usr/lib/
 	install --mode=755 -d -v /usr/include/lclib include/lclib
-	install --mode=755 -d -v /usr/include/json include/json
 	cp -R include/lclib /usr/include
-	cp -R include/json /usr/include
-	chmod -R 755 /usr/include/json
 	chmod -R 755 /usr/include/lclib
+	cp -R include/json /usr/include
+	install --mode=755 -d -v /usr/include/json include/json
+	chmod -R 755 /usr/include/json
+	install --mode=755 -d -v /usr/include/detail include/lclib/detail
+	cp -R include/detail /usr/include
+	chmod -R 755 /usr/include/detail
 
 uninstall:
-	rm -rf /usr/include/lclib-cxx
+	rm -rf /usr/include/lclib
 	rm -rf /usr/lib/$(OUTPUT)
 	rm -f ./install
 

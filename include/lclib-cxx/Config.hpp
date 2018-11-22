@@ -73,44 +73,12 @@
 #define LCLIBCXX_HAS_CLI
 #endif
 
-#define __EVAL0(m) m
-#define __EVAL(m) __EVAL0(m)
-
-#define __CONCAT2A(a,b) a##b
-#define __CONCAT3A(a,b,c) a##b##c
-#define __CONCAT4A(a,b,c,d) a##b##c##d
-
-#define CONCAT2(a,b) __CONCAT2A(a,b)
-#define CONCAT3(a,b,c) __CONCAT3A(a,b,c)
-#define CONCAT4(a,b,c,d) __CONCAT4A(a,b,c,d)
-
-#define STRINGIFY(...) #__VA_ARGS__
+#include <detail/PPHacks.hpp>
 
 #ifndef __UNIQUE__
-//Unique Id's are used by reflection (though are also availble to users)
-#if defined(__OAPI_ENHANCED_CPP)&&defined(__HAS_IMPORT_UNIQUE)
-#pragma macros import("__UNIQUE__") define("__UNIQUE__")
-//On SNES-OS __UNIQUE__ expands to UID<filename hash><line number><in file counter><Translation Time Random Token>QJJ
-//__UNIQUE__() expands to the same, except that in a Function-like macro, it expands recursively.
-#define __OAPI_USE_SHARED_COUNTER
-#else
-#if defined(__OAPI_ENHANCED_CPP)&&defined(__COUNTER__)
-#define __OAPI_USE_SHARED_COUNTER
-//If __OAPI_USE_SHARED_COUNTER is defined before the first use of__COUNTER__
-//Then __COUNTER__ values will be shared between files.
+//Unique Id's are used by reflection (though are also available to users)
+#include <detail/OAPIPP.hpp>
 #endif
-#define __UNIQUE__() CONCAT4(UID00AAKKZ09,__COUNTER__,__LINE__,QJJ)
-#endif
-#endif
-
-
-#ifndef UNIQUEID
-#define UNIQUEID(prefix) CONCAT3(prefix,__,__UNIQUE__())
-#endif
-
-
-
-
 
 //Enable Contracts for catching Some UB If they are available.
 //Disabled if __NOCONTRACTS or MINIMAL is defined
@@ -172,45 +140,15 @@
 #define LIBLCCXX_IS_CLANG
 #endif
 
-#if defined(__WIN32)
-#define LIBLCCXX_IS_WIN32
-#define LIBLCCXX_OS_NAME "windows"
-#define LIBLCCXX_OS_CODE 0
-#elif defined(__linux__)
-#define LIBLCCXX_OS_LINUX
-#define LIBLCCXX_POSIX
-#define LIBLCCXX_OS_NAME "linux"
-#define LIBLCCXX_OS_CODE 1
-#elif defined(__APPLE__)
-#define LIBLCCXX_OS_APPLE
-#define LIBLCCXX_OS_NAME "apple"
-#define LIBLCCXX_OS_CODE 2
-#elif defined(__snesos__)
-#define LIBLCCXX_OS_SNES
-#define LIBLCCXX_POSIX
-#define LIBLCCXX_OS_NAME "snesos"
-#define LIBLCCXX_OS_CODE 3
-#elif defined(__ANDROID__)
-#define LIBLCCXX_OS_ANDROID
-#define LIBLCCXX_OS_NAME "android"
-#define LIBLCCXX_OS_CODE 4
-#elif defined(__unix__)
-#define LIBLCCXX_OS_UNIX
-#define LIBLCCXX_POSIX
-#define LIBLCCXX_OS_NAME "unix"
-#define LIBLCCXX_OS_CODE 5
-#elif defined(__POSIX_VERSION)
-#define LIBLCCXX_POSIX
-#define LIBLCCXX_OS_NAME "posix"
-#else
-#define LIBLCCXX_OS_NAME "unknown"
-#endif
+#include <detail/OSCFG.hpp>
 
-#ifdef LIBLCCXX_OS_WINDOWS
+
+#ifdef LIBLCCXX_OS_WIN32
 #ifdef __WIN64
 #define LIBLCCXX_ARCH_64
 #else
 #define LIBLCCXX_ARCH_32
 #endif
 #endif
+
 #endif /* INCLUDE_CONFIG_HPP_ */

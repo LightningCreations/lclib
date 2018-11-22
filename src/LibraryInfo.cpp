@@ -5,9 +5,9 @@
  *      Author: connor
  */
 
-#include <lclib-cxx/Version.hpp>
-#include <lclib-cxx/Config.hpp>
-#include <lclib-cxx/Library.hpp>
+#include <lclib/Version.hpp>
+#include <lclib/Config.hpp>
+#include <lclib/Library.hpp>
 
 #include <cstdint>
 

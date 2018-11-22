@@ -4,8 +4,8 @@
  *  Created on: Oct 15, 2018
  *      Author: connor
  */
-#include <lclib-cxx/ThreadLocalRandom.hpp>
-#include <lclib-cxx/Random.hpp>
+#include <lclib/ThreadLocalRandom.hpp>
+#include <lclib/Random.hpp>
 #include <chrono>
 #include <thread>
 #include <functional>

@@ -14,7 +14,7 @@ CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -fpic -w
 COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -fpic -w -fpermissive -fwrapv
 LINKER_FLAGS = -static-libstdc++ -shared -fpic -flinker-output=dyn -pthread
 LIBS = -lssl
-OUTPUT = liblc-cxx.so
+OUTPUT = liblc.so
 INCLUDE = -I./ -I./include
 DEFINES = -DLCLIB_CXX_DEFINITION
 

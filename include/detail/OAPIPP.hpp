@@ -18,9 +18,9 @@
 #if __has_oapi_import("__FHASH__")
 #pragma macros import("__FHASH__") define("__FHASH__")
 #endif
-#endif
 #if __has_oapi_import("__RANDOM__")
 #pragma macros import("__RANDOM__")
+#endif
 #endif
 
 #ifndef __RANDOM__

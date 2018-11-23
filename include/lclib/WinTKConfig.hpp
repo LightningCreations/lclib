@@ -8,8 +8,8 @@
 #ifndef __INCLUDE_LCLIB_CXX_WINTKCONFIG_HPP__2018_11_22_09_22_10
 #define __INCLUDE_LCLIB_CXX_WINTKCONFIG_HPP__2018_11_22_09_22_10
 
-#include <lclib-cxx/Config.hpp>
-#include <lclib-cxx/CppHelpers.hpp>
+#include <lclib/Config.hpp>
+#include <lclib/CppHelpers.hpp>
 
 #if __has_include(<gtk/gtk.h>)
 #define LIBLCCXX_HAS_GNOME

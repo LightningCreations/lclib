@@ -9,7 +9,7 @@ private:
     NotCopyable& operator=(const NotCopyable&)=delete;
 public:
     constexpr NotCopyable(NotCopyable&&)=default;
-    constexpr NotCopyable& operator=(NotCopyable&&)=default;
+    NotCopyable& operator=(NotCopyable&&)=default;
     constexpr NotCopyable()=default;
     ~NotCopyable()=default;
 };
@@ -20,7 +20,7 @@ private:
     NotMoveable& operator=(NotMoveable&&)=delete;
 public:
     constexpr NotMoveable(const NotMoveable&)=default;
-    constexpr NotMoveable& operator=(const NotMoveable&)=default;
+    NotMoveable& operator=(const NotMoveable&)=default;
     constexpr NotMoveable()=default;
     ~NotMoveable()=default;
 };

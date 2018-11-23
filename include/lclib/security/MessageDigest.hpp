@@ -31,13 +31,13 @@ namespace security{
 		MessageDigest(MessageDigest&&)=default;
 		void digest(input_type in,std::size_t sz,output_type out){
 			target.init();
-			target.update(&in,sz);
+			target.update(in,sz);
 			target.doFinal(out);
 		}
 		void operator()(input_type in,std::size_t sz,output_type out){
 			target.init();
-			target.update(&in,sz);
-			target.doFinal(&out);
+			target.update(in,sz);
+			target.doFinal(out);
 		}
 	};
 }

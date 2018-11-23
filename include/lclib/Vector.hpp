@@ -45,7 +45,7 @@ template<typename T> struct Vec2{
     constexpr Vec2& operator=(Vec2&&)=default;
 
     template<typename U> constexpr auto operator+(const Vec2<U>& v)const -> Vec2<decltype(x+v.x)>{
-        return Vec2<decltype(x+v.x)>{x+v.x,y+v.y};
+        return Vec2{x+v.x,y+v.y};
     }
     template<typename U> constexpr auto operator+=(const Vec2<U>& v) -> require_types_t<Vec2&,decltype(x+=v.x)>{
         x+=v.x;
@@ -53,7 +53,7 @@ template<typename T> struct Vec2{
         return *this;
     }
     template<typename U> constexpr auto operator-(const Vec2<U>& v)const -> Vec2<decltype(x-v.x)>{
-        return Vec2<decltype(x-v.x)>{x-v.x,y-v.y};
+        return Vec2{x-v.x,y-v.y};
     }
     template<typename U> constexpr auto operator-=(const Vec2<U>& v) -> require_types_t<Vec2&,decltype(x-=v.x)>{
         x-=v.x;
@@ -65,7 +65,7 @@ template<typename T> struct Vec2{
     }
 
     template<typename U> constexpr auto operator*(U v)const -> Vec2<decltype(v*x)>{
-    	return Vec2<decltype(v*x)>{v*x,v*y};
+    	return Vec2{v*x,v*y};
     }
     template<typename U> constexpr auto operator*=(U v)const -> require_types_t<Vec2&,decltype(x*=v)>{
     	x *= v;
@@ -73,13 +73,16 @@ template<typename T> struct Vec2{
     	return *this;
     }
     template<typename U> constexpr auto operator/(U v)const -> Vec2<decltype(x/v)>{
-    	return Vec2<decltype(x/v)>{x/v,y/v};
+    	return Vec2{x/v,y/v};
     }
-    template<typename U> constexpr auto operator*=(U v)const -> require_types_t<Vec2&,decltype(x/=v)>{
-        	x /= v;
-        	y /= v;
-        	return *this;
-        }
+    template<typename U> constexpr friend auto operator*(U m,const Vec2& v)-> Vec2<decltype(v.x*m)>{
+    	return Vec2{v.x*m,v.y*m};
+    }
+    template<typename U> constexpr auto operator/=(U v)const -> require_types_t<Vec2&,decltype(x/=v)>{
+		x /= v;
+		y /= v;
+		return *this;
+	}
 
     constexpr int32_t hashCode()const{
         return hashcode(x)*31+hashcode(y);

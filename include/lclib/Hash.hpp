@@ -101,7 +101,7 @@ constexpr int32_t hashcode(double d){
 constexpr int32_t hashcode(const void* v){
 	return hashcode(reinterpret_cast<std::uintptr_t>(v));
 }
-constexpr int32_t hashcode(nullptr_t n){
+constexpr int32_t hashcode(std::nullptr_t n){
 	return 0;
 }
 constexpr int32_t hashcode(const char* str){

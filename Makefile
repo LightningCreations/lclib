@@ -1,5 +1,5 @@
-CXX := g++-8
-CC := gcc-8
+CXX := clang++
+CC := clang
 
 INCLUDE_PATH := include
 
@@ -20,9 +20,9 @@ OBJECT_FILES += out/UniqueRandomEngine.o
 
 LINFO_OBJ := out/LibraryInfo.o
 
-CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -fpic -w -fwrapv
-COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -fpic -w -fpermissive -fwrapv
-LINKER_FLAGS = -static-libstdc++ -shared -fpic -flinker-output=dyn -pthread
+CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -w -fwrapv
+COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -w -fpermissive -fwrapv
+LINKER_FLAGS = -static-libstdc++ -shared -flinker-output=dyn -pthread
 LIBS = -lssl
 OUTPUT = liblc.so
 INCLUDE = $(foreach ipath,$(INCLUDE_PATH),-I$(ipath))
@@ -32,13 +32,19 @@ LIBNAME = -Wl,-soname,liblc.so
 
 DIRS := out/ out/UI/ out/impl/ out/impl/linux/
 
-.PHONY: all FORCE install uninstall clean rebuild relink cxxheaders cheaders out
+.PHONY: all FORCE install uninstall clean rebuild relink cxxheaders cheaders out version
 .DEFAULT: all
 .IGNORE: $(DIRS)
 .PRECIOUS: Makefile $(DIRS)
 .DELETE_ON_ERROR:
 
 all: $(OUTPUT)
+
+version:
+	@echo $(CXX) version
+	@$(CXX) --version
+	@echo $(CC) verison
+	@$(CC) --version
 
 FORCE: ;
 
@@ -90,11 +96,11 @@ cxxheaders: cheaders $(INCLUDE_PATH) $(CXXHEAD)
 cheaders: $(INCLUDE_PATH) $(CCHEAD)
 
 out/%.o: src/%.cpp $(D@) cxxheaders
-	$(CXX) $(COMPILE_FLAGS) -c $(INCLUDE) -o $@ $<
+	$(CXX) $(COMPILE_FLAGS) $(DEFINES) -c $(INCLUDE) -o $@ $<
 
 out/%.o: src/%.c $(D@) cheaders
-	$(CC) $(CC_FLAGS) -c $(INCLUDE) -o $@ $<
+	$(CC) $(CC_FLAGS) $(DEFINES) -c $(INCLUDE) -o $@ $<
 	
-$(LINFO_OBJ): $(LINFO_OBJ cxxheaders out/ $(OBJECT_FILES)
-	$(CXX) $(COMPILE_FLAGS) -c $(INCLUDE) -o $@ $<
+$(LINFO_OBJ): $(LINFO_OBJ:out/%.o=src/%.cpp) cxxheaders out/ $(OBJECT_FILES)
+	$(CXX) $(COMPILE_FLAGS) $(DEFINES) -c $(INCLUDE) -o $@ $<
 

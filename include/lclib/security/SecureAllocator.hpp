@@ -145,20 +145,16 @@ namespace security{
 			reinterpret_cast<volatile unsigned char&>(t[s]) = 0;
 	}
 
-	template<typename T,
-	typename AllowSecurityClear=detected_or_t<std::is_trivially_copyable<T>,detail::detect_allow_security_clear_loop,T>>
-		std::enable_if_t<AllowSecurityClear::value> clear(volatile T* t){
-			const std::size_t sz = sizeof(t);
-			for(std::size_t s=(sz-1);s>=0;s--)
-				reinterpret_cast<volatile unsigned char*>(t)[s] = 0;
-		}
-	template<typename T,std::size_t N,
-		typename AllowSecurityClear=detected_or_t<std::is_trivially_copyable<T>,detail::detect_allow_security_clear_loop,T>>
-			std::enable_if_t<AllowSecurityClear::value> clear(volatile T(&t)[N]){
-				const std::size_t sz = sizeof(t);
-				for(std::size_t s=(sz-1);s>=0;s--)
-					reinterpret_cast<volatile unsigned char*>(&t)[s] = 0;
-			}
+	template<typename T> void clear(volatile T* t){
+		const std::size_t sz = sizeof(t);
+		for(std::size_t s=(sz-1);s>=0;s--)
+			reinterpret_cast<volatile unsigned char*>(t)[s] = 0;
+	}
+	template<typename T,std::size_t N> void clear(volatile T(&t)[N]){
+		const std::size_t sz = sizeof(t)*N;
+		for(std::size_t s=(sz-1);s>=0;s--)
+			reinterpret_cast<volatile unsigned char*>(&t)[s] = 0;
+	}
 	/**
 	 * A basic_string using the Secure Allocator
 	 */

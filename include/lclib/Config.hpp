@@ -126,10 +126,12 @@
 #endif
 #endif
 
+#ifndef INCLUDE_WARNING
 #if defined(LIBLCCXX_ERROR_INCLUDE_WARNINGS)
 #define INCLUDE_WARNING(...) static_assert(false,STRINGIFY(Including __FILE__ is not enabled: __VA_ARGS__))
 #else
 #define INCLUDE_WARNING(...) _Pragma(message STRINGIFY(Including __FILE__ is not enabled: __VA_ARGS__))
+#endif
 #endif
 
 #if defined(_MSC_VER)

@@ -9,7 +9,7 @@
 #define __INCLUDE_CPPHELPERS_HPP__2018_09_10_14_04
 #include <cstddef>
 #include <utility>
-#include <lclib-cxx/Config.hpp>
+#include <lclib/Config.hpp>
 namespace detail{
 	const char directory[]{"ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"};
 	template<std::size_t N> constexpr char nameHashChar(std::size_t& hash,const char(&str)[N],std::size_t n){

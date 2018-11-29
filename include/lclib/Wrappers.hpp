@@ -200,7 +200,7 @@ public:
     }
 
     /**
-     * Obtains the dynamic type of the owned object, or the type information of T if there is no dynamic type.
+     * Obtains the dynamic type of the owned object, or the type information of T if there is no object.
      * \Exceptions: Non-throwing
      */
     const std::type_info& type()const noexcept(true){
@@ -274,7 +274,8 @@ public:
      * \Exceptions: Non-throwing
      */
     PolymorphicWrapper& operator=(PolymorphicWrapper&& r)noexcept(true){
-        delete val;
+    	if(val)
+    		delete val;
         val = std::exchange(r.val,nullptr);
         return *this;
     }
@@ -286,7 +287,8 @@ public:
      */
     template<typename U>
     derived_polymorphic_wrapper<U>& operator=(PolymorphicWrapper<U>&& r)noexcept(true){
-        delete val;
+    	if(val)
+    		delete val;
         val = std::exchange(r.val,nullptr);
         return *this;
     }

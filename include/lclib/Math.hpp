@@ -100,7 +100,7 @@ namespace detail{
 
 
 /**
- * Returns a function of x, which is equivalent to (df/dx)(f).
+ * Returns a function of x, which is equivalent to (df/dx).
  * If adl lookup finds a definition of d for Fn, returns the result of that.
  * Otherwise, if Fn has a member function d()
  * Otherwise, returns g(x) where g(x)=lim[h->0+](f(x+h)-f(x))/(h)

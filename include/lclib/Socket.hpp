@@ -13,7 +13,10 @@
 #include <stdexcept>
 #include <functional>
 #include <lclib/Config.hpp>
+#include <lclib/CppHelpers.hpp>
 using std::function;
+
+#warning Socket.hpp is deprecated. Use net/Socket.hpp and net/IPSocket.hpp instead
 
 /**
  * A Base class that describes that an socket/networking specific error occured.

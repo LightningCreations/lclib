@@ -146,7 +146,7 @@ LIBLCAPI ostream& operator<<(ostream&,const Version&);
 
 namespace version_literals{
 	template<char... c> constexpr Version operator""v(){
-		char str[sizeof...(c)+1]{c...,0};
+		const char str[sizeof...(c)+1]{c...,0};
 		return Version{str};
 	}
 	constexpr Version operator""v(const char* str,std::size_t sz){

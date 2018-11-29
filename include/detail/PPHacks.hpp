@@ -14,7 +14,7 @@
 #define __EVAL(...) __EVAL0(__VA_ARGS__)
 
 #define __CONCAT2A(a,b) a##b
-#define __CONCAT2(a,b) __CONCAT2A(_EVAL(a,b))
+#define __CONCAT2(a,b) __CONCAT2A(_EVAL(a),_EVAL(b))
 
 #define __CONCAT3(a,b,c) __CONCAT2(a,__CONCAT2(b,c))
 #define __CONCAT4(a,b,c,d) __CONCAT2(__CONCAT2(a,b),__CONCAT2(c,d))

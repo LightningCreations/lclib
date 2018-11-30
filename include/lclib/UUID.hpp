@@ -52,10 +52,8 @@ public:
 	UUID(std::string_view,sha1_namespace_t);
 	constexpr UUID(const UUID&)=default;
 	constexpr UUID(UUID&&)=default;
-	UUID(const UUID&&)=delete;
 	constexpr UUID& operator=(const UUID&)=default;
 	constexpr UUID& operator=(UUID&&)=default;
-	UUID& operator=(const UUID&&)=delete;
 	constexpr uint64_t getHigh()const{
 		return high;
 	}

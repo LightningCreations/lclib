@@ -110,7 +110,7 @@ template<typename T,typename=std::enable_if_t<std::is_constructible_v<tuple_iter
 		}
 	};
 
-template<typename T> tuple_iterable(const T&) -> tuple_iterable<T>;
+template<typename T> tuple_range(const T&) -> tuple_range<T>;
 
 
 

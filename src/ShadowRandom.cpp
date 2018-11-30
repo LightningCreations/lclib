@@ -79,7 +79,7 @@ LIBLCHIDE void expand(const uint8_t(&arr)[256],uint64_t(&out)[256]){
         out[s] = block[s&0x7];
         out[s] ^= sbox[arr[s]];
         for(std::size_t n = 0;n<8;n++)
-            if(n!=s&0x7)
+            if(n!=(s&0x7))
                 out[s] ^= block[n];
         for(std::size_t q=0;q<256;q++)
             out[s] ^= rrotate(arr[q],q);

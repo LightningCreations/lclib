@@ -166,14 +166,14 @@ template<typename type> constexpr auto integrate(type upper,type lower){
 template<typename Fn> constexpr auto antiderivative(Fn&& f){
 	return detail::IndefIntF<Fn>{f};
 }
-
+using std::tgamma;
 /**
  * template function wrapper for the Gamma Function.
  * Wraps a tgamma function found with ADL, or std::tgamma if not applicable.
  */
 struct Gamma{
 public:
-	using std::tgamma;
+	
 	constexpr Gamma()=default;
 	constexpr Gamma(const Gamma&)=default;
 	constexpr Gamma& operator=(const Gamma&)=default;
@@ -230,9 +230,9 @@ template<typename type> constexpr auto product(type start,type max) EXPECTS(ceil
 }
 
 
-
+using std::pow;
 struct tetration{
-	using std::pow;
+	
 	constexpr tetration()=default;
 	constexpr tetration(const tetration&)=default;
 	constexpr tetration& operator=(const tetration&)=default;

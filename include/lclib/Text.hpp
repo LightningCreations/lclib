@@ -201,10 +201,8 @@ public:
     template<Color __c> TextComponent(background_t<__c>):c(__c),text(),bg(true),__tab(true),endl(false){}
     TextComponent(const TextComponent&)=default;
     TextComponent(TextComponent&&)=default;
-    TextComponent(const TextComponent&&)=delete;
     TextComponent& operator=(const TextComponent&)=default;
     TextComponent& operator=(TextComponent&&)=default;
-    TextComponent& operator=(const TextComponent&&)=delete;
     Color getColor()const;
     const string& getText()const;
     bool isEndl()const;

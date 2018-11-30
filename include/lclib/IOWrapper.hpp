@@ -189,14 +189,14 @@ public:
      * Gets the underlying file controlled by the stream,
      * or a null pointer if the stream has been moved from
      */
-    FILE* getUnderlying()noexcept(true);
+    FILE* getUnderlying()const noexcept(true);
 
     bool checkError()const noexcept(true);
     void clearError()noexcept(true);
 };
 
 
- class FilterInputStream:public InputStream{
+class LIBLCAPI FilterInputStream:public InputStream{
 private:
 	InputStream* underlying;
 protected:

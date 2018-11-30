@@ -9,7 +9,7 @@
 #define __INCLUDE_LCLIB_CXX_STLTYPEHASH_HPP__2018_09_30_19_17_14
 
 #include <type_traits>
-#include <TypeHash.hpp>
+#include <lclib/TypeHash.hpp>
 #include <string>
 #include <vector>
 #include <set>

@@ -90,9 +90,9 @@ template<typename T,size_t N> struct can_contain<T,std::array<T,N>>:std::true_ty
 template<typename T,typename U,size_t N> struct can_contain<T,std::array<U,N>>:can_contain<T,U>{};
 
 namespace detail{
-	template<typename T,typename Tuple,std::size_t... Ids> auto can_contain_tuple_helper_f(const T&,const Tuple& t,std::index_sequence<Ids...>)
-		-> std::conjunction<std::bool_constant<(std::tuple_size_v<Tuple>!=0)>,
-			std::disjunction<can_contain<T,std::tuple_element_t<Ids,Tuple>>...>
+	template<typename T, typename Tuple, std::size_t... Ids> auto can_contain_tuple_helper_f(const T&, const Tuple& t, std::index_sequence<Ids...>)
+		->std::conjunction<std::bool_constant<(std::tuple_size_v<Tuple> != 0)>,
+		std::disjunction<can_contain<T, std::tuple_element_t<Ids, Tuple>>...>
 		>;
 	template<typename T,typename U> using can_contain_tuple_helper = decltype(can_contain_helper_tuple_f(std::declval<const T&>(),std::declval<const U&>(),std::make_index_sequence<std::tuple_size_v<U>>{}));
 }
@@ -161,12 +161,19 @@ template<typename T,typename U> struct copy_category<T&&,U>:type_identity<U&&>{}
 
 template<typename T,typename U> using copy_category_t = typename copy_category<T,U>::type;
 
+
 template<typename... Ts> struct has_common_type:std::false_type{};
 template<> struct has_common_type<>:std::false_type{};
 template<typename T> struct has_common_type<T>:std::true_type{};
+template<typename T> struct has_common_type<T, T> :std::true_type {};
 template<typename T,typename U> struct has_common_type<T,U>:std::conjunction<
 	std::is_same<std::common_type_t<T,U>,std::common_type_t<U,T>>,
 	std::is_convertible<T,std::common_type_t<T,U>>,
 	std::is_convertible<U,std::common_type_t<T,U>>>{};
+template<typename T, typename U, typename... Rest> struct has_common_type<T, U, Rest...> :std::conjunction<
+	has_common_type<T, U>, has_common_type<T, Rest...>,
+	has_common_type<U, Rest...>, has_common_type<std::common_type_t<T, U>, std::common_type_t<T, Rest...>, std::common_type_t<U, Rest...>>> {};
+
+template<typename... Ts> constexpr bool has_common_type_v = has_common_type<Ts...>::value;
 
 #endif

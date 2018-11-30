@@ -15,7 +15,7 @@
 #include <lclib/Concepts.hpp>
 #endif
 namespace security{
-	constexpr const std::size_t dynamicSize{-1};
+	constexpr const std::size_t dynamicSize(-1);
 	/**
 	 * Template class for Key Concept
 	 * Given that K satisfies Key, and an object k of type K and c of type const K,

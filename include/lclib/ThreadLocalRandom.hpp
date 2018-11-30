@@ -10,7 +10,7 @@
 #include <lclib/Random.hpp>
 class TLRPool{
 public:
-	static thread_local Random rand;
+	static Random& threadLocalRandom();
 };
 
 

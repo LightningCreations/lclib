@@ -11,7 +11,7 @@
 #include <string>
 #include <lclib/Version.hpp>
 
-LIBLCAPI struct lclib_cxx{
+struct LIBLCAPI lclib_cxx{
 	static const char name[];
 	static const char copyright[];
 	static const char license[];

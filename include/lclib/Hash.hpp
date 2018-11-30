@@ -27,10 +27,8 @@ public:
 	~HashSum()=default;
 	constexpr HashSum(const HashSum&)=default;
 	constexpr HashSum(HashSum&&)=default;
-	HashSum(const HashSum&&)=delete;
 	constexpr HashSum& operator=(const HashSum&)=default;
 	constexpr HashSum& operator=(HashSum&&)=default;
-	HashSum& operator=(const HashSum&&)=delete;
 	template<typename T> constexpr int32_t operator()(int32_t total,const T& next){
 		return total*31+hashcode(next);
 	}
@@ -208,6 +206,7 @@ template<typename T,typename U> auto hashcode(const std::pair<T,U>& p)->std::com
 
 
 using std::begin;
+using std::end;
 
 template<typename Container> constexpr auto hashcode(const Container& c)->require_types<int32_t,decltype(hashcode(*begin(c))),decltype(end(c))>{
 	return std::accumulate(begin(c),end(c),0,HashSum{});

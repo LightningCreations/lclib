@@ -287,11 +287,11 @@ namespace security{
 		}
 		template<std::size_t N1> friend BigNumber<N<N1?N1:N> operator/(const BigNumber& b1,const BigNumber<N1,byte>& b2){
 			BigNumber<N<N1?N1:N> b{b1};
-			return devide(b,b2);
+			return divide(b,b2);
 		}
 		template<std::size_t N1> friend BigNumber<N<N1?N1:N> operator%(const BigNumber& b1,const BigNumber<N1,byte>& b2){
 			BigNumber<N<N1?N1:N> b{b1};
-			devide(b,b2);
+			divide(b,b2);
 			return b;
 		}
 
@@ -386,6 +386,7 @@ namespace security{
 
 	namespace big_integer_literals{
 		BigNumber<256> operator ""_bn(const char*);
+		BigNumber<256> operator""_bn(unsigned long long l);
 		BigNumber<256> operator ""_bn(const char*,std::size_t);
 	}
 }

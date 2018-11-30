@@ -23,9 +23,6 @@ using std::ostream;
 
 using namespace std::string_literals;
 
-#undef major
-#undef minor
-
 /*
  * Represents a version of the code.
  * This specification only defines the Major and Minor parts of the version and is encoded
@@ -79,10 +76,8 @@ public:
 	
 	constexpr Version(const Version&)=default;
 	constexpr Version(Version&&)=default;
-	Version(const Version&&)=delete;
 	constexpr Version& operator=(const Version&)=default;
 	constexpr Version& operator=(Version&&)=default;
-	Version& operator=(const Version&&)=delete;
 
 	/*
 	 * Gets the major version, ranging from 1 to 256
@@ -146,14 +141,13 @@ LIBLCAPI ostream& operator<<(ostream&,const Version&);
 
 namespace version_literals{
 	template<char... c> constexpr Version operator""v(){
-		const char str[sizeof...(c)+1]{c...,0};
-		return Version{str};
+		const char str[sizeof...(c)]{c...};
+		return Version{ std::string_view{str,sizeof...(c)} };
 	}
 	constexpr Version operator""v(const char* str,std::size_t sz){
 		return Version{std::string_view{str,sz}};
 	}
 }
-
 
 constexpr int32_t hashcode(Version v){
 	return v.hashCode();

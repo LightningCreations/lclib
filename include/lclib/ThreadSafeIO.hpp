@@ -37,7 +37,6 @@ public:
 	explicit constexpr in_progress()=default;
 };
 
-
 /**
  * A Threadsafe Wrapper on an OutputStream.
  * All operations are locked, and all interactions are atomic.
@@ -59,7 +58,7 @@ public:
  *  regardless of in progress transactions or observers.
  *  However, calling one or more atomic operations in parallel may have unpredictable results.
  */
-class LIBLCAPI TSOutputStream:OutputStream{
+class LIBLCAPI TSOutputStream:public OutputStream{
 private:
 	OutputStream* owned;
 	mutable std::shared_mutex lock;

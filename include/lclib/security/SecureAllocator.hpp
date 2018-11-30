@@ -187,21 +187,6 @@ namespace security{
 		using unordered_multimap =std::unordered_multimap<K,V,Hash,Equals,SecureAllocator<std::pair<const K,V>,Allocator>>;
 	template<typename T,typename Allocator=std::allocator<T>>
 		using forward_list = std::forward_list<T,SecureAllocator<T,Allocator>>;
-
-	namespace string_literals{
-		inline security::basic_string<char> operator""ss(const char* c,std::size_t n){
-			return security::basic_string<char>{c,c+n};
-		}
-		inline security::basic_string<wchar_t> operator""ss(const wchar_t* c,std::size_t n){
-			return security::basic_string<wchar_t>{c,c+n};
-		}
-		inline security::basic_string<char16_t> operator""ss(const char16_t* c,std::size_t n){
-			return security::basic_string<char16_t>{c,c+n};
-		}
-		inline security::basic_string<char32_t> operator""ss(const char32_t* c,std::size_t n){
-			return security::basic_string<char32_t>{c,c+n};
-		}
-	}
 }
 
 #endif /* __INCLUDE_SECURITY_SECUREDELETER_HPP__2018_09_17_18_44_59 */

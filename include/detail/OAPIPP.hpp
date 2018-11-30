@@ -10,8 +10,7 @@
 
 #if defined(__OAPI_CPP_EXT)
 #if __has_oapi_import("__UNIQUE__")>201705L
-#pragma macros import("__UNIQUE__") define("__UNIQUE__")
-
+#pragma macros import("__UNIQUE__",) define("__UNIQUE__",)
 #else
 #pragma OAPI counter useshared
 #endif
@@ -32,8 +31,9 @@
 #ifndef __FHASH__
 #define __FHASH__ AZsZPiXGlruWXCNMslMSUGum
 #endif
-#define __UNIQUE__() CONCAT(UID,__FHASH__,__COUNTER__,__LINE__,__RANDOM__)
+#define __UNIQUE__() __CONCAT5(UID,__FHASH__,__COUNTER__,__LINE__,__RANDOM__)
 #endif
+
 
 #define UNIQUEID(...) CONCAT(__VA_ARGS__,__,__UNIQUE__())
 

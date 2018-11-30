@@ -27,8 +27,8 @@ namespace security{
 	template<std::size_t M,typename byte=std::byte> struct SHA{
 		 static_assert(M==1,"SHA Cannot be instantiated for any Target that is not specialized");
 	};
-	template<typename byte> [[deprecated("SHA-1 is deprecated by the NSA as insecure. Use a SHA-2 Algorithm instead")]]
-							 struct SHA<1,byte>{
+	template<typename byte> 
+		struct[[deprecated("SHA-1 is deprecated by the NSA as insecure. Use a SHA-2 Algorithm instead")]] SHA<1,byte>{
 	private:
 		SHA_CTX ctx;
 	public:

@@ -9,7 +9,7 @@
 #define _INCLUDE_CONFIG_HPP__2018_09_06_16_35
 
 #if __cplusplus < 201703L
-#error This library requires C++17 Mode to function (Compile with -std=c++1z, -std=c++17, or -std=c++2a)
+#error This library requires C++17 Mode to function (Compile with -std=c++1z, -std=c++17, or -std=c++2a). In MSVC you have to specify C++17 or C++latest and 
 #endif
 #if __cplusplus >201703L
 #define LCLIBCXX_CXX2a

@@ -41,6 +41,10 @@ int FileInputStream::read(){
     return c;
 }
 
+FILE* FileInputStream::getUnderlying()const noexcept(true) {
+	return this->underlying;
+}
+
 size_t FileInputStream::read(void* ptr,size_t size){
     return fwrite(ptr,1,size,underlying);
 }
@@ -192,6 +196,8 @@ bool OutputStream::operator!()const noexcept(true){
 	return checkError();
 }
 
+namespace fs = std::filesystem;
+
 FileOutputStream::FileOutputStream(FILE* f):underlying(f){
     if(underlying==NULL||underlying==nullptr)
         throw FileNotFoundException();
@@ -201,10 +207,10 @@ FileOutputStream::FileOutputStream(const std::string& str):FileOutputStream(fope
 
 FileOutputStream::FileOutputStream(const char* c,append_t):FileOutputStream(fopen(c,"ab")){}
 FileOutputStream::FileOutputStream(const std::string& str,append_t):FileOutputStream(fopen(str.c_str(),"ab")){}
-#ifdef USE_PATH_CTORS
-FileOutputStream::FileOutputStream(const std::filesystem::path& p):FileOutputStream(fopen(p.c_str(),"wb")){}
-FileOutputStream::FileOutputStream(const std::filesystem::path& p,append_t):FileOutputStream(fopen(p.c_str(),"ab")){}
-#endif
+
+FileOutputStream::FileOutputStream(const std::filesystem::path& p):FileOutputStream(fs::canonical(p).u8string()){}
+FileOutputStream::FileOutputStream(const std::filesystem::path& p,append_t):FileOutputStream(fs::canonical(p).u8string(),append){}
+
 FileOutputStream::FileOutputStream(FileOutputStream&& f):underlying(std::exchange(f.underlying,nullptr)){}
 FileOutputStream::~FileOutputStream(){
     if(underlying!=NULL&&underlying!=nullptr)
@@ -225,6 +231,10 @@ void FileOutputStream::write(uint8_t u){
 
 void FileOutputStream::flush(){
 	fflush(underlying);
+}
+
+FILE* FileOutputStream::getUnderlying()const noexcept(true) {
+	return this->underlying;
 }
 
 bool FileOutputStream::checkError()const noexcept(true){
@@ -527,3 +537,9 @@ void TSOutputStream::endBulk(){
 	waitForBulkCompletion.notify_all();
 }
 
+BulkOpWrapper::BulkOpWrapper(TSOutputStream& out) :target{ &out } {
+	out.startBulk();
+}
+BulkOpWrapper::~BulkOpWrapper() {
+	target->endBulk();
+}

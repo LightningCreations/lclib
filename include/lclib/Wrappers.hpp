@@ -123,10 +123,6 @@ public:
     template<typename U,disable_move_derived<U> =0> PolymorphicWrapper(U&& u)=delete;
 
     /**
-     * Disable Move-from const for derived types.
-     */
-    template<typename U,typename=derived_type<U>> PolymorphicWrapper(const U&&)=delete;
-    /**
      * Move Constructs a PolymorphicWrapper from a wrapper to a derived class.
      * The new PolymorphicWrapper takes ownership of the moved-from wrapper's owned object.
      * This constructor does not participate in overload resolution unless std::is_base_of_v<T,U> is true

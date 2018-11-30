@@ -71,7 +71,6 @@ constexpr nanos_t toNanos(uint64_t val,ChronoUnit unit){
 /**
  * Converts the given seconds and nano adjustment to a value of ChronoUnit. (This truncates)
  *  if the precision of the pair is less than the precision of the unit.
- * As with toSeconds and toNanos, the behavior is undefined  if unit is not an Enumerator of ChronoUnit.
  * returns 0 if unit is not a valid Enumerator of ChronoUnit.
  */
 constexpr chrono_value_t truncateTo(seconds_t seconds,nanos_t nano,ChronoUnit unit){
@@ -121,10 +120,8 @@ public:
     constexpr Duration():seconds(0),nanos(0){}
     constexpr Duration(const Duration&)=default;
     constexpr Duration(Duration&&)=default;
-    Duration(const Duration&&)=delete;
     constexpr Duration& operator=(const Duration&)=default;
     constexpr Duration& operator=(Duration&&)=default;
-    constexpr Duration& operator=(const Duration&&)=delete;
     ~Duration()=default;
     /*
         Produces a duration by a given number of seconds, adjusted by the given nanoseconds.
@@ -147,7 +144,7 @@ public:
      */
     template<typename Rep,typename Period> constexpr Duration(std::chrono::duration<Rep,Period> d):
     	seconds{std::chrono::duration_cast<std::chrono::seconds>(d).count()},
-		nanos{(std::chrono::duration_cast<std::chrono::nanoseconds>(d)%1000000000ns).count()}{}
+		nanos{(std::chrono::duration_cast<std::chrono::nanoseconds>(d%1000000000ns)).count()}{}
     /*
         Produces a new duration that equivalent to the given duration subtracted from this duration.
     */
@@ -165,20 +162,20 @@ public:
     /*
         Produces a new duration that is equivalent to this duration, with the given number of seconds added.
     */
-    constexpr Duration addSeconds(int64_t s)const{
+    constexpr Duration addSeconds(seconds_t s)const{
     	return Duration{seconds+s,nanos};
     }
 
     /*
         Gets the seconds field of this Instant.
     */
-    constexpr int64_t getSeconds()const{
+    constexpr seconds_t getSeconds()const{
     	return seconds;
     }
     /*
         Gets the nanoseconds field of this Instant.
     */
-    constexpr int     getNanos()const{
+    constexpr nanos_t     getNanos()const{
     	return nanos;
     }
     /*
@@ -473,11 +470,18 @@ public:
     	return hashcode(seconds)*31+hashcode(nanos);
     }
 
-    template<typename Duration> operator std::chrono::time_point<instant_clock,Duration>()const{
-    	return std::chrono::time_point_cast<Duration>(std::chrono::time_point<instant_clock,std::chrono::seconds>(seconds)+std::chrono::nanoseconds(nanos));
+	template<typename Duration> operator std::chrono::time_point<instant_clock, Duration>()const {
+		return std::chrono::time_point_cast<Duration>(std::chrono::time_point<instant_clock, std::chrono::seconds>{std::chrono::seconds{ seconds }}+std::chrono::nanoseconds{ nanos });
     }
 
 };
+
+template<typename T> T&& Duration::wait(const Duration& d, T&& t) {
+	Instant start{ now };
+	while (start + d > Instant{ now });
+	return std::forward<T>(t);
+}
+
 /*
     Instant Constant Representing the Epoch (January 01, 1970 at 00:00:00 Exactly UTC)
 */

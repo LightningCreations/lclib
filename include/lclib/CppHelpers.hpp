@@ -36,14 +36,14 @@ template<std::size_t N> constexpr const char* nameHash(const char(&str)[N],char 
 	return out;
 }
 
-#define __mkstatic_warn0(id,bconstexpr,message)template<bool> struct id{\
+#define __mkstatic_warn0(id,val,message)template<bool> struct id{\
 	constexpr explicit id()=default;\
 	};\
-[[deprecated(message)]] template<> struct id<false>{\
+ template<> struct [[deprecated(message)]] id<false>{\
 	constexpr explicit id()=default;\
-	}; constexpr id<val> __UNIQUE__ {}
+	}; constexpr id<val> __UNIQUE__() {}
 
-#define static_warn(bconstexpr,message)__mkstatic_warn0(UNIQUEID(static_warn_class),bconstexpr,message)
+#define static_warn(bconstexpr,message)__mkstatic_warn0(__UNIQUE__(),bconstexpr,message)
 
 
 #endif /* __INCLUDE_CPPHELPERS_HPP__2018_09_10_14_04 */

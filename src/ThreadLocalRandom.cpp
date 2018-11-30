@@ -21,7 +21,10 @@ static uint64_t genTLRSeed(){
 	return ret;
 }
 
-thread_local Random TLRPool::rand{genTLRSeed()};
+Random& TLRPool::threadLocalRandom() {
+	thread_local static Random val{ genTLRSeed() };
+	return val;
+}
 
 
 

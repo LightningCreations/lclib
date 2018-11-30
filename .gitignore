@@ -31,3 +31,7 @@
 *.out
 *.app
 /.cproject
+
+#Visual Studio Stuff
+**/.vs/**
+**/Debug/**

@@ -7,11 +7,12 @@
 
 #ifndef __INCLUDE_LCLIB_CXX_SPAN_HPP__2018_09_27_09_16_01
 #define __INCLUDE_LCLIB_CXX_SPAN_HPP__2018_09_27_09_16_01
+#include <lclib/Config.hpp>
+#include <lclib/TypeTraits.hpp>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
-#include <lclib/Config.hpp>
-#include <lclib/TypeTraits.hpp>
+
 #include <algorithm>
 #include <array>
 constexpr const std::ptrdiff_t dynamic_extent{-1};
@@ -373,7 +374,7 @@ template<typename T,std::size_t N> span(std::array<T,N>&) -> span<T,N>;
 template<typename T,std::size_t N> span(const std::array<T,N>&) -> span<const T,N>;
 template<typename T> span(T*,T*) -> span<T>;
 template<typename T> span(T*,std::size_t) ->span<T>;
-template<typename Container> span(Container&)->span<std::remove_reference_t<decltype(*std::data(std::declval<Container&>()))>;
-template<typename Container> span(const Container& c)->span<std::remove_reference_t<decltype(*std::data(std::declval<const Container&>()))>;
+template<typename Container> span(Container&)->span<std::remove_reference_t<decltype(*std::data(std::declval<Container&>()))>>;
+template<typename Container> span(const Container& c)->span<std::remove_reference_t<decltype(*std::data(std::declval<const Container&>()))>>;
 
 #endif /* __INCLUDE_LCLIB_CXX_SPAN_HPP__2018_09_27_09_16_01 */

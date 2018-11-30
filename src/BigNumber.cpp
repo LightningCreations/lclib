@@ -15,7 +15,7 @@ using security::BigNumber;
 using namespace security::big_integer_literals;
 
 
-BigNumber<256> operator ""_bn(const char* c,std::size_t n){
+BigNumber<256> security::big_integer_literals::operator ""_bn(const char* c,std::size_t n){
 	const char* end = c+n;
 	BigNumber<256> ret{};
 	while(c!=end){
@@ -25,11 +25,11 @@ BigNumber<256> operator ""_bn(const char* c,std::size_t n){
 	return ret;
 }
 
-BigNumber<256> operator ""_bn(const char* c){
+BigNumber<256> security::big_integer_literals::operator ""_bn(const char* c){
 	return operator""_bn(c,strlen(c));
 }
 
-BigNumber<256> operator ""_bn(unsigned long long l){
+BigNumber<256> security::big_integer_literals::operator ""_bn(unsigned long long l){
 	return l;
 }
 

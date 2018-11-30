@@ -41,9 +41,9 @@ private:
 	static_assert(std::is_same_v<CharT,typename CharTraits::char_type>,"CharTraits have CharT as its character type");
 	Predicate pred;
 public:
-	case_insensitive_order()=default;
-	case_insensitive_order(const case_insensitive_order&)=default;
-	case_insensitive_order& operator=(const case_insensitive_order&)=default;
+	constexpr case_insensitive_order()=default;
+	constexpr case_insensitive_order(const case_insensitive_order&)=default;
+	constexpr case_insensitive_order& operator=(const case_insensitive_order&)=default;
 	template<typename A1,typename A2> bool operator()(const std::basic_string<CharT,CharTraits,A1>& s1,const std::basic_string<CharT,CharTraits,A2>& s2)const{
 		return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(),std::ref(*this));
 	}

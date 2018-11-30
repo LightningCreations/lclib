@@ -7,7 +7,8 @@
 
 #ifndef __INCLUDE_LCLIB_CXX_FUNCTIONTYPEHASH_HPP__2018_09_30_20_42_33
 #define __INCLUDE_LCLIB_CXX_FUNCTIONTYPEHASH_HPP__2018_09_30_20_42_33
-#include <TypeHash.hpp>
+#include <type_traits>
+#include <lclib/TypeHash.hpp>
 namespace types{
 	template<typename Ret,typename... Args> struct TypeHash<Ret(Args...),
 			std::void_t<decltype(TypeHash<Ret>{}()),decltype(TypeHash<Args>{}())...>>:

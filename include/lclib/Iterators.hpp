@@ -9,6 +9,7 @@
 #define __INCLUDE_LCLIB_CXX_ITERATORS_HPP__2018_10_29_13_15_29
 
 #include <type_traits>
+#include <lclib/TypeTraits.hpp>
 #include <iterator>
 
 template<typename Itr1,typename Itr2,typename Predicate> struct split{
@@ -20,7 +21,7 @@ private:
 public:
 	using element_type = typename Itr1::element_type;
 	template<typename... Args,typename=std::enable_if_t<std::is_constructible_v<Predicate,Args...>>>
-		constexpr explicit split(Itr1 i1,Itr2 i2):i1(i1),i2(i2){}
+		constexpr explicit split(Itr1 i1,Itr2 i2,Args&&... args):i1(i1),i2(i2),pre(std::forward<Args>()...){}
 	constexpr split& operator++(){
 		return *this;
 	}

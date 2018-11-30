@@ -16,8 +16,6 @@
 #include <lclib/CppHelpers.hpp>
 using std::function;
 
-#warning Socket.hpp is deprecated. Use net/Socket.hpp and net/IPSocket.hpp instead
-
 /**
  * A Base class that describes that an socket/networking specific error occured.
  * All exceptions thrown by any method in the SocketIO Library must be a subclass

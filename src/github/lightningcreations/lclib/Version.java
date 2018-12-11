@@ -193,9 +193,6 @@ public final class Version implements Comparable<Version>, Externalizable,Clonea
 	public static Version read(DataInput in)throws IOException{
 		return new Version(in.readUnsignedShort());
 	}
-	public static Version get(github.lightningcreations.lclib.annotation.Version ver) {
-		return new Version(ver.value());
-	}
 	public /*const*/ VersionRange sameOrgin()/*const*/{
 		return new VersionRange(this,new Version(major,255));
 	}

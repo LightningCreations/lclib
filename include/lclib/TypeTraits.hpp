@@ -105,7 +105,7 @@ template<typename T,typename U> constexpr const bool can_contain_v = can_contain
  * Checks if T is a byte type, a special subset of the scalar types with sizeof(T)==1.
  * By default is_byte is only specialized for char, unsigned char, signed char, or std::byte (to inherit from true_type),
  * is_byte inherits from false_type for all other types.
- * This trait may be specialized for T
+ * This trait may be specialized for any user-defined type T
  * The behavior is undefined if it is specialized for any T which is not a scalar type with sizeof(T)==1.
  * The behavior is additionally undefined if it is specialized for any T which does not follow the rules layed out for
  * Byte data types as specified by Special Object types.

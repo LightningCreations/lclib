@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/CPATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/CPATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/CPLUS_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/CPLUS_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/C_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/C_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/append=true
+environment/buildEnvironmentInclude/cdt.managedbuild.config.llvm.clang.win32.cygwin.lib.debug.1997213697/appendContributed=true

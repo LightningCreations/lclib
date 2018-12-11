@@ -35,3 +35,4 @@
 #Visual Studio Stuff
 **/.vs/**
 **/Debug/**
+/Debug/

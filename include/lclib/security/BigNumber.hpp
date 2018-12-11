@@ -254,6 +254,10 @@ namespace security{
 			return !std::any_of(block,block+N,[](auto a){ return static_cast<unsigned char>(a)==0;});
 		}
 
+		BigNumber& operator--(){
+			return (*this)-=1;
+		}
+
 
 		template<std::size_t N1> BigNumber& operator+=(const BigNumber<N1,byte>& n){
 			return (*this = BigNumber{(*this)+n});
@@ -267,6 +271,9 @@ namespace security{
 				return 0;
 			while(b){
 				if(!b.isMultipleTwo())
+					ret += ret,b/=2;
+				else
+					ret += b1,--b;
 			}
 			return b1;
 		}

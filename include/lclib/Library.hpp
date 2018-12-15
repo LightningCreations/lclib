@@ -19,6 +19,8 @@ struct LIBLCAPI lclib_cxx{
 	static const uint16_t patch;
 	static const char releaseDate[];
 	static const char releaseTime[];
+	static const char providerName[];
+	static const char providerPublic[];
 };
 
 

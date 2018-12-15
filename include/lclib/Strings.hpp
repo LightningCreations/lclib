@@ -13,14 +13,10 @@
 #include <lclib/TypeTraits.hpp>
 
 template<typename CharT> constexpr CharT* strend(CharT* cstr){
-	for(;*cstr!=0;cstr++);
-	return cstr;
+	return const_cast<CharT*>(std::basic_string_view<CharT>{cstr}.end());
 }
 
-template<typename CharT> constexpr const CharT* strend(const CharT* cstr){
-	for(;*cstr!=0;cstr++);
-	return cstr;
-}
+
 /**
  * Case Insensitive comparator for Strings and char types.
  * Specifically, a given specialization of case_insenitive_order can Compare
@@ -34,36 +30,76 @@ template<typename CharT> constexpr const CharT* strend(const CharT* cstr){
  * 	Must satisfy CharTraits, DefaultConstructible, and have typename CharTraits::char_type be CharT
  * \template parameter Predicate: The Underlying Comparator Predicate to use (defaults to std::less<CharT>)
  */
-template<typename CharT,typename CharTraits=std::char_traits<CharT>,typename Predicate=std::less<CharT>> struct case_insensitive_order{
+template<typename CharT=void,typename Predicate=std::less<CharT>> struct case_insensitive_order{
 private:
 	static_assert(is_char_v<CharT>,"case_insensitive_order requires a Char Type");
 	static_assert(std::is_default_constructible_v<Predicate>,"Predicate must be default constructible");
-	static_assert(std::is_same_v<CharT,typename CharTraits::char_type>,"CharTraits have CharT as its character type");
+	static_assert(std::is_invocable_r_v<bool,Predicate,CharT,CharT>,"Predicate must be a Binary Predicate accepting values of type CharT");
 	Predicate pred;
 public:
+	using is_transparent = std::true_type;
 	constexpr case_insensitive_order()=default;
 	constexpr case_insensitive_order(const case_insensitive_order&)=default;
 	constexpr case_insensitive_order& operator=(const case_insensitive_order&)=default;
-	template<typename A1,typename A2> bool operator()(const std::basic_string<CharT,CharTraits,A1>& s1,const std::basic_string<CharT,CharTraits,A2>& s2)const{
+	template<typename A1,typename A2,typename CharTraits> bool operator()(const std::basic_string<CharT,CharTraits,A1>& s1,const std::basic_string<CharT,CharTraits,A2>& s2)const{
 		return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(),std::ref(*this));
 	}
-	bool operator()(const std::basic_string_view<CharT,CharTraits>& sv1,const std::basic_string_view<CharT,CharTraits>& sv2)const{
+	template<typename CharTraits> bool operator()(const std::basic_string_view<CharT,CharTraits>& sv1,const std::basic_string_view<CharT,CharTraits>& sv2)const{
 		return std::lexicographical_compare(sv1.begin(),sv1.end(),sv2.begin(),sv2.end(),std::ref(*this));
 	}
-	template<typename Alloc> bool operator()(const std::basic_string<CharT,CharTraits,Alloc>& s1,const std::basic_string_view<CharT,CharTraits>& sv2)const{
+	template<typename Alloc,typename CharTraits> bool operator()(const std::basic_string<CharT,CharTraits,Alloc>& s1,const std::basic_string_view<CharT,CharTraits>& sv2)const{
 		return std::lexicographical_compare(s1.begin(),s1.end(),sv2.begin(),sv2.end(),std::ref(*this));
 	}
-	template<typename Alloc> bool operator()(const std::basic_string_view<CharT,CharTraits>& sv1,const std::basic_string<CharT,CharTraits,Alloc>& s2)const{
+	template<typename Alloc,typename CharTraits> bool operator()(const std::basic_string_view<CharT,CharTraits>& sv1,const std::basic_string<CharT,CharTraits,Alloc>& s2)const{
 		return std::lexicographical_compare(sv1.begin(),sv1.end(),s2.begin(),s2.end(),std::ref(*this));
 	}
 	bool operator()(const CharT* s1,const CharT* s2){
-		return std::lexicographical_compare(s1,strend(s1),s2,strend(s2),std::ref(*this));
+		return (*this)(std::basic_string_view<CharT>{s1},std::basic_string_view<CharT>{s2});
 	}
 	bool operator()(CharT c1,CharT c2)const{
 		std::locale l{};
 		return pred(std::toupper(c1, l),toupper(c2,l));
 	}
 };
+
+template<typename Predicate> struct case_insensitive_order<void,Predicate>{
+private:
+	static_assert(std::is_default_constructible_v<Predicate>,"Predicate must be default constructible");
+	Predicate pred;
+public:
+	using is_transparent = std::true_type;
+	constexpr case_insensitive_order()=default;
+	constexpr case_insensitive_order(const case_insensitive_order&)=default;
+	constexpr case_insensitive_order& operator=(const case_insensitive_order&)=default;
+	template<typename CharT,typename A1,typename A2,typename CharTraits> auto operator()(const std::basic_string<CharT,CharTraits,A1>& s1,const std::basic_string<CharT,CharTraits,A2>& s2)const
+	 -> decltype((*this)(s1[0],s2[0])){
+		return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(),std::ref(*this));
+	}
+	template<typename CharT,typename CharTraits> auto operator()(const std::basic_string_view<CharT,CharTraits>& sv1,const std::basic_string_view<CharT,CharTraits>& sv2)const
+	-> decltype((*this)(sv1[0],sv2[0])){
+		return std::lexicographical_compare(sv1.begin(),sv1.end(),sv2.begin(),sv2.end(),std::ref(*this));
+	}
+	template<typename CharT,typename Alloc,typename CharTraits> auto operator()(const std::basic_string<CharT,CharTraits,Alloc>& s1,const std::basic_string_view<CharT,CharTraits>& sv2)const
+	-> decltype((*this)(s1[0],sv2[0])){
+		return std::lexicographical_compare(s1.begin(),s1.end(),sv2.begin(),sv2.end(),std::ref(*this));
+	}
+	template<typename CharT,typename Alloc,typename CharTraits> auto operator()(const std::basic_string_view<CharT,CharTraits>& sv1,const std::basic_string<CharT,CharTraits,Alloc>& s2)const
+	-> decltype((*this)(sv1[0],s2[0])){
+		return std::lexicographical_compare(sv1.begin(),sv1.end(),s2.begin(),s2.end(),std::ref(*this));
+	}
+	template<typename CharT> auto operator()(const CharT* s1,const CharT* s2)const
+	-> decltype((*this)(s1[0],s2[0])){
+		return (*this)(std::basic_string_view<CharT>{s1},std::basic_string_view<CharT>{s2});
+	}
+	template<typename CharT> auto operator()(CharT c1,CharT c2)const -> std::enable_if_t<is_char_v<CharT>&&std::is_invocable_r_v<bool,Predicate,CharT,CharT>,bool>{
+		using std::toupper;
+		std::locale l{};
+		return pred(toupper(c1, l),toupper(c2,l));
+	}
+};
+
+
+case_insensitive_order() -> case_insensitive_order<void,std::less<void>>;
 
 
 

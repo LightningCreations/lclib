@@ -160,6 +160,9 @@ namespace security{
 	 */
 	template<typename CharT,typename CharTraits=std::char_traits<CharT>,typename Allocator=std::allocator<CharT>> using basic_string = std::basic_string<CharT,CharTraits,SecureAllocator<CharT,Allocator>>;
 	using string = basic_string<char>;
+#if defined(__cpp_char8_t)&&__cpp_char8_t>=201811L
+	using u8string = basic_string<char8_t>;
+#endif
 	using wstring = basic_string<wchar_t>;
 	using u16string = basic_string<char16_t>;
 	using u32string = basic_string<char32_t>;

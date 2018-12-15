@@ -32,6 +32,8 @@ LIBNAME = -Wl,-soname,liblc.so
 
 DIRS := out/ out/UI/ out/impl/ out/impl/linux/
 
+BASE_DIR := out/
+
 .PHONY: all FORCE install uninstall clean rebuild relink cxxheaders cheaders out version
 .DEFAULT: all
 .IGNORE: $(DIRS)
@@ -51,11 +53,11 @@ FORCE: ;
 $(OUTPUT): $(OBJECT_FILES) $(LINFO_OBJ)
 	$(CXX) $(LINKER_FLAGS) $(LIBNAME) -o $@ $(LIBS) $^
 
-out/: 
-	mkdir $@/
+$(BASE_DIR): 
+	mkdir $@
 	$(MAKE) $(DIRS)
 	
-out/%/: out
+$(BASE_DIR)%/: $(BASE_DIR)
 	mkdir $@
 
 

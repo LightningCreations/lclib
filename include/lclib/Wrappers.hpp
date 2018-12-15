@@ -66,13 +66,15 @@ public:
      * The PolymorphicWrapper owns no object of any type.
      * \Exceptions: Non-throwing
      */
-    PolymorphicWrapper()noexcept(true):val(nullptr){}
+    constexpr PolymorphicWrapper()noexcept(true):val(nullptr){}
     /**
      * Moves Constructs a PolymorphicWrapper.
      * The new PolymorphicWrapper takes ownership of the moved-from PolymorphicWrapper.
      * \Exceptions: Non-throwing
      */
-    PolymorphicWrapper(PolymorphicWrapper&& r)noexcept(true):val(std::exchange(r.val,nullptr)){}
+    constexpr PolymorphicWrapper(PolymorphicWrapper&& r)noexcept(true):val(std::exchange(r.val,nullptr)){}
+    template<typename U,typename=derived_type<U>> constexpr PolymorphicWrapper(PolymorphicWrapper<U>&& r) noexcept(true):val(std::exchange(r.val,nullptr)){}
+
     ~PolymorphicWrapper(){
 		delete val;
     }
@@ -269,10 +271,8 @@ public:
      * The current object gains ownership of r's owned value.
      * \Exceptions: Non-throwing
      */
-    PolymorphicWrapper& operator=(PolymorphicWrapper&& r)noexcept(true){
-    	if(val)
-    		delete val;
-        val = std::exchange(r.val,nullptr);
+    PolymorphicWrapper& operator=(PolymorphicWrapper&& rhs)noexcept(true){
+    	swap(*this,rhs);
         return *this;
     }
     /**
@@ -295,10 +295,9 @@ public:
 
 
 
-template<typename T> PolymorphicWrapper(T&&) ->PolymorphicWrapper<T>;
-template<typename T> PolymorphicWrapper(const T&) -> PolymorphicWrapper<T>;
+template<typename T> PolymorphicWrapper(T) ->PolymorphicWrapper<T>;
 template<typename T> PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicWrapper<T>;
-template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>,Args&&...) -> PolymorphicWrapper<T>;
+template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>,Args...) -> PolymorphicWrapper<T>;
 
 
 

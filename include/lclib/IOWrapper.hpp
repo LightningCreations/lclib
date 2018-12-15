@@ -5,6 +5,7 @@
 #include <string>
 #include <lclib/Version.hpp>
 #include <lclib/UUID.hpp>
+#include <exception>
 #include <stdexcept>
 #include <cstddef>
 #include <lclib/Vector.hpp>
@@ -16,6 +17,12 @@
 #endif
 #include <lclib/TypeTraits.hpp>
 #undef EOF
+
+#if defined(__cpp_char8_t)&&__cpp_char8_t>=201811L
+	typedef char8_t u8char;
+#else
+	typedef char u8char;
+#endif
  class FileNotFoundException:public std::exception{
 public:
 	 const char* what()const noexcept(true) override;
@@ -310,7 +317,7 @@ public:
      * an EOFException is thrown.
      * \Exceptions: Same as readFully
      */
-     std::string readString();
+     std::basic_string<u8char> readString();
     /**
      * Reads a 4-byte value, as if by readInt(), from the stream which is then interpreted as a float.
      * The behavior is undefined unless the value was written by the writeFloat method of DataOutputStream,
@@ -400,6 +407,9 @@ public:
      * \Exceptions: Same as readFully
      */
      DataInputStream& operator>>(std::string&);
+#if defined(__cpp_char8_t)&&__cpp_char8_t>=201811L
+     DataInputStream& operator>>(std::u8string&);
+#endif
     /**
      * Overload of the Read-From-Stream operator for Verison
      * This function acts as if the version is initialized with a 2-byte value read in big-endian byte order as though by readUnsignedShort()
@@ -709,6 +719,9 @@ public:
 	 * \Exceptions: same as write
 	 */
      void writeString(const std::string&);
+#if defined(__cpp_char8_t)&&__cpp_char8_t>=201811L
+     void writeString(const std::u8string&);
+#endif
     /**
      * Writes a 4-byte float to the stream.
      * The float is interpreted as a 4-byte value, then written as if by writeInt, except that it cannot be read by readInt.
@@ -741,6 +754,10 @@ public:
      DataOutputStream& operator<<(uint64_t);
      DataOutputStream& operator<<(int64_t);
      DataOutputStream& operator<<(const std::string&);
+
+#if defined(__cpp_char8_t)&&__cpp_char8_t>201811L
+     DataOutputStream& operator<<(const std::u8string&);
+#endif
     /**
      * Writes a given UUID to the stream, by writing the high then the low bits as if by writeLong
      */

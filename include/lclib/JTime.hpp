@@ -12,9 +12,14 @@ enum class ChronoUnit{
     MINUTES, HOURS
 };
 
-using chrono_value_t = int64_t;
+using chrono_val_t = int64_t;
 using seconds_t = int64_t;
 using nanos_t = unsigned;
+
+using seconds_duration = std::chrono::duration<seconds_t>;
+using nanos_duration = std::chrono::duration<nanos_t,std::nano>;
+using base_duration = std::chrono::duration<chrono_val_t,std::milli>;
+using max_duration = std::chrono::duration<chrono_val_t,std::nano>;
 
 using namespace std::chrono_literals;
 
@@ -25,7 +30,7 @@ using namespace std::chrono_literals;
  * Otherwise the value is truncated or extended
  * Returns 0 if unit is not a valid Enumerator of ChronoUnit.
  */
-constexpr seconds_t toSeconds(chrono_value_t val,ChronoUnit unit){
+constexpr seconds_t toSeconds(chrono_val_t val,ChronoUnit unit){
 	if(val<0)
 		switch(unit){
 		case ChronoUnit::SECONDS: return val;
@@ -73,7 +78,7 @@ constexpr nanos_t toNanos(uint64_t val,ChronoUnit unit){
  *  if the precision of the pair is less than the precision of the unit.
  * returns 0 if unit is not a valid Enumerator of ChronoUnit.
  */
-constexpr chrono_value_t truncateTo(seconds_t seconds,nanos_t nano,ChronoUnit unit){
+constexpr chrono_val_t truncateTo(seconds_t seconds,nanos_t nano,ChronoUnit unit){
 	switch(unit){
 	case ChronoUnit::HOURS:
 		return seconds/3600;
@@ -98,14 +103,14 @@ constexpr chrono_value_t truncateTo(seconds_t seconds,nanos_t nano,ChronoUnit un
  * Otherwise effectively returns toNanos(uint64_t(val),unit);
  * Returns 0 if unit is not a valid enumerator of ChronoUnit.
  */
-constexpr nanos_t toNanos(chrono_value_t val,ChronoUnit unit){
+constexpr nanos_t toNanos(chrono_val_t val,ChronoUnit unit){
 	if(val<0)
 		return (1000000000-toNanos(uint64_t(-val),unit))%1000000000;
 	else
 		return toNanos(uint64_t(val),unit);
 }
 
-constexpr const nanos_t NANOS_PER_SECOND = 1000000000;
+constexpr const nanos_t NANOS_PER_SECOND{1000000000};
 
 /*
     A class that represents a Duration between 2 Instants.
@@ -117,7 +122,7 @@ private:
     nanos_t nanos;
 
 public:
-    constexpr Duration():seconds(0),nanos(0){}
+    constexpr Duration():seconds{0},nanos{0}{}
     constexpr Duration(const Duration&)=default;
     constexpr Duration(Duration&&)=default;
     constexpr Duration& operator=(const Duration&)=default;
@@ -137,7 +142,7 @@ public:
     /*
         Produces a duration by a given Number of a specific unit.
     */
-    constexpr Duration(chrono_value_t val,ChronoUnit unit):seconds{toSeconds(val,unit)},nanos{toNanos(val,unit)}{}
+    constexpr Duration(chrono_val_t val,ChronoUnit unit):seconds{toSeconds(val,unit)},nanos{toNanos(val,unit)}{}
 
     /**
      * Conversion constructor from a chrono duration.
@@ -275,12 +280,6 @@ public:
 
 /**
  * The type which represents the clock used by Instants.
- * Note: Prior to C++20, time points from this clock were not guaranteed
- * 	to be relative to the unix epoch. (January 1st, 1970 at 12:00:00.0000000000 UTC)
- * Instants defined in any other version are relative to the epoch of the system clock.
- *
- * Interoperation with Other Instances of LCLib is only well defined if both uses the same epoch.
- * Interoperation with Java is only well defined if this epoch holds.
  */
 using instant_clock = std::chrono::system_clock;
 
@@ -489,11 +488,11 @@ constexpr Instant EPOCH{};
 /*
     Instant Constant Holding the Effective Max value for an instant (1<<63-1 seconds, 999999999 nanoseconds)
 */
-constexpr Instant MAX{31556889864401399LL,999999999};
+constexpr Instant MAX{seconds_t{31556889864401399},nanos_t{999999999}};
 /*
     Instant Constant Holding the Effective Minimum value for an instant (-1<<63 seconds)
 */
-constexpr Instant MIN{-31556889864401400LL};
+constexpr Instant MIN{seconds_t{-31556889864401400}};
 
 
 constexpr int hashcode(const Instant& i){
@@ -505,8 +504,9 @@ constexpr int hashcode(const Duration& d){
 }
 
 constexpr Duration ZERO{};
-constexpr Duration MAX_DURATION{31556889864401399,999999999};
-constexpr Duration MIN_DURATION{-31556889864401400};
+constexpr Duration MAX_DURATION{seconds_t{31556889864401399},nanos_t{999999999}};
+constexpr Duration MIN_DURATION{seconds_t{-31556889864401400}};
+constexpr Duration LOWEST_DURATION{seconds_t{},nanos_t{1}};
 
 namespace std{
 	template<> struct hash<Instant>{
@@ -521,6 +521,110 @@ namespace std{
 		constexpr hash()=default;
 		constexpr std::size_t operator()(const Duration& i)const{
 			return i.hashCode();
+		}
+	};
+	template<> struct numeric_limits<Instant>{
+		constexpr static bool is_specialized{true};
+		constexpr static bool is_signed{true};
+		constexpr static bool is_integer{false};
+		constexpr static bool is_exact{true};
+		constexpr static bool has_infinity{false};
+		constexpr static bool has_quiet_NaN{false};
+		constexpr static bool has_signaling_NaN{false};
+		constexpr static std::float_denorm_style has_denorm{std::denorm_absent};
+		constexpr static bool has_denorm_loss{false};
+		constexpr static std::float_round_style round_style{std::round_toward_zero};
+		constexpr static bool is_iec559{false};
+		constexpr static bool is_bounded{true};
+		constexpr static bool is_modulo{false};
+		constexpr static int digits{0};
+		constexpr static int digits10{0};
+		constexpr static int max_digits10{0};
+		constexpr static int radix{0};
+		constexpr static int min_exponent{0};
+		constexpr static int min_exponent10{0};
+		constexpr static int max_exponent{0};
+		constexpr static int max_exponent10{0};
+		constexpr static bool traps{false};
+		constexpr static bool tinyness_before{false};
+		constexpr static Instant min() noexcept{
+			return MIN;
+		}
+		constexpr static Instant lowest() noexcept{
+			return MIN;
+		}
+		constexpr static Instant max() noexcept{
+			return MAX;
+		}
+		constexpr static Duration epsilon() noexcept{ //Yes this returns a Duration, not an Instant
+			return LOWEST_DURATION;
+		}
+		constexpr static Instant round_error() noexcept{
+			return Instant{};
+		}
+		constexpr static Instant infinity() noexcept{
+			return Instant{};
+		}
+		constexpr static Instant quiet_NaN() noexcept{
+			return Instant{};
+		}
+		constexpr static Instant signaling_NaN() noexcept{
+			return Instant{};
+		}
+		constexpr static Instant denorm_min() noexcept{
+			return Instant{};
+		}
+	};
+	template<> struct numeric_limits<Duration>{
+		constexpr static bool is_specialized{true};
+		constexpr static bool is_signed{true};
+		constexpr static bool is_integer{false};
+		constexpr static bool is_exact{true};
+		constexpr static bool has_infinity{false};
+		constexpr static bool has_quiet_NaN{false};
+		constexpr static bool has_signaling_NaN{false};
+		constexpr static std::float_denorm_style has_denorm{std::denorm_absent};
+		constexpr static bool has_denorm_loss{false};
+		constexpr static std::float_round_style round_style{std::round_toward_zero};
+		constexpr static bool is_iec559{false};
+		constexpr static bool is_bounded{true};
+		constexpr static bool is_modulo{false};
+		constexpr static int digits{0};
+		constexpr static int digits10{0};
+		constexpr static int max_digits10{0};
+		constexpr static int radix{0};
+		constexpr static int min_exponent{0};
+		constexpr static int min_exponent10{0};
+		constexpr static int max_exponent{0};
+		constexpr static int max_exponent10{0};
+		constexpr static bool traps{false};
+		constexpr static bool tinyness_before{false};
+		constexpr Duration min() noexcept{
+			return MIN_DURATION;
+		}
+		constexpr Duration max() noexcept{
+			return MAX_DURATION;
+		}
+		constexpr Duration lowest() noexcept{
+			return LOWEST_DURATION;
+		}
+		constexpr Duration epsilon() noexcept{
+			return LOWEST_DURATION;
+		}
+		constexpr static Duration round_error() noexcept{
+			return Duration{};
+		}
+		constexpr static Duration infinity() noexcept{
+			return Duration{};
+		}
+		constexpr static Duration quiet_NaN() noexcept{
+			return Duration{};
+		}
+		constexpr static Duration signaling_NaN() noexcept{
+			return Duration{};
+		}
+		constexpr static Duration denorm_min() noexcept{
+			return Duration{};
 		}
 	};
 }

@@ -60,5 +60,15 @@ public:
 
 typedef basic_interop_istream<char> interop_istream;
 typedef basic_interop_ostream<char> interop_ostream;
+typedef basic_interop_istream<wchar_t> interop_wistream;
+typedef basic_interop_ostream<wchar_t> interop_wostream;
+#if defined(__cpp_char8_t)&&__cpp_char8_t>=201811L
+typedef basic_interop_istream<char8_t> interop_u8istream;
+typedef basic_interop_ostream<char8_t> interop_u8ostream;
+#endif
+typedef basic_interop_istream<char16_t> interop_u16istream;
+typedef basic_interop_ostream<char16_t> interop_u16ostream;
+typedef basic_interop_istream<char32_t> interop_u32istream;
+typedef basic_interop_ostream<char32_t> interop_u32ostream;
 
 #endif /* __INCLUDE_LCLIB_CXX_IOINTEROP_HPP__2018_10_17_13_13_45 */

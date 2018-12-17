@@ -1,6 +1,6 @@
 # Time Library #
 
-Defined in `<lclib-cxx/JTime.hpp>`
+Defined in `<lclib/JTime.hpp>`
 
 
 

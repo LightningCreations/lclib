@@ -61,6 +61,8 @@ class LIBLCAPI InputStream{
 protected:
     ~InputStream()=default;
 public:
+    void* operator new(std::size_t)=delete;
+    void operator delete(void*)=delete;
     InputStream()=default;
 
     InputStream(InputStream&&)=default;
@@ -465,6 +467,8 @@ class LIBLCAPI OutputStream{
 private:
     OutputStream(const OutputStream&)=delete;
     OutputStream& operator=(const OutputStream&)=delete;
+    void* operator new(std::size_t)=delete;
+    void operator delete(void*)=delete;
 protected:
     /**
 	 * Destroys the OutputStream.

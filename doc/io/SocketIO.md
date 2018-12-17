@@ -1,18 +1,19 @@
-<h1>SocketIO Library</h1>
-Included by `<Socket.hpp>`<br/>
+# SocketIO Library #
+
+Included by `<lclib/Socket.hpp>` <br/>
 Part of the io library and the Networking Library<br/>
 
-<h2>Deprecation</h2>
+## Deprecation ##
 
 This library is deprecated for the new Template Based Networking Library. 
 
 This library was based heavily on having a single implementation, using a Service Provider Interface system, and runtime polymorphism. 
 
-The New Networking Library uses Template based SPIs, and static polymorphism to implement generic services. It also supports extended socket interfaces, such as Datagram Sockets, and Non IP Based Sockets. 
+The New Networking Library uses Template based SPIs, and static polymorphism to implement generic services, which is generally more efficient than dynamic (runtime) polymorphism. It also supports extended socket interfaces, such as Datagram Sockets, and Non IP Based Sockets. 
 
 
 
-<h2>Synopsis</h2>
+## Synopsis ##
 
 ```cpp
 class SocketException:public std::exception;
@@ -33,7 +34,7 @@ std::unique_ptr<SocketImpl> newSocketHandle();
 std::unique_ptr<ServerSocketImpl> newServerSocketHandle();
 ```
 
-<h2>Overview</h2>
+## Overview ##
 
 Provides a strong, consistent Socket Based Networking Interface built off of IOWrapper and the Service Provider Interface Model. The providers for Sockets/Servers are called Handles and the default Provider can be set via setDefaultSocketHandleConstructor and setDefaultServerSocketHandleConstructors. 
 An implementation specific default handle constructor is provided so that sockets may be created. 
@@ -42,11 +43,11 @@ IO Access to sockets are provided through unspecified subclasses of InputStream 
 It is implied that any undefined behavior created within functions that may throw an exception is allowed to throw an exception for purposes of the Implementation.
 
 
-<h2>Classes</h2>
-<h3>SocketImpl</h3>
+## Classes ##
+### SocketImpl ###
 SocketImpl is the base of the Socket SPI Model. It is provided by the Implementation. It is used by Socket and ServerSocketImpl.
 
-<h4>Synopsis</h4>
+#### Synopsis ####
 
 ```cpp
 virtual void connect(const std::string&,uint16_t)=0;
@@ -60,7 +61,7 @@ virtual uint16_t getPort()const=0;
 
 ```
 
-<h4>Destructor</h4>
+#### Destructor ####
 
 ```cpp
 virtual ~SocketImpl()=default;
@@ -68,9 +69,9 @@ virtual ~SocketImpl()=default;
 
 Closes the socket handle and the underlying streams. Releases any reasources held by this socket. 
 
-<h4>Methods</h4>
+#### Methods ####
 
-<h5>connect</h5>
+##### connect #####
 
 ```cpp
 virtual void connect(const std::string& host,uint16_t port)=0;
@@ -81,7 +82,7 @@ The behavior is undefined if the host name is in an incorrect format for the pro
 
 The behavior is also undefined if the Socket has been previously connected.
 
-<h6>Exceptions</h6>
+###### Exceptions ######
 Any unspecified subclass of SocketException may be thrown for any reason. 
 In general an exception is thrown if:
 <ul>
@@ -95,7 +96,7 @@ In general an exception is thrown if:
 </ul>
 The value of the what() string of the Exception is Unspecified, but should be meaningfully describe the error.
 
-<h5>IO Interactions</h5>
+#### IO Interactions ####
 
 ```cpp
 virtual InputStream& getInputStream()=0; //(1)
@@ -109,7 +110,7 @@ The streams are guaranteed to exist for the remaining lifetime of the Socket, th
 
 The behavior is undefined if the socket has not succesfully connected, or has been closed.
 
-<h6>Exceptions</h6>
+###### Exceptions ######
 Either method may throw any Subclass of SocketException to indicate failure, for any reason. Also the potentially throwing methods of InputStream/OutputStream may also throw any subclass of SocketException for any reason. The rules regarding exceptions in these methods are described in IOWrapper.md. The exception is that the exceptions, and conditions which these exceptions are thrown is Unspecified, and do not have to be clearly documented. 
 Some causes for exceptions being thrown from these methods are as follows:
 <ul>

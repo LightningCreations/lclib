@@ -317,17 +317,17 @@ template<typename T,typename U,typename V,typename W> struct has_common_type<T,U
 >{};
 
 template<typename T, typename U, typename... Rest> struct has_common_type<T, U, Rest...> :std::disjunction<
-std::is_same<T,U,Rest...>,
 std::conjunction<
-	has_common_type<T, U>,
+	std::is_same<T,U>,
+	std::is_same<T,Rest>...
+>,std::conjunction<
 	has_common_type<T, Rest...>,
 	has_common_type<U, Rest...>,
 	has_common_type<Rest...,T>,
 	has_common_type<Rest...,U>,
 	has_common_type<Rest...>,
 	has_common_type<std::common_type_t<T,U>,Rest...>,
-	has_common_type<T,std::common_type_t<Rest...>>,
-	has_common_type<U,std::common_type_t<Rest...>>,
+	has_common_type<T,U,std::common_type_t<Rest...>>,
 	has_common_type<std::common_type_t<T,U>,std::common_type_t<Rest...>>,
 	has_common_type<std::common_type_t<T,U>,std::common_type_t<T,Rest...>,std::common_type_t<U,Rest...>>,std::common_type_t<Rest...>>,
 	std::is_same<std::common_type_t<T,std::common_type_t<T,U,Rest...>>,std::common_type_t<T,U,Rest...>>,

@@ -45,13 +45,16 @@ template<typename Tuple,typename Func,std::size_t... Is>
 
 template<typename Tuple,typename Func>
 	auto rebindTuple(Tuple&& t,Func&& f)
-		noexcept(rebindTuple_helper(std::declval<Tuple>(),std::declval<Func>(),std::make_index_sequence<std::tuple_size_v<Tuple>>{}))
+		noexcept(noexcept(rebindTuple_helper(std::declval<Tuple>(),std::declval<Func>(),std::make_index_sequence<std::tuple_size_v<Tuple>>{})))
 		->decltype(rebindTuple_helper(std::forward<Tuple>(t),std::forward(f),std::make_index_sequence<std::tuple_size_v<Tuple>>{}))
 		{
 			return rebindTuple_helper(std::forward<Tuple>(t),std::forward(f),std::make_index_sequence<std::tuple_size_v<Tuple>>{});
 		}
 
-template<typename T,typename U> copy_category<U&&,T> forward_from(U&& u,T&& val){
+template<typename T,typename U> constexpr copy_category<U&&,T> forward_from(U&& u,std::remove_reference_t<T>&& val) noexcept{
+	return static_cast<copy_category<U&&,T>>(val);
+}
+template<typename T,typename U> constexpr copy_category<U&&,T> forward_from(U&& u,std::remove_reference_t<T>& val) noexcept{
 	return static_cast<copy_category<U&&,T>>(val);
 }
 

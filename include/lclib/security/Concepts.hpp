@@ -185,27 +185,27 @@ namespace security{
 		template<typename T> concept Key=Byte<typename T::byte_type>&&requires(const T& t){
 			{t.data()} -> typename T::data_type;
 			{t.size()} -> std::size_t;
-		}
+		};
 
 		template<typename T> concept DestroyableKey=Key<T>&&requires(T& t){
 			{t.destroy()}
-		}
+		};
 
 		template<typename T> concept PrivateKey=DestroyableKey<T>&&requires(const T& t){
 			{t.publicKey()} -> typename T::public_key;
-		}
+		};
 		template<typename T> concept Padding=Byte<typename T::byte_type>&&requires(std::size_t sz,typename T::data_type dt){
 			{T::getPaddedSize(sz)} -> std::size_t;
 			{T::pad(dt,sz)};
 			{T::unpad(dt,sz)} -> std::size_t;
-		}
+		};
 
-		template<typename T> concept Transformer=Byte<typename T::byte_type>&&requires(T& t,typename T::input_type in,typename T::output_type out){
+		template<typename T> concept Transformer=Byte<typename T::byte_type>&&requires(T& t,typename T::input_type in,typename T::output_type out,std::size_t sz){
 			{T::blockSize}->std::size_t;
 			{t.transform(in,out)};
 			{t.update(in)};
-			{t.reverseTransform(in,sz,out);};
-		}
+			{t.reverseTransform(in,sz,out)};
+		};
 
 		template<typename T> concept SymmetricCipherAlgorithm=Byte<typename T::byte_type>&&Key<typename T::key>&&
 				Padding<typename T::padding>&&
@@ -215,7 +215,7 @@ namespace security{
 			{t.update(in,sz,out)};
 			{t.doFinal(out)};
 			{T::blockSize} -> std::size_t;
-		}
+		};
 		template<typename T> concept AsymmetricCipherAlgorithm=Byte<typename T::byte_type>&&
 				PrivateKey<typename T::private_key>&&Key<typename T::public_key>&&
 				Padding<typename T::padding>&&
@@ -226,7 +226,7 @@ namespace security{
 			{t.update(in,sz,out)};
 			{t.doFinal(out)};
 			{T::blockSize} -> std::size_t;
-		}
+		};
 		template<typename T> concept CipherAlgorithm=AsymmetricCipherAlgorithm<T>||SymmetricCipherAlgorithm<T>;
 
 		template<typename T> concept KeyGenerator=Byte<typename T::byte_type>
@@ -234,27 +234,27 @@ namespace security{
 			{T{}};
 			{T{std::move(x)}};
 			{t.newKey()} -> typename T::key;
-		}
+		};
 		template<typename T> concept KeyDerivationAlgorithm=
 				Byte<typename T::byte_type>&&Key<typename T::key>
 			&&requires(T& t,typename T::password_type pwd,typename T::salt_type salt,typename T::input_type raw){
 			{t.deriveKey(raw)}->typename T::key;
 			{t.deriveKey(pwd,salt)}->typename T::key;
-		}
+		};
 		template<typename T> concept KeyPairGenerator=Byte<typename T::byte_type>
 			&&PrivateKey<typename T::private_key>&&Key<typename T::public_key>
 			&&requires(T& t,typename T::source_type&& x){
 			{T{}};
-			{T{x}};
+			{T{std::move(x)}};
 			{t.newKeyPair()} -> std::pair<typename T::public_key,typename T::private_key>;
-		}
+		};
 		template<typename T> concept MessageDigestAlgorithm=Byte<typename T::byte_type>
 		&&requires(T& t,typename T::input_type in,std::size_t sz,typename T::output_type out){
 			{T::digestSize} -> std::size_t;
 			{t.init()};
 			{t.update(in,sz)};
 			{t.doFinal(out)};
-		}
+		};
 	}
 #endif
 	namespace traits{

@@ -1,6 +1,6 @@
 <h1>SHA Library</h1>
 
-Included from `<lclib-cxx\security\SHA.hpp>`<br/>
+Included from `<lclib\security\SHA.hpp>`<br/>
 
 The SHA Library is a part of the security library, which provides MessageDigestAlgorithms implementing The Secure Hash Algorithm.
 Presently Implementations for SHA1, SHA-224, SHA-256, SHA-384, and SHA-512 are available.

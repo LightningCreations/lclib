@@ -1,11 +1,13 @@
-<h1>Security Library Named Requirements</h1>
+# Security Library Named Requirements #
+
 This is part of the security library defining Concepts and named requirements of Security Types<br/>
-Included by &lt;security/Concepts.hpp&gt;<br/>
+Included by `<lclib/security/Concepts.hpp>`<br/>
+
 In `namespace security`
-<h2>Named Requirements</h2>
-<h3>Key</h3>
+# Named Requirements #
+### Key ###
 Key is named requirement in the LCLib C++ Security Library. It is the structure representation of a Cryptographic Key.
-<h4>Requirements:</h4>
+#### Requirements ####
 Given
 <ul>
 <li>T, a type which statisfies Key</li>
@@ -75,9 +77,10 @@ Given
 		<td></td>
 	</tr>
 </table>
-<h4>Notes</h4>
-If a type T satisfies Key, the type const T also satisifies Key. This does not hold for the subconcepts of Key.
-<h3>DestroyableKey</h3>
+#### Notes ####
+If a type T satisfies Key, the type const T also satisifies Key. This does not hold for the subconcepts of Key. (Until 1.3)
+### DestroyableKey ###
+
 DestroyableKey is a requirement which extends the Key concept. DestroyableKeys contain sensitive information which may need to be destroyed at will, and must be destroyed when the object is destroyed. In general, Private Keys and Secret Keys should satisfy destroyable key.
 <h4>Requirements</h4>
 Given:
@@ -119,9 +122,9 @@ T must satisfy Key (except that Copy and move constructors may be deleted)
 	</tr>
 </table>
 
-<h3>PrivateKey</h3>
-PrivateKey further extends the DestroyableKey concept, and exists for asymmetric encryption algorithms. PrivateKeys also provide an ability to (potentially) compute the public key.
-<h4>Requirements</h4>
+### PrivateKey ###
+PrivateKey further extends the DestroyableKey concept, and exists for asymmetric encryption algorithms. PrivateKeys also provide an ability to compute the public key.
+#### Requirements ####
 Given:
 <ul>
 <li>A type T which satisfies PrivateKey</li>
@@ -149,9 +152,9 @@ T must also Satisfy DestroyableKey
 	</tr>
 </table>
 
-<h3>Padding</h3>
+### Padding ###
 Padding concept is provided to allow Cipher Algorithms to pad incomplete blocks. Padding is a static concept, objects of types which satisfy Padding do not need to be created.
-<h4>Requirements</h4>
+#### Requirements ####
 Given:
 <ul>
 <li>T, a type which satisfies Padding</li>
@@ -197,10 +200,10 @@ Given:
 	</tr>
 </table>
 
-<h3>SymmetricCipherAlgorithm</h3>
+### SymmetricCipherAlgorithm ###
 Cipher Algorithm for Symmetric Ciphers (Like AES). 
 
-<h4>Requirements</h4>
+#### Requirements ####
 Given:
 <ul>
 <li>T, a type which satisfies SymmetricCipherAlgorithm</li>
@@ -275,10 +278,10 @@ Given:
 	</tr>
 </table>
 
-<h3>AsymmetricCipherAlgorithm</h3>
+### AsymmetricCipherAlgorithm ###
 Concept for Cipher Algorithms that use a different key for encryption/decryption (such as RSA).
 
-<h4>Requirements</h4>
+#### Requirements ####
 Given:
 
 <ul>
@@ -368,14 +371,14 @@ Given:
 	</tr>
 </table>
 
-<h3>CipherAlgorithm</h3>
+### CipherAlgorithm ###
 CipherAlgorithm is a generalized concept, which has specializations in SymmetricCipherAlgorithm and AsymmetricCipherAlgorithm.
 CipherAlgorithm does not have any explicit requirements, but All types which satisfy SymmetricCipherAlgorithm or AsymmetricCipherAlgorithm, and only such types, satisfy CipherAlgorithm.
 
-<h3>KeyGenerator</h3>
+### KeyGenerator ###
 KeyGenerator is a provided to generate random Keys for SymmetricCipherAlgorithms. KeyGenerator is a special NullaryFunctionalObject which returns a key when called.
 
-<h4>Requirements</h4>
+#### Requirements ####
 Given:
 <ul>
 <li>T, a type which satisfies KeyGenerator</li>
@@ -408,7 +411,7 @@ Given:
 		<td>
 			Must satisfy DefaultConstructible and MoveConstructible. Must also either: 
 			<ul>
-				<li> be a subclass of Random (defined in &lt;Random.hpp&gt;)</li>
+				<li> be a subclass of Random (defined in `<lclib/Random.hpp>`)</li>
 				<li>Satisfy UniformRandomBitGenerator</li>
 			</ul>
 		</td>
@@ -423,7 +426,7 @@ Given:
 		<td>T{r}</td>
 		<td>T</td>
 		<td>Initializes the internal random number generator by moving the state of r</td>
-		<td>If source_type is Non-Deterministic (such as std::random_device), this is equivalent to T{}</td>
+		<td>If `source_type` is Non-Deterministic (such as `std::random_device`), this is equivalent to T{}</td>
 	</tr>
 	<tr>
 		<td>t()</td>
@@ -433,10 +436,10 @@ Given:
 	</tr>
 </table>
 		
-<h3>KeyPairGenerator</h3>
+### KeyPairGenerator ###
 KeyPairGenerator is a provided to generate random Keys pairs for AsymmetricCipherAlgorithms. KeyGenerator is a special NullaryFunctionalObject which returns a key when called.
 
-<h4>Requirements</h4>
+#### Requirements ####
 Given:
 <ul>
 <li>T, a type which satisfies KeyGenerator</li>
@@ -460,13 +463,13 @@ Given:
 		<td>typename T::private_key</td>
 		<td>type alias</td>
 		<td>The PrivateKey type</td>
-		<td>Must satisfy PrivateKey. UB if key::byte_type is not the same as byte_type</td>
+		<td>Must satisfy PrivateKey. UB if `key::byte_type` is not the same as `byte_type`</td>
 	</tr>
 	<tr>
 		<td>typename T::public_key</td>
 		<td>type alias</td>
 		<td>The PublicKey type</td>
-		<td>Must satisfy Key. UB if this is not the same type as private_key::public_key</td>
+		<td>Must satisfy Key. UB if this is not the same type as `private_key::public_key`</td>
 	</tr>
 	<tr>
 		<td>typename T::source_type</td>
@@ -490,17 +493,17 @@ Given:
 		<td>T{r}</td>
 		<td>T</td>
 		<td>Initializes the internal random number generator by moving the state of r</td>
-		<td>If source_type is Non-Deterministic (such as std::random_device), this is equivalent to T{}</td>
+		<td>If `source_type` is Non-Deterministic (such as `std::random_device`), this is equivalent to T{}</td>
 	</tr>
 	<tr>
 		<td>t()</td>
-		<td>std::pair<T::public_key,T::private_key></td>
+		<td>std::pair<`T::public_key`,`T::private_key`></td>
 		<td>Generates a random Key Pair from the internal random number generator</td>
 		<td>The public key returned must be equivalent to value resulting from calling getPublicKey on the returned private key.</td>
 	</tr>
 </table>
 
-<h3>KeyDerivationAlgorithm</h3>
+### KeyDerivationAlgorithm ###
 KeyDerivationAlgorithm is an algorithm for turning arbitrary byte sequences, and salted passwords into keys. 
 <h4>Requirements</h4>
 Given:
@@ -557,10 +560,10 @@ Given:
 	</tr>
 </table>
 
-<h3>MessageDigestAlgorithm</h3>
+### MessageDigestAlgorithm ###
 Algorithm for the MessageDigest structure. MessageDigestAlgorithms hash or "digest" arbitary byte buffers, and returns a staticly sized hash. 
 
-<h4>Requirements</h4>
+#### Requirements ####
 Given:
 <ul>
 <li>T, a type which satisfies MessageDigestAlgorithm</li>
@@ -621,15 +624,14 @@ Given:
 	</tr>
 </table>
 
-<h2>Concepts</h2>
-Included with &lt;lclib-cxx/security/Concepts.hpp&gt;<br/>
-Requires LIBLCCXX_HAS_CONCEPTS<br/>
+## Concepts ##
+Included with `<lclib-cxx/security/Concepts.hpp>`<br/>
+Requires `LIBLCCXX_HAS_CONCEPTS`<br/>
 The Security API Provides a Set of Concepts if Concepts are supported by the compiler. 
 Each named requirement has a respective concept, declared in the security::concepts namespace.
 
-<h2>Type Traits</h2>
-Included with &lt;lclib-cxx/security/Concepts.hpp&gt;<br/>
+## Type Traits ##
+Included with `<lclib-cxx/security/Concepts.hpp>`<br/>
 The Security API Also provides a Set of legacy type traits, for when concepts may not be or are not available. 
 Each named requirement has a respective type trait, declared in the security::traits namespace.
-
 

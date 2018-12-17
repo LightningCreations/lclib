@@ -1,8 +1,9 @@
-<h1>Thread Safe Output</h1>
-Included by `<lclib-cxx/ThreadSafeIO.hpp>`<br/>
+# Thread Safe Output #
+
+Included by `<lclib/ThreadSafeIO.hpp>` <br/>
 Part of the io library
 
-<h2>Synopsis</h2>
+## Synopsis ##
 
 ```cpp
 struct async_t;
@@ -12,24 +13,24 @@ struct BulkOpWrapper;
 class TSOutputStream:public OutputStream;
 ```
 
-<h2>Overview</h2>
+## Overview ##
 
 Provides a wrapper for output streams which allow for asynchronous, and thread safe output. There is no equivalent wrapper for InputStreams due to possible issues with asynchronous reading. <br/>
 
 
-<h2>Classes</h2>
+## Classes ##
 
-<h3>struct async_t</h3>
+### struct async_t ###
 Tag type for opening TSOutputStreams initially in asynchronous mode. 
 This mode may be changed by the objects setSynchronous/setAsynchronous modes.
 
-<h3>struct in_progress</h3>
+### struct in_progress ###
 Exception type thrown by transaction methods to notify callers that the transaction was dispatched asynchronously and will complete at some point, before any others are dispatched.<br/>
 
-<h3>struct BulkOpWrapper</h3>
+### struct BulkOpWrapper ###
 Immobile RAII Struct which starts a bulk transaction in a given TSOutputStream& at construction, and stops the transaction at destruction.<br/>
 
-<h4>Constructors, Assignment Operators, and Destructor</h4>
+#### Constructors, Assignment Operators, and Destructor ####
 
 ```cpp
 BulkOpWrapper(TSOutputStream& out); //(1)
@@ -42,7 +43,7 @@ BulkOpWrapper& operator=(const BulkOpWrapper&)=delete; //(4)
 (2): Ends the bulk transaction in out. The Stream is released from exclusive/bulk transation mode<br/>
 (3),(4): BulkOpWrapper cannot be copied or moved.<br/>
 
-<h3>class TSOutputStream</h3>
+### class TSOutputStream ###
 
 Thread-safe Wrapper over OutputStreams. 
 The wrapped stream and this object have an ownership relationship, that is, the Wrapper "owns", rather then "wraps" the target stream. 
@@ -78,7 +79,7 @@ Bulk transactions started from the owning thread will join the same bulk transac
 Bulk transactions are transactions suitable for writing multiple bytes from individual calls to write(uint8_t), IE. writes requested by MB Write methods of DataOutputStream. <br/>
 It is the responsibility of the caller to ensure that any bulk transaction started is completed. This may be achieved using the BulkOpWrapper class.<br/><br/>
 
-<h4>Constructors, Assignment Operators, and Destructors</h4>
+#### Constructors, Assignment Operators, and Destructors ####
 
 ```cpp
 TSOutputStream(OutputStream& out); //(1)
@@ -93,7 +94,7 @@ TSOutputStream& operator=(const TSOutputStream&)=delete; //(5)
 (3): Closes the TSOutputStream when the current bulk transaction (if any) completes<br/>
 (4),(5): TSOutputStream is neither copyable, nor movable.<br/>
 
-<h4>Transaction Dispatch Methods</h4>
+#### Transaction Dispatch Methods ####
 
 ```cpp
 std::size_t write(const void* ptr,std::size_t sz); //(1)
@@ -110,7 +111,7 @@ Dispatches a transaction which calls the appropriate method in the underlying st
 In synchronous mode, throws anything that the respective method of the underlying stream throws.<br/>
 In Asynchronous mode, unconditionally throws in_progress.
 
-<h4>Mode Changing Atomic Operations</h4>
+#### Mode Changing Atomic Operations ####
 
 ```cpp
 void setSynchronous(); //(1)
@@ -120,7 +121,7 @@ Atomically changes the operation mode. The resultant mode of operation applies t
 (1): Subsequent transactions occur in synchronous mode. <br/>
 (2): Subsequent transactions occur in asynchronous mode.<br/>
 
-<h4>Stream Observers</h4>
+#### Stream Observers ####
 
 ```cpp
 std::size_t getTransactionResult()const; //(1)
@@ -132,7 +133,7 @@ bool waitFor()const; //(3)
 (2): Checks if an error is on the stream.<br/>
 (3): Waits for the active transaction to complete. Returns true if and only if the transaction completed without throwing an exception.<br/>
 
-<h4>Clear Error</h4>
+#### Clear Error ####
 
 ```cpp
 void clearError()noexcept;
@@ -140,7 +141,7 @@ void clearError()noexcept;
 
 Atomic operation which calls clearError() on the underlying stream. <br/>
 
-<h4>Exclusive/Bulk Operations</h4>
+#### Exclusive/Bulk Operations ####
 
 ```cpp
 void startBulk(); //(1)

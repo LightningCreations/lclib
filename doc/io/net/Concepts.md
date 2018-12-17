@@ -1,6 +1,6 @@
 <h1>Networking Library Concepts</h1>
 
-Included by `<lclib-cxx/Concepts.hpp>`<br/>
+Included by `<lclib/Concepts.hpp>`<br/>
 In `namespace net`<br/>
 
 Part of the IO Library and the Networking Library.<br/>

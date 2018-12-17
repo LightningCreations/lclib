@@ -86,6 +86,8 @@ int DataInputStream::readSingle(){
 }
 
 void DataInputStream::readFully(void* ptr,size_t size){
+	if(size==0)
+		return;
 	if(read(ptr,size)!=size)
 		throw EOFException();
 }

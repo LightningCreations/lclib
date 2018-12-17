@@ -1,6 +1,6 @@
 # PolymorphicWrapper #
 
-In header `<lclib-cxx/Wrappers.hpp>`<br/>
+In header `<lclib/Wrappers.hpp>`<br/>
 Provides a Type Erased Wrapper on a polymorphic type and its subclass.
 
 
@@ -10,7 +10,7 @@ Provides a Type Erased Wrapper on a polymorphic type and its subclass.
 template<typename T> class PolymorphicWrapper;
 ```
 
-<h2>PolymorphicWrapper</h2>
+## PolymorphicWrapper ##
 
 ```cpp
 template<typename T> class PolymorphicWrapper{

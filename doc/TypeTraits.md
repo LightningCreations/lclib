@@ -1,6 +1,6 @@
 # Type Traits Library #
 
-Included from `<lclib-cxx/TypeTraits.hpp>`. 
+Included from `<lclib/TypeTraits.hpp>`. 
 Provides several custom type traits, to extend the ones from `<type_traits>`.<br/> 
 
 ## General Rules ##
@@ -130,7 +130,7 @@ Alias for `typename require_types<T,Ts...>::type`.
 If `T` is a complete object type, then inherits from `std::true_type`. Otherwise, inherits from `std::false_type`. 
 Note that this will never be true for function types, or reference types, and will always be true for pointer types, even if the pointed to type is incomplete. 
 
-If `T` is a class or union type, and `is_complete<T>` or `is_complete_v<T>` is odr-used after `T` is completed in a translation unit, except if it is instantiated after `T` is completed in that translation unit, then the behavior is undefined. 
+If `T` is a class or union type or a cv-qualified variant thereof and `T` is completed in a translation unit where `is_complete<T>` or `is_complete_v<T>` is odr-used, then all odr-uses of `is_complete<T>` or `is_complete_v<T>` in the translation unit shall occur before `T` is completed or after `T` is completed or the behavior is undefined. If `is_complete<T>` or `is_complete_v<T>` is odr-used in the definition of `T`, the behavior is undefined. 
 
 ### constexpr bool `is_complete_v` ####
 

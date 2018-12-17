@@ -10,7 +10,8 @@ import java.nio.charset.StandardCharsets;
  * Provided for compatibility with LCLib-C++ IOWrapper (DataOutputStream in little endian byte order mode).
  * Bytes written by this class are suitable for being read by LCLib-C++'s DataInputStream in little-endian byte order mode,
  * or by LittleEndianDataInputStream.
- * Neither the writeBytes, nor writeChars method of This class are recommended to be used. writeUTF should be used to write strings
+ * Neither the writeBytes, nor writeChars method of This class are recommended to be used. They are not specified by LCLib and are not guaranteed to write data in Big Endian Byte order.
+ *  writeUTF should be used to write strings
  * @author Connor
  * @see LittleEndianDataInputStream
  */
@@ -66,12 +67,23 @@ public class LittleEndianDataOutputStream extends FilterOutputStream implements 
 		writeLong(Double.doubleToRawLongBits(v));
 
 	}
-
+	
+	/**
+	 * Writes the bytes of s to the stream.
+	 * This method is not specified by LCLib, and the results are unspecified.
+	 * No length prefix is written and the charset is unspecified
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void writeBytes(String s) throws IOException {
 		write(s.getBytes());
 	}
-
+	
+	/**
+	 * Writes the characters of the string to the stream.
+	 * It is unspecified if the characters (which are Utf-16 encoded unicode code points) are written in Little-Endian or Big-Endian byte order 
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void writeChars(String s) throws IOException {
 		for(char c:s.toCharArray())

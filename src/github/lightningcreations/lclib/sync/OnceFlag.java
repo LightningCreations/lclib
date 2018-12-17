@@ -1,9 +1,13 @@
 package github.lightningcreations.lclib.sync;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class OnceFlag {
-	private volatile boolean isSet;
+	private AtomicBoolean val = new AtomicBoolean();
 	public OnceFlag() {
 		// TODO Auto-generated constructor stub
 	}
+	
+	
 
 }

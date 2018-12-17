@@ -1,10 +1,13 @@
 package github.lightningcreations.lclib.numerics;
 
+import github.lightningcreations.lclib.annotation.Numeric;
+
 /**
  * Class which represents an immutable, Complex Number.
  * @author connor
  *
  */
+@Numeric(double.class)
 public final class Complex {
 	private double rr, ii;
 	/**
@@ -139,7 +142,7 @@ public final class Complex {
 		int result = 1;
 		long temp;
 		temp = Double.doubleToRawLongBits(ii);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = (int) (temp ^ (temp >>> 32));
 		temp = Double.doubleToRawLongBits(rr);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;

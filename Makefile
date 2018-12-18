@@ -1,6 +1,3 @@
-CXX := g++-8
-CC := gcc-8
-
 INCLUDE_PATH := include
 
 CXXHEAD := $(foreach ipath,$(INCLUDE_PATH),$(wildcard $(ipath)/**/*.hpp) $(wildcard $(ipath)/**/*.inl))
@@ -30,16 +27,15 @@ DEFINES = -DLCLIB_CXX_DEFINITION
 
 LIBNAME = -Wl,-soname,liblc.so
 
-DIRS := out/ out/UI/ out/impl/ out/impl/linux/
+DIRS := out out/UI out/impl out/impl/linux out/json
 
-BASE_DIR := out/
+BASE_DIR := out
 
-.PHONY: all FORCE install uninstall clean rebuild relink cxxheaders cheaders out version
+.PHONY: all FORCE install uninstall clean rebuild relink cxxheaders cheaders version
 .DEFAULT: all
-.IGNORE: $(DIRS)
 .PRECIOUS: Makefile $(DIRS)
 
-all: $(OUTPUT)
+all: $(DIRS) $(OUTPUT)
 
 version:
 	@echo $(CXX) version
@@ -52,14 +48,9 @@ FORCE: ;
 $(OUTPUT): $(OBJECT_FILES) $(LINFO_OBJ)
 	$(CXX) $(LINKER_FLAGS) $(LIBNAME) -o $@ $(LIBS) $^
 
-$(BASE_DIR): 
-	mkdir $@
-	$(MAKE) $(DIRS)
-	
-$(BASE_DIR)%/: $(BASE_DIR)
-	mkdir $@
-
-
+out:
+	mkdir out
+	mkdir $(DIRS)
 
 install:$(OUTPUT)
 	install $(OUTPUT) /usr/lib/
@@ -101,7 +92,7 @@ out/%.o: src/%.cpp $(D@) cxxheaders
 
 out/%.o: src/%.c $(D@) cheaders
 	$(CC) $(CC_FLAGS) $(DEFINES) -c $(INCLUDE) -o $@ $<
-	
+
 $(LINFO_OBJ): $(LINFO_OBJ:out/%.o=src/%.cpp) cxxheaders out/ $(OBJECT_FILES)
 	$(CXX) $(COMPILE_FLAGS) $(DEFINES) -c $(INCLUDE) -o $@ $<
 

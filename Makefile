@@ -1,5 +1,5 @@
-CXX := clang++
-CC := clang
+CXX := g++-8
+CC := gcc-8
 
 INCLUDE_PATH := include
 
@@ -20,9 +20,9 @@ OBJECT_FILES += out/UniqueRandomEngine.o
 
 LINFO_OBJ := out/LibraryInfo.o
 
-CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c11 -w -fwrapv
-COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -std=c++17 -w -fpermissive -fwrapv
-LINKER_FLAGS = -static-libstdc++ -shared -flinker-output=dyn -pthread
+CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -fpic -std=c11 -w -fwrapv
+COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -fpic -std=c++17 -w -fpermissive -fwrapv
+LINKER_FLAGS = -static-libstdc++ -shared -flinker-output=dyn -pthread -fpic
 LIBS = -lssl
 OUTPUT = liblc.so
 INCLUDE = $(foreach ipath,$(INCLUDE_PATH),-I$(ipath))
@@ -38,7 +38,6 @@ BASE_DIR := out/
 .DEFAULT: all
 .IGNORE: $(DIRS)
 .PRECIOUS: Makefile $(DIRS)
-.DELETE_ON_ERROR:
 
 all: $(OUTPUT)
 

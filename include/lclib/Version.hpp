@@ -17,6 +17,8 @@
 #include <lclib/Operations.hpp>
 #include <tuple>
 
+#undef major
+#undef minor
 
 using std::istream;
 using std::ostream;

@@ -18,9 +18,11 @@ FileInputStream::FileInputStream(FILE* f):underlying(f){
 }
 FileInputStream::FileInputStream(const char* c):FileInputStream(fopen(c,"rb")){}
 FileInputStream::FileInputStream(const std::string& str):FileInputStream(fopen(str.c_str(),"rb")){}
+
 #ifdef USE_PATH_CTORS
 FileInputStream::FileInputStream(const std::filesystem::path& p):FileInputStream(fopen(p.c_str(),"rb")){}
 #endif
+
 FileInputStream::~FileInputStream(){
     if(underlying!=nullptr&&underlying!=NULL)
         fclose(underlying);
@@ -198,7 +200,6 @@ bool OutputStream::operator!()const noexcept(true){
 	return checkError();
 }
 
-namespace fs = std::filesystem;
 
 FileOutputStream::FileOutputStream(FILE* f):underlying(f){
     if(underlying==NULL||underlying==nullptr)
@@ -210,8 +211,10 @@ FileOutputStream::FileOutputStream(const std::string& str):FileOutputStream(fope
 FileOutputStream::FileOutputStream(const char* c,append_t):FileOutputStream(fopen(c,"ab")){}
 FileOutputStream::FileOutputStream(const std::string& str,append_t):FileOutputStream(fopen(str.c_str(),"ab")){}
 
+#ifdef USE_PATH_CTORS
 FileOutputStream::FileOutputStream(const std::filesystem::path& p):FileOutputStream(fs::canonical(p).u8string()){}
 FileOutputStream::FileOutputStream(const std::filesystem::path& p,append_t):FileOutputStream(fs::canonical(p).u8string(),append){}
+#endif
 
 FileOutputStream::FileOutputStream(FileOutputStream&& f):underlying(std::exchange(f.underlying,nullptr)){}
 FileOutputStream::~FileOutputStream(){

@@ -11,6 +11,7 @@
 #include <string>
 #include <locale>
 #include <lclib/TypeTraits.hpp>
+#include <functional>
 
 template<typename CharT> constexpr CharT* strend(CharT* cstr){
 	return const_cast<CharT*>(std::basic_string_view<CharT>{cstr}.end());

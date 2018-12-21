@@ -9,16 +9,16 @@
 #include <chrono>
 #include <thread>
 #include <functional>
+#include <atomic>
 
 static uint64_t genTLRSeed(){
-	static uint64_t number{19884305634001};
+	static std::atomic<std::uint64_t> number{19884305634001};
 	static const uint64_t cprime{154431600453379};
 	const auto tp = std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());
 	const auto tidH = std::hash<std::thread::id>{}(std::this_thread::get_id());
-	const uint64_t ret = (tp.time_since_epoch().count()*number+tidH);
-	number *= cprime;
-	number += 1;
-	return ret;
+	uint64_t val{number.load()};
+	while(number.compare_exchange_strong(val, val*cprime+1));
+	return val*tp.time_since_epoch().count()+tidH;
 }
 
 Random& TLRPool::threadLocalRandom() {

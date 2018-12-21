@@ -336,6 +336,7 @@ std::conjunction<
 	>{};//Yes this gets unwieldy quickly.
 	//But there's not much choice. has_common_type requires comutative operations
 
+
 template<typename... Ts> constexpr bool has_common_type_v = has_common_type<Ts...>::value;
 
 #endif

@@ -105,7 +105,7 @@ public:
 			std::allocator_traits<Allocator>::construct(a, &p[n]);
 		p = std::launder(p);
 	}
-	template<typename U, typename = std::enable_if_t<std::is_constructible_v<T, U>&&std::is_default_constructible_v<Allocator>>>
+	template<typename U, typename = std::enable_if_t<std::is_constructible_v<T, const U&>&&std::is_default_constructible_v<Allocator>>>
 	explicit DynamicArray(const std::initializer_list<U>& il) :
 		sz{ a.size() } {
 		p = std::allocator_traits<Allocator>::allocate(a, sz);
@@ -119,19 +119,19 @@ public:
 		DynamicArray(InputIt begin, InputIt end) :sz{ std::distance(begin, end) } {
 		p = std::allocator_traits<Allocator>::allocate(a, sz);
 		for (std::size_t n = 0; n < sz; n++)
-			std::allocator_traits<Allocator>::construct(a, &p[n], *begin);
+			std::allocator_traits<Allocator>::construct(a, &p[n], *begin++);
 		p = std::launder(p);
 	}
 	template<typename Container,
 		std::enable_if_t<
 		std::is_constructible_v<DynamicArray, typename Container::const_iterator, typename Container::const_iterator>&&
-		std::is_convertible_v<typename Container::value_type, T>>*= 0>
+		std::is_convertible_v<typename Container::value_type, T>>* = 0>
 		DynamicArray(const Container& c) :DynamicArray(c.cbegin(), c.cend()) {}
 
 	template<typename Container,
 		std::enable_if_t<
 		std::is_constructible_v<DynamicArray, typename Container::const_iterator, typename Container::const_iterator> &&
-		!std::is_convertible_v<typename Container::value_type, T>>*= 0>
+		!std::is_convertible_v<typename Container::value_type, T>>* = 0>
 		explicit DynamicArray(const Container& c) :DynamicArray(c.cbegin(), c.cend()) {}
 
 	template<typename... Tuple,
@@ -164,6 +164,10 @@ public:
 		return p[i];
 	}
 
+	const_reference operator()(size_type i)const{
+		return p[i];
+	}
+
 	template<typename U>
 	auto operator()(size_type i, U&& t)->decltype(p[i][std::forward(t)]) {
 		return p[i][std::forward<U>(t)];
@@ -171,11 +175,6 @@ public:
 	template<typename U>
 	auto operator()(size_type i, U&& t)const->decltype(const_cast<const T*>(p)[i][std::forward<U>(t)]) {
 		return const_cast<const T*>(p)[i][std::forward<U>(t)];
-	}
-
-
-	const_reference operator()(size_type i)const{
-		return p[i];
 	}
 
 	iterator begin(){

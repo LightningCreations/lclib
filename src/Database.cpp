@@ -146,6 +146,7 @@ EndRowset::EndRowset(){}
 void DirectStatement::setInt(int,int){}
 void DirectStatement::setFloat(int,float){}
 void DirectStatement::setDouble(int,double){}
+void DirectStatement::setLong(int,int64_t){}
 void DirectStatement::setString(int,std::string_view){}
 Rowset& DirectStatement::executePreparedQuery(){
 	throw SQLException("No such query");
@@ -165,12 +166,12 @@ std::shared_mutex providersLock;
 
 std::vector<ConnectionProvider*> providers;
 
-void registerProvider(ConnectionProvider& provider){
+void db::registerProvider(ConnectionProvider& provider){
 	std::unique_lock sync(providersLock);
 	providers.push_back(&provider);
 }
 
-void unregisterProvider(ConnectionProvider& provider){
+void db::unregisterProvider(ConnectionProvider& provider){
 	for(auto& a:providers)
 		if(a==&provider){
 			a = nullptr;
@@ -178,12 +179,12 @@ void unregisterProvider(ConnectionProvider& provider){
 		}
 }
 
-const std::vector<ConnectionProvider*>& getProviderList(){
+const std::vector<ConnectionProvider*>& db::getProviderList(){
 	std::shared_lock sync(providersLock);
 	return providers;
 }
 
-std::unique_ptr<Connection> open(std::string_view uri){
+std::unique_ptr<Connection> db::open(std::string_view uri){
 	std::shared_lock sync(providersLock);
 	for(auto a:providers)
 		if(a&&a->supports(uri))
@@ -198,6 +199,10 @@ Rowset& SQLStatement::executeQuery(std::string_view q){
 
 int SQLStatement::executeUpdate(std::string_view q){
 	return underlying->executeUpdate(q);
+}
+
+db::Connection& db::SQLStatement::getConnection(){
+	return underlying->getConnection();
 }
 
 SQLPreparedStatement::SQLPreparedStatement(std::unique_ptr<PreparedStatement> stat):underlying(std::move(stat)){}
@@ -227,6 +232,10 @@ Rowset& SQLPreparedStatement::executePreparedQuery(){
 
 int SQLPreparedStatement::executePreparedUpdate(){
 	return underlying->executePreparedUpdate();
+}
+
+db::Connection& db::SQLPreparedStatement::getConnection(){
+	return underlying->getConnection();
 }
 
 DBConnection::DBConnection(std::string_view uri):underlying(open(uri)){

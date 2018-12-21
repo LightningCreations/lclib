@@ -126,11 +126,12 @@ namespace detail{
 			}
 		}
 	}
+	using _k::intg;
 	template<typename Fn> struct IndefIntF{
 	private:
 		Fn f;
 	public:
-		using _k::intg;
+
 		IndefIntF(Fn&& f):f(std::forward(f)){}
 		template<typename type> auto operator()(type x)->decltype(f(x)){
 			intg(f,0,x);
@@ -186,7 +187,7 @@ public:
 
 
 template<typename Fn1,typename Fn2> constexpr auto convolution(Fn1&& f,Fn2&& g){
-	return [f,g](auto t)->decltype(integrate(-inf<decltype(t)>,inf<decltype(t)>)([](auto t){return t;})){
+	return [f,g](auto t)->decltype(integrate(-inf<decltype(t)>,inf<decltype(t)>)(identity{})){
 		using type = decltype(t);
 		return integrate(-inf<type>,inf<type>)([f,g,t](type x)->type{
 			return f(x)*g(t-x);

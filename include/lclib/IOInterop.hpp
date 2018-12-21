@@ -15,11 +15,14 @@
 template<typename CharT,typename CharTraits=std::char_traits<CharT>>
 	class basic_interopstream_buff:public std::basic_streambuf<CharT,CharTraits>{
 	private:
+		bool isRead;
 		union{
 			InputStream* in;
 			OutputStream* out;
 		};
 	public:
+		typedef CharT char_type;
+		typedef typename CharTraits::int_type int_type;
 		basic_interopstream_buff(InputStream& in):in(&in),isRead(false){
 			this->setg(nullptr, nullptr, nullptr);
 		}
@@ -37,8 +40,8 @@ template<typename CharT,typename CharTraits=std::char_traits<CharT>>
 			return out->write(ptr,sz);
 		}
 		int_type overflow(int_type ch){
-			if(ch==eof)
-				return eof;
+			if(ch==CharTraits::eof())
+				return CharTraits::eof();
 			out->write(ch);
 			return ch;
 		}
@@ -48,14 +51,14 @@ template<typename CharT,typename CharTraits=std::char_traits<CharT>> struct basi
 private:
 	basic_interopstream_buff<CharT,CharTraits> buff;
 public:
-	basic_interop_istream(InputStream& str):buff(str),basic_istream(&buff){}
+	basic_interop_istream(InputStream& str):buff(str),std::basic_istream<CharT,CharTraits>(&buff){}
 };
 
 template<typename CharT,typename CharTraits=std::char_traits<CharT>> struct basic_interop_ostream:std::basic_ostream<CharT,CharTraits>{
 private:
 	basic_interopstream_buff<CharT,CharTraits> buff;
 public:
-	basic_interop_ostream(OutputStream& str):buff(str),basic_ostream(&buff){}
+	basic_interop_ostream(OutputStream& str):buff(str),std::basic_ostream<CharT,CharTraits>(&buff){}
 };
 
 typedef basic_interop_istream<char> interop_istream;

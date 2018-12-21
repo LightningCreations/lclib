@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <lclib/TypeTraits.hpp>
 #include <iterator>
+#include <functional>
 /**
  * Helper class for iterating over the elements of a tuple or tuple-like-type
  * Returns an InputIterator of variants containing const references to the elements of the tuple

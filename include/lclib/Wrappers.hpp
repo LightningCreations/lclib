@@ -125,14 +125,6 @@ public:
     template<typename U,disable_move_derived<U> =0> PolymorphicWrapper(U&& u)=delete;
 
     /**
-     * Move Constructs a PolymorphicWrapper from a wrapper to a derived class.
-     * The new PolymorphicWrapper takes ownership of the moved-from wrapper's owned object.
-     * This constructor does not participate in overload resolution unless std::is_base_of_v<T,U> is true
-     * \Exceptions: This constructor does not throw any exceptions
-     */
-    template<typename U,typename=derived_polymorphic_wrapper<U>> PolymorphicWrapper(PolymorphicWrapper<U>&& pw)noexcept(true):val(std::exchange(pw.val,nullptr)){}
-
-    /**
      * Constructs a new PolymorphicWrapper.
      * The owned object is allocated and constructed using the default constructor of U, with U as its dynamic type (U may be T)
      * This constructor does not participate in overload resolution unless std::is_base_of_v<T,U> and
@@ -149,7 +141,7 @@ public:
      * \Exceptions: Throws any exception thrown by the selected constructor (noexcept if that constructor is non-throwing)
      */
     template<typename U,typename... Args,typename=construct_in_place<U,Args...>> PolymorphicWrapper(std::in_place_type_t<U>,Args&&... args)noexcept(std::is_nothrow_constructible_v<U,Args...>)
-    	:val(new U(std::forward(args)...)){}
+    	:val(new U(std::forward<Args>(args)...)){}
 
     /**
      * Explicitly casts to a derived class.

@@ -8,7 +8,6 @@
 #include <lclib/Version.hpp>
 #include <mutex>
 #include <lclib/Config.hpp>
-#include <json/json.h>
 #include <utility>
 using std::initializer_list;
 using std::vector;

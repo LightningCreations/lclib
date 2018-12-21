@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <lclib/Types.hpp>
 #include <lclib/Operations.hpp>
+#include <lclib/TypeTraits.hpp>
+#include <lclib/Detectors.hpp>
 #include <tuple>
 #if __has_include(<bit>)&&__cplusplus>201703L
 #if defined(__cpp_bit_cast) && __cpp_bit_cast > 201806
@@ -24,11 +26,18 @@ template<typename To,typename From> constexpr std::enable_if_t<sizeof(To)==sizeo
 	}
 
 #endif
+
+namespace detail{
+	class _pmf_base_tag{};
+	using zero_tag = _pmf_base_tag (_pmf_base_tag::*)(char,unsigned char,signed char,short,unsigned short,int,unsigned,long,unsigned long,long long,unsigned long long,float,double,long double,void*,const void*,const volatile void*,const _pmf_base_tag&,std::true_type&&)const volatile noexcept;
+	template<typename T> using detect_compare_zero = decltype(std::declval<const T>()==0);
+}
+
 using std::sqrt;
 template<typename T> struct Vec2{
     T x,y;
-    constexpr Vec2():x{0},y{0}{}
-    explicit constexpr Vec2(T x,T y):x{x},y{y}{}
+    constexpr Vec2():x{},y{}{}
+    constexpr Vec2(T x,T y):x{x},y{y}{}
     template<typename Q,typename U,typename=std::enable_if_t<std::is_constructible_v<T,Q>&&std::is_constructible_v<T,U>>>
     	explicit constexpr Vec2(Q x,U y):x(x),y(y){}
 
@@ -44,8 +53,15 @@ template<typename T> struct Vec2{
     constexpr Vec2& operator=(const Vec2&)=default;
     constexpr Vec2& operator=(Vec2&&)=default;
 
+    constexpr auto operator+()const -> Vec2<decltype(+x)>{
+    	return *this;
+    }
+    constexpr auto operator-()const -> Vec2<decltype(-x)>{
+    	return {-x,-y};
+    }
+
     template<typename U> constexpr auto operator+(const Vec2<U>& v)const -> Vec2<decltype(x+v.x)>{
-        return Vec2{x+v.x,y+v.y};
+        return {x+v.x,y+v.y};
     }
     template<typename U> constexpr auto operator+=(const Vec2<U>& v) -> require_types_t<Vec2&,decltype(x+=v.x)>{
         x+=v.x;
@@ -53,7 +69,7 @@ template<typename T> struct Vec2{
         return *this;
     }
     template<typename U> constexpr auto operator-(const Vec2<U>& v)const -> Vec2<decltype(x-v.x)>{
-        return Vec2{x-v.x,y-v.y};
+        return {x-v.x,y-v.y};
     }
     template<typename U> constexpr auto operator-=(const Vec2<U>& v) -> require_types_t<Vec2&,decltype(x-=v.x)>{
         x-=v.x;
@@ -65,7 +81,7 @@ template<typename T> struct Vec2{
     }
 
     template<typename U> constexpr auto operator*(U v)const -> Vec2<decltype(v*x)>{
-    	return Vec2{v*x,v*y};
+    	return {v*x,v*y};
     }
     template<typename U> constexpr auto operator*=(U v)const -> require_types_t<Vec2&,decltype(x*=v)>{
     	x *= v;
@@ -73,10 +89,10 @@ template<typename T> struct Vec2{
     	return *this;
     }
     template<typename U> constexpr auto operator/(U v)const -> Vec2<decltype(x/v)>{
-    	return Vec2{x/v,y/v};
+    	return {x/v,y/v};
     }
     template<typename U> constexpr friend auto operator*(U m,const Vec2& v)-> Vec2<decltype(v.x*m)>{
-    	return Vec2{v.x*m,v.y*m};
+    	return {v.x*m,v.y*m};
     }
     template<typename U> constexpr auto operator/=(U v)const -> require_types_t<Vec2&,decltype(x/=v)>{
 		x /= v;
@@ -84,12 +100,15 @@ template<typename T> struct Vec2{
 		return *this;
 	}
 
-    constexpr int32_t hashCode()const{
+    constexpr auto hashCode()const -> decltype(hashcode(x)){
         return hashcode(x)*31+hashcode(y);
     }
 
     template<typename U> constexpr auto operator==(const Vec2<U>& v)const ->decltype(x==v.x){
     	return std::tie(x,y)==std::tie(v.x,v.y);
+    }
+    template<decltype(x==0)* = 0> constexpr auto operator==(detail::zero_tag)const{
+    	return x==0&&y==0;
     }
     template<typename U> constexpr friend auto operator!=(const Vec2& v1,const Vec2<U>& v2)->decltype(!(v1==v2)){
     	return !(v1==v2);
@@ -99,10 +118,10 @@ template<typename T> struct Vec2{
     	return x*x+y*y;
     }
 
-    auto magnetude()const ->decltype(sqrt(magnetudeSquared())){
+    constexpr auto magnetude()const ->decltype(sqrt(magnetudeSquared())){
     	return sqrt(magnetudeSquared());
     }
-   	auto normalize()const -> Vec2<decltype(magnetude())> {
+   	constexpr auto normalize()const -> Vec2<decltype(magnetude())> {
     	return *this/magnetude();
     }
 

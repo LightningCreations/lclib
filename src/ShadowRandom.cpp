@@ -72,7 +72,7 @@ const uint8_t sbox[256] =
     0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 };
 
-LIBLCHIDE void expand(const uint8_t(&arr)[256],uint64_t(&out)[256]){
+static void expand(const uint8_t(&arr)[256],uint64_t(&out)[256]){
     uint64_t block[8];
     SHA512(arr,256,reinterpret_cast<unsigned char*>(block));
     for(std::size_t s = 0;s<256;s++){
@@ -90,7 +90,7 @@ LIBLCHIDE void expand(const uint8_t(&arr)[256],uint64_t(&out)[256]){
         out[s-1] ^= out[s];
 }
 
-LIBLCHIDE uint64_t reduce(const uint64_t(&arr)[256]){
+static uint64_t reduce(const uint64_t(&arr)[256]){
     uint64_t block[8];
     SHA512(reinterpret_cast<const unsigned char*>(arr),sizeof(arr),reinterpret_cast<unsigned char*>(block));
     for(std::size_t s = 0;s<256;s++){
@@ -105,7 +105,7 @@ LIBLCHIDE uint64_t reduce(const uint64_t(&arr)[256]){
     return ret;
 }
 
-LIBLCHIDE uint8_t toByte(uint64_t t){
+static uint8_t toByte(uint64_t t){
     uint8_t b = 0;
     for(size_t s=0;s<16;s++)
         b ^= lrotate(t,rotations[s])&0xff;

@@ -131,6 +131,7 @@ template<typename T,T high,T low,typename=std::enable_if_t<low<high>>
 
 template<typename T,T low> explicit numeric_range(std::integral_constant<T,low>)->numeric_range<T,low,std::numeric_limits<T>::max()>;
 
+
 template<typename Range> struct reverse{
 private:
 	template<bool> struct select_existing_reverse_iterator{

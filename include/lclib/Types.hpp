@@ -35,5 +35,10 @@ using noreturn_t = void;
 
 ValueDiscard()->ValueDiscard<void>;
 
+namespace detail{
+	struct zero_literal_pmr_helper{};
+}
+
+using zero_literal_t = void(detail::zero_literal_pmr_helper::*)(char,signed char,unsigned char,short,unsigned short,int,unsigned,long,unsigned long,long long,unsigned long long,float,double,long double,wchar_t,char16_t,char32_t,detail::zero_literal_pmr_helper);
 
 #endif

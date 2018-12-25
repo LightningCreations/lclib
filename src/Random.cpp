@@ -21,28 +21,20 @@ static seed_t nextMultiplier(){
 	return val;
 }
 
-
-
-static seed_t number{876730097};
-const seed_t cprime{2227123637};
-
-
-
-LIBLCHIDE seed_t genUniqueSeed(){
+static seed_t genUniqueSeed(){
 	return highResTime()*nextMultiplier();
 }
-LIBLCHIDE seed_t initRandomizeSeed(seed_t seed){
+static seed_t initRandomizeSeed(seed_t seed){
 	return (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
 }
 
 uint32_t Random::next(int bits){
-	std::lock_guard<recursive_mutex> sync(lock);
+	std::lock_guard sync{lock};
 	seed = (seed * 0x5DEECE66DL + 0xBL) & ((1LL << 48) - 1);
 	return (int)(seed >> (48 - bits));
 }
 Random::Random():lock(){
 	setSeed(genUniqueSeed());
-	
 }
 Random::Random(seed_t s):lock(){
 	setSeed(s);
@@ -72,7 +64,7 @@ int Random::nextInt(int bound){
 }
 
 double Random::nextGuassian(){
-	std::lock_guard<recursive_mutex> sync(lock);
+	std::lock_guard sync{lock};
 	double ret;
 	if (haveNextNextGaussian) {
 			haveNextNextGaussian = false;

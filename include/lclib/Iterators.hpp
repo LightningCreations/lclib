@@ -21,8 +21,9 @@ private:
 	static_assert(std::is_same_v<typename Itr1::element_type,typename Itr2::element_type>,"Requires Iterators that accept the same type");
 public:
 	using element_type = typename Itr1::element_type;
-	template<typename... Args,typename=std::enable_if_t<std::is_constructible_v<Predicate,Args...>>>
-		constexpr explicit split(Itr1 i1,Itr2 i2,Args&&... args):i1(i1),i2(i2),pred(std::forward<Args>()...){}
+	using reference_type = split&;
+	template<typename Pred,typename=std::enable_if_t<std::is_same_v<std::decay_t<Predicate>,std::decay_t<Pred>>&&std::is_constructible_v<Predicate,Pred&&>>>
+		constexpr explicit split(Itr1 i1,Itr2 i2,Pred&& pred):i1(i1),i2(i2),pred(std::forward<Pred>(pred)){}
 	constexpr split& operator++(){
 		return *this;
 	}
@@ -45,6 +46,8 @@ public:
 			return *(i2++) = std::move(e);
 	}
 };
+
+template<typename Itr1,typename Itr2,typename Predicate> split(Itr1,Itr2,Predicate)->split<Itr1,Itr2,Predicate>;
 
 struct discard{
 public:

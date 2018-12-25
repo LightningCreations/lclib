@@ -210,7 +210,39 @@ template<typename T,typename U> struct copy_category<T&&,U>:type_identity<U&&>{}
 
 template<typename T,typename U> using copy_category_t = typename copy_category<T,U>::type;
 
+struct nonesuch{};
 
+namespace detail{
+	template<typename Default,typename AlwaysVoid,template<typename...> class Op,
+		class... Args> struct detector{
+		using value_t = std::false_type;
+		using type = Default;
+	};
+	template<typename Default,template<typename...> class Op,class... Args> struct
+		detector<Default,std::void_t<Op<Args...>>,Op,Args...>{
+		using value_t = std::true_type;
+		using type = Op<Args...>;
+	};
+}
+
+template<template<typename...> class Op,class... Args> using is_detected = typename detail::detector<nonesuch,void,Op,Args...>::value_t;
+template<template<typename...> class Op,class... Args> using detected_t = typename detail::detector<nonesuch,void,Op,Args...>::type;
+template<typename Default,template<typename...> class Op,class... Args> struct detected_or: detail::detector<Default,void,Op,Args...>{};
+
+template<template<typename...> class Op,class... Args> constexpr const bool is_detected_v = is_detected<Op,Args...>::value;
+template<typename Default,template<typename...> class Op,class... Args> using detected_or_t = typename detected_or<Default,Op,Args...>::type;
+template<typename Expected,template<typename...> class Op,class... Args> using is_detected_exact = typename std::is_same<Expected,detected_t<Op,Args...>>::type;
+template<typename Expected,template<typename...> class Op,class... Args> using is_detected_convertible = typename std::is_convertible<Expected,detected_t<Op,Args...>>::type;
+
+template<typename Expected,template<typename...> class Op,class... Args> constexpr const bool is_detected_exact_v = is_detected_exact<Expected,Op,Args...>::value;
+template<typename Expected,template<typename...> class Op,class... Args> constexpr const bool is_detected_convertible_v = is_detected_convertible<Expected,Op,Args...>::value;
+
+template<template<typename...> class Op,class... Args> using require_detected = std::enable_if<is_detected_v<Op,Args...>,detected_t<Op,Args...>>;
+template<template<typename...> class Op,class... Args> using require_detected_t = typename require_detected<Op,Args...>::type;
+
+namespace detail{
+	template<typename... Ts> using detect_common_type = detected_or_t<void,std::common_type_t,Ts...>;
+}
 
 /*
  * Checks a set of types that Share a single common type.
@@ -266,54 +298,53 @@ template<typename T,typename U> using copy_category_t = typename copy_category<T
  * Otherwise, inherits from std::false_type
  */
 template<typename... Ts> struct has_common_type:std::false_type{};
+
 template<> struct has_common_type<>:std::false_type{};
 template<typename T> struct has_common_type<T>:std::true_type{};
 template<typename T> struct has_common_type<T, T> :std::true_type {};
+
 template<typename T,typename U> struct has_common_type<T,U>:std::conjunction<
-	std::is_same<std::common_type_t<T,U>,std::common_type_t<U,T>>,
-	std::is_same<std::common_type_t<T,std::common_type_t<T,U>>,std::common_type_t<T,U>>,
-	std::is_same<std::common_type_t<U,std::common_type_t<T,U>>,std::common_type_t<T,U>>,
-	std::is_convertible<T,std::common_type_t<T,U>>,
-	std::is_convertible<U,std::common_type_t<T,U>>>{};
+	is_detected<std::common_type_t,T,U>,
+	std::is_same<detail::detect_common_type<T,U>,detail::detect_common_type<U,T>>,
+	std::is_same<detail::detect_common_type<T,detail::detect_common_type<T,U>>,detail::detect_common_type<T,U>>,
+	std::is_same<detail::detect_common_type<U,detail::detect_common_type<T,U>>,detail::detect_common_type<T,U>>,
+	std::is_convertible<T,detail::detect_common_type<T,U>>,
+	std::is_convertible<U,detail::detect_common_type<T,U>>>{};
+
 template<typename T,typename U,typename V> struct has_common_type<T,U,V>:std::conjunction<
+	is_detected<std::common_type_t,T,U,V>,
 	has_common_type<T,U>,
 	has_common_type<U,V>,
 	has_common_type<T,V>,
-	has_common_type<T,std::common_type_t<U,V>>,
-	has_common_type<U,std::common_type_t<T,V>>,
-	has_common_type<V,std::common_type_t<T,U>>,
-	has_common_type<std::common_type_t<T,U>,std::common_type_t<U,V>>,
-	has_common_type<std::common_type_t<T,U>,std::common_type_t<T,V>>,
-	has_common_type<std::common_type_t<U,V>,std::common_type_t<T,V>>,
-	std::is_same<std::common_type_t<T,std::common_type_t<T,U,V>>,std::common_type_t<T,U,V>>,
-	std::is_same<std::common_type_t<U,std::common_type_t<T,U,V>>,std::common_type_t<T,U,V>>,
-	std::is_same<std::common_type_t<V,std::common_type_t<T,U,V>>,std::common_type_t<T,U,V>>
+	has_common_type<T,detail::detect_common_type<U,V>>,
+	has_common_type<U,detail::detect_common_type<T,V>>,
+	has_common_type<V,detail::detect_common_type<T,U>>,
+	has_common_type<detail::detect_common_type<T,U>,detail::detect_common_type<U,V>>,
+	has_common_type<detail::detect_common_type<T,U>,detail::detect_common_type<T,V>>,
+	has_common_type<detail::detect_common_type<U,V>,detail::detect_common_type<T,V>>,
+	std::is_same<detail::detect_common_type<T,detail::detect_common_type<T,U,V>>,detail::detect_common_type<T,U,V>>,
+	std::is_same<detail::detect_common_type<U,detail::detect_common_type<T,U,V>>,detail::detect_common_type<T,U,V>>,
+	std::is_same<detail::detect_common_type<V,detail::detect_common_type<T,U,V>>,detail::detect_common_type<T,U,V>>
 >{};
 template<typename T,typename U,typename V,typename W> struct has_common_type<T,U,V,W>:std::conjunction<
-	has_common_type<T,U>,
-	has_common_type<T,V>,
-	has_common_type<T,W>,
-	has_common_type<U,V>,
-	has_common_type<U,W>,
-	has_common_type<V,W>,
 	has_common_type<T,U,V>,
 	has_common_type<T,V,W>,
 	has_common_type<T,U,W>,
 	has_common_type<U,V,W>,
-	has_common_type<T,U,std::common_type_t<V,W>>,
-	has_common_type<T,V,std::common_type_t<U,W>>,
-	has_common_type<T,W,std::common_type_t<U,V>>,
-	has_common_type<U,V,std::common_type_t<T,W>>,
-	has_common_type<U,W,std::common_type_t<T,V>>,
-	has_common_type<V,W,std::common_type_t<T,U>>,
-	has_common_type<T,std::common_type_t<U,V,W>>,
-	has_common_type<U,std::common_type_t<T,V,W>>,
-	has_common_type<V,std::common_type_t<T,U,W>>,
+	has_common_type<T,U,detail::detect_common_type<V,W>>,
+	has_common_type<T,V,detail::detect_common_type<U,W>>,
+	has_common_type<T,W,detail::detect_common_type<U,V>>,
+	has_common_type<U,V,detail::detect_common_type<T,W>>,
+	has_common_type<U,W,detail::detect_common_type<T,V>>,
+	has_common_type<V,W,detail::detect_common_type<T,U>>,
+	has_common_type<T,detail::detect_common_type<U,V,W>>,
+	has_common_type<U,detail::detect_common_type<T,V,W>>,
+	has_common_type<V,detail::detect_common_type<T,U,W>>,
 	has_common_type<W,std::common_type_t<T,U,V>>,
-	std::is_same<std::common_type_t<T,std::common_type_t<T,U,V,W>>,std::common_type_t<T,U,V,W>>,
-	std::is_same<std::common_type_t<U,std::common_type_t<T,U,V,W>>,std::common_type_t<T,U,V,W>>,
-	std::is_same<std::common_type_t<V,std::common_type_t<T,U,V,W>>,std::common_type_t<T,U,V,W>>,
-	std::is_same<std::common_type_t<W,std::common_type_t<T,U,V,W>>,std::common_type_t<T,U,V,W>>
+	std::is_same<detail::detect_common_type<T,detail::detect_common_type<T,U,V,W>>,detail::detect_common_type<T,U,V,W>>,
+	std::is_same<detail::detect_common_type<U,detail::detect_common_type<T,U,V,W>>,detail::detect_common_type<T,U,V,W>>,
+	std::is_same<detail::detect_common_type<V,detail::detect_common_type<T,U,V,W>>,detail::detect_common_type<T,U,V,W>>,
+	std::is_same<detail::detect_common_type<W,detail::detect_common_type<T,U,V,W>>,detail::detect_common_type<T,U,V,W>>
 >{};
 
 template<typename T, typename U, typename... Rest> struct has_common_type<T, U, Rest...> :std::disjunction<
@@ -321,22 +352,24 @@ std::conjunction<
 	std::is_same<T,U>,
 	std::is_same<T,Rest>...
 >,std::conjunction<
+	is_detected<std::common_type_t,T,U,Rest...>,
 	has_common_type<T, Rest...>,
 	has_common_type<U, Rest...>,
 	has_common_type<Rest...,T>,
 	has_common_type<Rest...,U>,
 	has_common_type<Rest...>,
-	has_common_type<std::common_type_t<T,U>,Rest...>,
-	has_common_type<T,U,std::common_type_t<Rest...>>,
-	has_common_type<std::common_type_t<T,U>,std::common_type_t<Rest...>>,
-	has_common_type<std::common_type_t<T,U>,std::common_type_t<T,Rest...>,std::common_type_t<U,Rest...>>,std::common_type_t<Rest...>>,
-	std::is_same<std::common_type_t<T,std::common_type_t<T,U,Rest...>>,std::common_type_t<T,U,Rest...>>,
-	std::is_same<std::common_type_t<U,std::common_type_t<T,U,Rest...>>,std::common_type_t<T,U,Rest...>>,
-	std::is_same<std::common_type_t<Rest,std::common_type_t<T,U,Rest...>>,std::common_type_t<T,U,Rest...>>...
+	has_common_type<detail::detect_common_type<T,U>,Rest...>,
+	has_common_type<T,U,detail::detect_common_type<Rest...>>,
+	has_common_type<detail::detect_common_type<T,U>,detail::detect_common_type<Rest...>>,
+	has_common_type<detail::detect_common_type<T,U>,detail::detect_common_type<T,Rest...>,detail::detect_common_type<U,Rest...>>,detail::detect_common_type<Rest...>>,
+	std::is_same<detail::detect_common_type<T,detail::detect_common_type<T,U,Rest...>>,detail::detect_common_type<T,U,Rest...>>,
+	std::is_same<detail::detect_common_type<U,detail::detect_common_type<T,U,Rest...>>,detail::detect_common_type<T,U,Rest...>>,
+	std::is_same<detail::detect_common_type<Rest,detail::detect_common_type<T,U,Rest...>>,detail::detect_common_type<T,U,Rest...>>...
 	>{};//Yes this gets unwieldy quickly.
 	//But there's not much choice. has_common_type requires comutative operations
 
 
 template<typename... Ts> constexpr bool has_common_type_v = has_common_type<Ts...>::value;
+
 
 #endif

@@ -78,49 +78,103 @@ public final class Complex {
 	public Complex multiply(double d) {
 		return new Complex(rr*d,ii*d);
 	}
-	public Complex devide(double d) {
+	
+	/**
+	 * Divides this complex number by a real number
+	 * @param d the real to divide this by 
+	 * @return (a/d)+(b/d)i
+	 */
+	public Complex divide(double d) {
 		return new Complex(rr/d,ii/d);
 	}
+	/**
+	 * Computes the complex exponential of the given complex number.
+	 * @param pow a+bi
+	 * @return e^(a+bi)
+	 * @see Complex#expi(double)
+	 */
 	public static Complex exp(Complex pow) {
 		double m = Math.exp(pow.rr);
-		return new Complex(m*Math.sin(pow.ii),m*Math.cos(pow.ii));
+		return new Complex(m*Math.cos(pow.ii),m*Math.sin(pow.ii));
 	}
-	public static Complex expi(double i) {
-		return new Complex(Math.sin(i),Math.cos(i));
+	/**
+	 * Computes the exponential of a pure imaginary number.
+	 * e^iθ is defined as cosθ+isinθ by Eular's Formula
+	 * @param d a pure imaginary number, devided by i.
+	 * @return e^id or equivalently, cos(d)+isin(d)
+	 */
+	public static Complex expi(double d) {
+		return new Complex(Math.cos(d),Math.sin(d));
 	}
 	
+	/*
+	 * Computes the natural logarithm of this number.
+	 * The natural logaritm of a+bi is c+di, where c is the natural logarithm of |a+bi| and d is the phase angle of a+bi.
+	 */
 	public Complex log() {
 		return valueOf(Math.log(getMagnetude()),getTheta());
 	}
 	
+	/**
+	 * Computes the complex square root of the real number d.
+	 * @param d a real number, which may be negative
+	 * @return sqrt(d) in the domain of Complex Numbers
+	 */
 	public static Complex sqrt(double d) {
 		if(d>=0)
 			return valueOf(Math.sqrt(d));
 		else
 			return valueOfImaginary(Math.sqrt(-d));
 	}
-	
+	/**
+	 * Adds 2 complex numbers together.
+	 * @param c a complex number
+	 * @return this+c
+	 */
 	public Complex add(Complex c) {
 		return new Complex(rr+c.rr,ii+c.ii);
 	}
+	/**
+	 * Adds a real number to a complex number
+	 * @param d a real number
+	 * @return this+d
+	 */
 	public Complex add(double d) {
 		return new Complex(rr+d,ii);
 	}
+	
 	public Complex sub(Complex c) {
 		return new Complex(rr-c.rr,ii-c.ii);
 	}
 	public Complex sub(double d) {
 		return new Complex(rr-d,ii);
 	}
+	
+	/**
+	 * Gets the real component of the complex number.
+	 * @return a, if a+bi equals this number
+	 */
 	public double getReal() {
 		return rr;
 	}
+	/**
+	 * Returns the imaginary component of the complex number.
+	 * @return b, if a+bi equals this number.
+	 */
 	public double getImaginary() {
 		return ii;
 	}
+	
+	/**
+	 * Computes the phase angle of this complex number
+	 */
 	public double getTheta() {
 		return Math.atan2(rr, ii);
 	}
+	/**
+	 * Computes the magnetude of this complex number
+	 * @return
+	 */
 	public double getMagnetude() {
 		return Math.sqrt(rr*rr+ii*ii);
 	}
@@ -131,7 +185,7 @@ public final class Complex {
 		else if(n==0)
 			return valueOf(1);
 		else if(n<0)
-			throw new IllegalArgumentException("SQRT negative is not implemented yet");
+			throw new IllegalArgumentException("pow negative is not implemented yet");
 		return multiply(this).pow(n-1);
 	}
 	
@@ -147,6 +201,7 @@ public final class Complex {
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

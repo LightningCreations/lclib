@@ -119,12 +119,14 @@
 #define ENSURES(condition,...)
 #endif
 
-#if __has_include(<concepts>)&&(__cplusplus>201803L)
-#include <concepts>
+#if __has_include(<version>)
+#include <version>
+#endif
+
 #if defined(__cpp_lib_concepts) &&(__cpp_lib_concepts>=201806L)
 #define LIBLCCXX_HAS_CONCEPTS
 #endif
-#endif
+
 
 #ifndef INCLUDE_WARNING
 #if defined(LIBLCCXX_ERROR_INCLUDE_WARNINGS)

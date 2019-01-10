@@ -104,14 +104,16 @@ Given:
 
 
 * A type `T`, which satisfies *Numeric*
-* `t` and `u`, a possibly const value of type `T`.
+* `t`, `u`, `v` which are possibly const values of type `T`.
 * `l`, an lvalue of type `T`
 * `c`, a const lvalue of type `T`.
 * `r`, an rvalue of type `T`
-* `a`, a value of some type which satisfies *Numeric*. May be distinct values of distinct types depending on the expression. 
-* `U`, some other type that satisfies *Numeric* (may be `T`). May be different depending the expression
+* `i`, Some value for which `t*i` is a well formed expression and the result is equal to `t`
+* `z`, the null/empty/zero value for `T`, where `t+z==t` is true. 
+* `a`, a value of any type in a potentially constrained set of types which satisfy *Numeric*. May be distinct values of distinct types depending on the expression. 
+* `U`,`Q`, some other type that satisfies *Numeric* (may be `T`), which are as standins for a Generic type. `Q{t}` and `Q{a}` must both be well formed expressions, and may not result in narrowing conversions (that is, `Q` must be able to completely represent all possible values of `T` and of the type of a.) 
 
-`T` must either be an arithmetic type or satisfy the following requirements:
+`T` must satisfy the following requirements (note that where Brace Construction is used, it either means Brace Construction or Parenthesis Construction, and which one it means in the context is unspecified):
 
 <table>
 	<tr>
@@ -122,7 +124,12 @@ Given:
 	<tr>
 		<td>T{}</td>
 		<td>T</td>
-		<td>T{} shall result in a value that is the equivalent of the value 0</td>
+		<td>T{}==z shall be true</td>
+	</tr>
+	<tr>
+		<td>T{0} (optional)</td>
+		<td>T</td>
+		<td>T{0}==z shall be true</td>
 	</tr>
 	<tr>
 		<td>T{c}</td>
@@ -137,11 +144,16 @@ Given:
 	<tr>
 		<td>T{a} (optional)</td>
 		<td>T</td>
-		<td>If supported, T{a}==T{a} shall be true. However a==T{a} need not be true (if it is valid), as the conversion may be narrowing</td>
+		<td>If supported, T{a}==T{a} shall be true. However a==T{a} need not be true (if it is valid), as the conversion may be narrowing.</td>
+	</tr>
+	<tr>
+		<td>l=t</td>
+		<td>T&</td>
+		<td>Assigns the value of t to l. If before the assignment u==t, then after the assignment, l==u must be true. Additionally, if before the assigment l==u is true, then after the assignment l!=u is true, unless u==t before the assignment.</td>
 	</tr>
 	<tr>
 		<td>t+u</td>
-		<td>T</td>
+		<td>U</td>
 		<td>The result of the sum of t and u. t+T{}==t must be true. Additionally, u+t==t+u shall be true</td>
 	</tr>
 	<tr>
@@ -157,7 +169,7 @@ Given:
 	<tr>
 		<td>t==u</td>
 		<td>bool</td>
-		<td>True if and only if t and u have the same value</td>
+		<td>True if and only if t and u have the same value. t==t shall be true, and if t==u is true, then t==v shall be true if and only if u==v</td>
 	</tr>
 	<tr>
 		<td>t==a (optional)</td>
@@ -181,7 +193,7 @@ Given:
 	</tr>
 </table>
 
-Additionally, the following expressions may be optionally supported, but if they are supported, the semantics must be supported. In this context, all `U` shall always be able to fully represent all values of `T`. Further, when expressions include `a`, `U` shall also be able to fully represent all values of `a`. 
+Additionally, the following expressions may be optionally supported, but if they are supported, the semantics must be as defined
 
 
 <table>
@@ -203,32 +215,42 @@ Additionally, the following expressions may be optionally supported, but if they
 	<tr>
 		<td>t*u</td>
 		<td>U</td>
-		<td>The value of U that is the product of t and u. t*u==u*t must be true</td>
+		<td>The value of U that is the product of t and u. t*u==u*t must be true. Additionally, t*z==z must be true for all values t.</td>
 	</tr>
 	<tr>
 		<td>t*a</td>
 		<td>U</td>
-		<td>Equivalent to Q{t}*Q{a}, where Q satisfies <i>Numeric</i>, is constructible from both T and decltype(a), and the result type is convertible to U. Also all values of both T and decltype(a) shall be representable as values of Q. t*a==a*t shall be true</td>
+		<td>Usually equivalent to Q{t}*Q{a}. t*a==a*t shall be true</td>
 	</tr>
 	<tr>
 		<td>t/u</td>
 		<td>U</td>
-		<td>The value of U that is the quotient of t and u. If the result of the division is representable as a value of T, then T{(t/u)*u}==t is true. Otherwise it is unspecified if that equality holds. Additionally, t/t shall be a unique value that is representable as a value of T, and T{u*(t/t)}==u is true.</td>
+		<td>The value of U that is the quotient of t and u. If the result of the division is representable as a value of T, then T{(t/u)*u}==t is true. Otherwise it is unspecified if that equality holds. Additionally, t/t shall be a unique value that is representable as a value of T, and T{u*(t/t)}==u is true. If u==T{}, then the behavior is undefined.</td>
 	</tr>
 	<tr>
 		<td>t/a</td>
 		<td>U</td>
-		<td>Equivalent to Q{t}/Q{a}, where Q is defined the same way as it is for t*a</td>
+		<td>Divides t by a. See below for equivalences. </td>
 	</tr>
 	<tr>
 		<td>a/t</td>
 		<td>U</td>
-		<td>Equivalent to Q{a}/Q{t}, where Q is defined the same way as it is for t*a and t/a</td>
+		<td>Divides a by t. See below for equivalences. </td>
 	</tr>
 	<tr>
 		<td>t&lt;u</td>
 		<td>bool</td>
-		<td>True if and only if the value of t is less than the value of u. If t!=u, then one of t&lt;u and u&lt;t must be true. Additionally only one of t&lt;u and u&lt;t may be true</td>
+		<td>True if and only if the value of t is less than the value of u. One of t&lt;u, u&lt;t, or u==t must be true. Additionally only one of t&lt;u and u&lt;t may be true. If t&lt;u is true, and u&lt;v is true, then t&lt;v must be true.</td>
+	</tr>
+	<tr>
+		<td>t&lt;a</td>
+		<td>bool</td>
+		<td>Equivalent to Q{t}&lt;Q{a}.</td>
+	</tr>
+	<tr>
+		<td>a&lt;t</td>
+		<td>bool</td>
+		<td>Equivalent to Q{a}&lt;Q{t}.</td>
 	</tr>
 	<tr>
 		<td>t&gt;u</td>
@@ -236,10 +258,24 @@ Additionally, the following expressions may be optionally supported, but if they
 		<td>Equivalent to u&lt;t</td>
 	</tr>
 	<tr>
+		<td>t&gt;a</td>
+		<td>bool</td>
+		<td>Equivalent to Q{a}&lt;U{t}</td>
+	</tr>
+	<tr>
+		<td>a&gt;t</td>
+		<td>bool</td>
+		<td>Equivalent to U{t}&lt;U{a}</td>
+	</tr>
+	<tr>
 		<td>t&lt;=u</td>
 		<td>bool</td>
 		<td>Equivalent to (t&lt;u)||(t==u)</td>
 	</tr>
+	<tr>
+		<td>t&lt;=a</td>
+		<td>bool</td>
+		<td>Equivalent to U{t}&lt;
 	<tr>
 		<td>t&gt;=u</td>
 		<td>bool</td>
@@ -247,4 +283,32 @@ Additionally, the following expressions may be optionally supported, but if they
 	</tr>
 </table>
 
+The expression `t/a` is equivalent to at least one of the following, unless the semantics of the expression are explicitly defined:
 
+* `t/T{a}`, if and only if `T` can represent the value of `a` (this is permitted even if `T` cannot represent ALL values of the type of `a`)
+* `Q{t}/Q{a}`
+* `Q{t}/a`
+* `U{t}/a`, where `U` can represent the value of `t`. 
+* `t/Q{a}`
+* `t/U{a}`, where `U` can represent the value of `a`.
+* `U{t}/U{a}`, where `U` can represent the values of both `t` and `a`. (This differs from `Q{t}/Q{a}`, as `Q` is required to be able to represent all values of `T` and of the type of `a`, whereas `U` is not explicitly required to, it only needs to be able to represent the value of `t` and `a`.)
+
+The expression `a/t` is equivalent to at least one of the following, unless the semantics of the expression are explicitly defined:
+* `T{a}/t`, if and only if `T` can represent the value of `a` (this is permitted even if `T` cannot represent ALL values of the type of `a`)
+* `Q{a}/Q{t}`
+* `Q{a}/t`
+* `U{a}/t`, where `U` can represent the value of `a`
+* `a/Q{t}`
+* `a/U{t}`, where `U` can represent the value of `t`
+* `U{a}/U{t}`, where `U` can represent the values of both `t` and `a`.
+* `i/(t/a)`
+
+
+Additionally, T may not be abstract and may not be `bool`. All of the operations defined above may not throw any exceptions. 
+If T satisfies *LiteralType*, any expression that applys any of the above operators to one or more values of (possibly const-qualified) T and no other values, except the assignment operator, shall be a valid constant expression if all of its operands are a valid rvalue constant expression. 
+
+If `operator<` is overloaded, then all relational operators for a type must be defined and form a strict, total-order with `operator<`. This order must be consistent and deterministic. If `T{}<u` is true, then `t+u<t` is true, unless the result of `t+u` cannot be represented fully as a value of `T` (however, it may still be true even when that is the case). 
+
+Note that for the purposes of determining what is an is not a value of the type, the special NaN values are not considered valid values. `NaN` values are therefore exempt from all the semantic rules defined above. This allows that x!=x is true when x is a `NaN` value. 
+
+If `T` satisfies *Numeric*, then all of `const T`, `volatile T`, and `const volatile T` also satisfy *Numeric*.

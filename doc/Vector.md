@@ -27,10 +27,16 @@ A class that represents a Point in the 2d plane, where the position on both the 
 * BytesReadable
 * BytesWritable
 
+### Notes ###
+
+`NaN` values are not acceptable values for any function or constructor of Vec2. If a `NaN` value is a paramater for a constructor or method call, or an operand of any of Vec2's overload operators, the behavior is undefined. 
+
+
 ### Type Requirements ###
 
 `T` shall satisfy the requirements of *Numeric* or the program is ill-formed. If the semantic requires of *Numeric* are not met, the behavior is undefined. 
 
+Additionally, `T` may not be a specialization of Vec2 or the program is ill-formed. 
 
 ### Class Synopsis ###
 
@@ -153,9 +159,13 @@ template<typename U> constexpr friend /*see below*/ operator*(const Vec2& v1,con
 
 (3),(6),(9),(10): Scales the x and y components of the vector by a factor of t. The result type is `Vec2<decltype(x*t)>`. This method only participates in overload resolution if the expression `x*t` is well formed in an unevaluated context. `t*x` must be an equalivalent to `x*t` otherwise the behavior is undefined. 
 
+(9) and (10) Additionally do not participate in overload resolution if `U` is a specialization of `Vec2`.
+
 (4),(11): Scales the x and y components of the vector, reducing them by a factor of t. The result type is `Vec2<decltype(x/t)>`. This method only participates in overload resolution if the expression`x/t` is well formed in an unevaluated context. 
 
-(5),(12): Computes the dot product of 2 vectors, reducing them to a scalar quantity. This method only participates in overload resolution if the expression `x*t` is well formed in an unevaulated context, the result being q, and `q+q'` is also well formed in an unevaluated context, where q' is annother value of the same type as q. The result type is the type of `q+q'`. `q+q'` must be an equivalent operation to `q'+q` as with `x*t` and `t*x` or the behavior is undefined.  >
+(11) additionally does not participate in overload resolution if `U` is a specialization of `Vec2`. 
+
+(5),(12): Computes the dot product of 2 vectors, reducing them to a scalar quantity. This method only participates in overload resolution if the expression `x*t` is well formed in an unevaulated context, the result being q, and `q+q'` is also well formed in an unevaluated context, where q' is another value of the same type as q. The result type is the type of `q+q'`. `q+q'` must be an equivalent operation to `q'+q` as with `x*t` and `t*x` or the behavior is undefined.  
 
 (7): Adds the components of v1 and v2 together. The result type is `Vec2<decltype(v1.x+v2.x)>`. This method only participates in overload resolution if `v1.x+v2.x` is well formed in an unevaluated context. `v1.x+v2.x` shall be an equivalent expression to `v2.x+v1.x` or the behavior is undefined. 
 
@@ -228,7 +238,7 @@ Vec2()->Vec2<int>; //(3)
 
 (1): Basic deduction guide
 
-(2): Allows you to deduce a Vector from 2 different types. This only succesfully deduces the type if `has_common_type_v<Q,U>` is true. 
+(2): Allows you to deduce a Vector from 2 different types. This deduction guide only applies if `has_common_type_v<Q,U>` is true. 
 
 (3): Default Deduction Guide. 
 
@@ -241,4 +251,9 @@ Determines the common type between 2 vectors. The specialization has a member ty
 Computes the hash of a Vector.
 The result is the result of hashcode. The specialization is disabled if `hashcode(v)` is not well-formed in an unevaulated context, given that v is an object of `Vec2<T>`.  
 
+## ORIGIN ##
+
+```cpp
+template<typename T> constexpr const Vec2<T> ORIGIN{};
+```
 

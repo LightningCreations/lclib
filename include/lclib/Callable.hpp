@@ -23,7 +23,7 @@ class identity{
 public:
 	constexpr identity()=default;
 	template<typename T> constexpr T&& operator()(T&& t)const noexcept(true){
-		return std::forward(t);
+		return std::forward<T>(t);
 	}
 };
 

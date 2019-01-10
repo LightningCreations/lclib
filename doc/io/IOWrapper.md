@@ -96,7 +96,7 @@ Due to the Resource Owning Nature of InputStreams, InputStream (and concequently
 InputStream is not inheritly thread-safe. The effects of using a single input stream across multiple threads is unspecified, and may be undefined. 
 
 (Until 1.3): Objects of types derived from `InputStream` shall not be deleteable by a pointer-to-base. 
-(As of 1.3): A program that attempts to construct an object of `InputStream` by an allocating (non-placement) new expression is ill-formed. 
+(As of 1.3): A program that attempts to construct an object of `InputStream` by an allocating (non-placement) new expression or delete a pointer to such an object with a delete expression is ill-formed. 
 
 #### Constructors, Destructors, Assignment Operators ####
 
@@ -222,7 +222,7 @@ void clearError()noexcept(true); //(2)
 Represents a InputStream that reads from a raw C File Handle. The handle is owned and usually opened by the input stream. Additionally the file is closed in its destructor. 
 
 If multiple FileInputStreams are open to the same resource, (Until 1.3): the behavior is undefined (As of 1.3): the files read from the resource independently of each other. 
-If a FileOutputStream is open to the same resource as a FileInputStream it is unspecified if the effects of writing 
+If a FileOutputStream is open to the same resource as a FileInputStream it is unspecified if calls to write affect calls to read. 
 
 #### Base Class</h4> ####
 Extends (public) InputStream
@@ -249,7 +249,7 @@ In addition, (Until 1.3) the behavior is unspecified (and may be undefined), if 
 Exceptions: Throws FileNotFoundException if the passed file is a null pointer
 
 
-(2),(3),(4):Constructs the FileInputStream from the given filename. Constructs the stream as though by `FileInputStream(fopen(c,"rb"))`, `FileInputStream(fopen(str.c_str(),"rb"))`, or `FileInputStream(fopen(p.c_str(),"rb"))` respectively.
+(2),(3),(4): Constructs the FileInputStream from the given filename. Constructs the stream as though by `FileInputStream(fopen(c,"rb"))`, `FileInputStream(fopen(str.c_str(),"rb"))`, or `FileInputStream(fopen(p.c_str(),"rb"))` respectively.
 
 Exceptions: Throws FileNotFoundException if given file does not exist or cannot be openned.
 
@@ -283,6 +283,10 @@ FILE* getUnderlying()const noexcept(true);
 ```
 Gets the underlying file or a null pointer if control of the underlying file has been moved. 
 
+This pointer can only be passed to observer methods and (until 1.3) `clearerror`.
+
+(Until 1.3): If this FileInputStream was constructed with the FILE* constructor, then calls to getUnderlying() return the same Pointer as was passed. 
+
 ##### Deprecated #####
 The method has no usage out side of testing if the file has been moved. Calling `ferror`/`feof` on the handle is unnecessary (as InputStream's have there own method of checking errors). Prior to Version 1.3, the only operations that could be performed on returned handles were observer methods, or `clearerror`. As of Version 1.3, clearing the error through this handle is undefined behavior. All observers may be called on this method however. 
 
@@ -291,7 +295,7 @@ This method will be removed in a future version of LCLib-C++.
 ##### Exception Guarantee #####
 noexcept(true)
 
-<h4>Stream Error Analysis</h4>
+#### Stream Error Analysis ####
 
 ```cpp
 bool checkError()const noexcept(true); //(1)
@@ -381,7 +385,7 @@ If any read operation results in EOF then an EOFException is thrown.
 
 (Until 1.3): If any invocation of the method called to read bytes from the stream throws an exception, the exception is propagated
 
-(As of 1.3): If the call to `readFully()` (if any) throws any exception, that exception is propagated. If bytes are read using `readSingle()`, and any individual call to `readSingle()` throws an exception, that exception is propagated. 
+(As of 1.3): If the call to `readFully()` (if any) throws any exception, that exception is propagated. If bytes are read using `readSingle()`, and any individual call to `readSingle()` throws an exception, that exception is propagated and no more calls to `readSingle()` are made. 
 
 ##### Stream Operator Overloads ####
 Reads a given value from the stream based on the type of the argument, and assigns the target reference to that value
@@ -700,7 +704,7 @@ FILE* getUnderlying()const noexcept(true); //(1)
 bool checkError()const noexcept(true);//(2)
 void clearError()noexcept(true); //(3)
 ```
-(1):Gets the underlying file of the InputStream. This file may be inspected by feof, ferror or similar inspection functions. Closing or flushing the file, constructing a new FileOutputStream with the file, using the file in raw c io operations is undefined behavior. (Until 1.3): However, the pointer is to a valid file handle, and may be passed to clearerror as such. (As of 1.3): Passing the handle to clearerror is undefined behavior.  This method is deprecated as of 1.3 and may be removed in a future version. 
+(1): Similar to getUnderlying() called on an instance of FileInputStream. All rules and restrictions as above apply to this function. This function is deprecated as of LCLib-C++ 1.3 and will be removed in future versions. 
 (2): Checks if there is an error on the stream. Effectively ferror(getUnderlying())||feof(getUnderlying()) 
 (3): Clears any error on the stream. Effectively clearerror(getUnderlying())
 

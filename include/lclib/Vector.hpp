@@ -10,22 +10,8 @@
 #include <lclib/TypeTraits.hpp>
 #include <lclib/Detectors.hpp>
 #include <tuple>
-#if __has_include(<bit>)&&__cplusplus>201703L
-#if defined(__cpp_bit_cast) && __cpp_bit_cast > 201806
-#include <bit>
-using std::bit_cast;
-#define __HAS_BIT_CAST
-#endif
-#endif
-#ifndef __HAS_BIT_CAST
-#include <cstddef>
-#include <new>
-template<typename To,typename From> constexpr std::enable_if_t<sizeof(To)==sizeof(From)&&std::is_trivially_copyable_v<To>&&std::is_trivially_copyable_v<From>&&std::is_trivially_default_constructible_v<To>,To>
-	bit_cast(const From& f){
-		return *std::launder(reinterpret_cast<const To*>(&f));
-	}
 
-#endif
+#include <lclib/BitCast.hpp>
 
 namespace detail{
 	class _pmf_base_tag{};
@@ -100,21 +86,19 @@ template<typename T> struct Vec2{
 		return *this;
 	}
 
-    constexpr auto hashCode()const -> decltype(hashcode(x)){
+    constexpr decltype(auto) hashCode()const{
         return hashcode(x)*31+hashcode(y);
     }
 
     template<typename U> constexpr auto operator==(const Vec2<U>& v)const ->decltype(x==v.x){
     	return std::tie(x,y)==std::tie(v.x,v.y);
     }
-    template<decltype(x==0)* = 0> constexpr auto operator==(detail::zero_tag)const{
-    	return x==0&&y==0;
-    }
+
     template<typename U> constexpr friend auto operator!=(const Vec2& v1,const Vec2<U>& v2)->decltype(!(v1==v2)){
     	return !(v1==v2);
     }
 
-    constexpr T magnetudeSquared()const{
+    constexpr decltype(auto) magnetudeSquared()const{
     	return x*x+y*y;
     }
 
@@ -125,8 +109,12 @@ template<typename T> struct Vec2{
     	return *this/magnetude();
     }
 
+   	template<typename=std::enable_if_t<std::is_constructible_v<bool,T>>> constexpr explicit operator bool()const{
+   		return x||y;
+   	}
+
 };
-template<typename T> constexpr const Vec2<T> ORIGIN{0,0};
+template<typename T> constexpr const Vec2<T> ORIGIN{};
 
 
 template<typename T> constexpr int32_t hashcode(const Vec2<T>& v){

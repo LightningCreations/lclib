@@ -8,23 +8,23 @@
 
 
 
-static seed_t highResTime(){
+static std::uint64_t highResTime(){
 	const auto tp{std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now())};
 	return tp.time_since_epoch().count();
 }
 
-static seed_t nextMultiplier(){
-	static std::atomic<seed_t> number{876730097};
-	const seed_t cprime{2227123637};
-	seed_t val = number.load();
+static std::uint64_t nextMultiplier(){
+	static std::atomic<std::uint64_t> number{876730097};
+	const std::uint64_t cprime{2227123637};
+	std::uint64_t val = number.load();
 	while(number.compare_exchange_strong(val, val*cprime+1));
 	return val;
 }
 
-static seed_t genUniqueSeed(){
+static std::uint64_t genUniqueSeed(){
 	return highResTime()*nextMultiplier();
 }
-static seed_t initRandomizeSeed(seed_t seed){
+static std::uint64_t initRandomizeSeed(std::uint64_t seed){
 	return (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1);
 }
 
@@ -33,15 +33,19 @@ uint32_t Random::next(int bits){
 	seed = (seed * 0x5DEECE66DL + 0xBL) & ((1LL << 48) - 1);
 	return (int)(seed >> (48 - bits));
 }
-Random::Random():lock(){
-	setSeed(genUniqueSeed());
+Random::Random():lock(),seed(initRandomizeSeed(genUniqueSeed())),haveNextNextGaussian(false){
 }
-Random::Random(seed_t s):lock(){
-	setSeed(s);
+Random::Random(std::uint64_t s):lock(),seed(genUniqueSeed()),haveNextNextGaussian(false){
 }
-void Random::setSeed(seed_t seed){
-	std::lock_guard<recursive_mutex> sync(lock);
+
+
+void Random::do_setSeed(std::uint64_t seed){
 	this->seed = initRandomizeSeed(seed);
+}
+
+void Random::setSeed(std::uint64_t seed){
+	std::lock_guard<recursive_mutex> sync(lock);
+	this->do_setSeed(seed);
 	this->haveNextNextGaussian = false;
 }
 
@@ -53,7 +57,7 @@ int Random::nextInt(int bound){
 		throw "Bound must greater then 0";
 
 	if ((bound & -bound) == bound)  // i.e., bound is a power of 2
-		return (int)((bound * (seed_t)next(31)) >> 31);
+		return (int)((bound * (std::uint64_t)next(31)) >> 31);
 
 	int bits, val;
 	do {
@@ -94,11 +98,19 @@ double Random::nextDouble(){
 	return ((uint64_t)next(26) << 27 + next(27))/((double)(1L << 53));
 }
 
-void Random::nextBytes(uint8_t* out,size_t size){
+void Random::do_nextBytes(uint8_t* out,size_t size){
 	for (int i = 0; i < size; )
 		for (int rnd = nextInt(), n = std::min<size_t>(size - i, 4);
         	  n-- > 0; rnd >>= 8)
       		 out[i++] = (char)rnd;
+}
+
+void Random::nextBytes(uint8_t* out,size_t size){
+	this->do_nextBytes(out,size);
+}
+
+uint32_t Random::operator()(){
+	return next(32);
 }
 
 bool Random::nextBoolean(){

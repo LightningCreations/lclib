@@ -96,6 +96,155 @@ A type `T` satisfies CString if and only if it is one of the following:
 <li>A reference to any of the above</li>
 </ul>
 
+## Numeric ##
 
+The Numeric concept defines types that can be used as an Arithmetic-type. 
+
+Given:
+
+
+* A type `T`, which satisfies *Numeric*
+* `t` and `u`, a possibly const value of type `T`.
+* `l`, an lvalue of type `T`
+* `c`, a const lvalue of type `T`.
+* `r`, an rvalue of type `T`
+* `a`, a value of some type which satisfies *Numeric*. May be distinct values of distinct types depending on the expression. 
+* `U`, some other type that satisfies *Numeric* (may be `T`). May be different depending the expression
+
+`T` must either be an arithmetic type or satisfy the following requirements:
+
+<table>
+	<tr>
+		<th>Expression</th>
+		<th>Type</th>
+		<th>Semantics</th>
+	</tr>
+	<tr>
+		<td>T{}</td>
+		<td>T</td>
+		<td>T{} shall result in a value that is the equivalent of the value 0</td>
+	</tr>
+	<tr>
+		<td>T{c}</td>
+		<td>T</td>
+		<td>T{c}==c shall be true</td>
+	</tr>
+	<tr>
+		<td>T{r}</td>
+		<td>T</td>
+		<td>If r==t, then T{r}==t shall be true</td>
+	</tr>
+	<tr>
+		<td>T{a} (optional)</td>
+		<td>T</td>
+		<td>If supported, T{a}==T{a} shall be true. However a==T{a} need not be true (if it is valid), as the conversion may be narrowing</td>
+	</tr>
+	<tr>
+		<td>t+u</td>
+		<td>T</td>
+		<td>The result of the sum of t and u. t+T{}==t must be true. Additionally, u+t==t+u shall be true</td>
+	</tr>
+	<tr>
+		<td>t-u</td>
+		<td>U</td>
+		<td>The difference between t and u. t-T{}==t must be true.</td>
+	</tr>
+	<tr>
+		<td>-t (optional)</td>
+		<td>U</td>
+		<td>If supported, -t==T{}-t is true. Additionally, t-u==t+(-u) and u-t==-(t-u).</td>
+	</tr>
+	<tr>
+		<td>t==u</td>
+		<td>bool</td>
+		<td>True if and only if t and u have the same value</td>
+	</tr>
+	<tr>
+		<td>t==a (optional)</td>
+		<td>bool</td>
+		<td>If the value of a is representable as a value of T, same as T{a}==t, otherwise false</td>
+	</tr>
+	<tr>
+		<td>t!=u</td>
+		<td>bool</td>
+		<td>!(t==u)</td>
+	</tr>
+	<tr>
+		<td>t!=a (optional)</td>
+		<td>bool</td>
+		<td>!(t==a)</td>
+	</tr>
+	<tr>
+		<td>bool{t} (optional)</td>
+		<td>bool</td>
+		<td>Same as t!=T{}</td>
+	</tr>
+</table>
+
+Additionally, the following expressions may be optionally supported, but if they are supported, the semantics must be supported. In this context, all `U` shall always be able to fully represent all values of `T`. Further, when expressions include `a`, `U` shall also be able to fully represent all values of `a`. 
+
+
+<table>
+	<tr>
+		<td>t+a</td>
+		<td>U</td>
+		<td>Equivalent to U{t}+U{a}</td>
+	</tr>
+	<tr>
+		<td>t-a</td>
+		<td>U</td>
+		<td>Equivalent to U{t}-U{a}</td>
+	</tr>
+	<tr>
+		<td>a-t</td>
+		<td>U</td>
+		<td>Equivalent to U{a}-U{t}</td>
+	</tr>
+	<tr>
+		<td>t*u</td>
+		<td>U</td>
+		<td>The value of U that is the product of t and u. t*u==u*t must be true</td>
+	</tr>
+	<tr>
+		<td>t*a</td>
+		<td>U</td>
+		<td>Equivalent to Q{t}*Q{a}, where Q satisfies <i>Numeric</i>, is constructible from both T and decltype(a), and the result type is convertible to U. Also all values of both T and decltype(a) shall be representable as values of Q. t*a==a*t shall be true</td>
+	</tr>
+	<tr>
+		<td>t/u</td>
+		<td>U</td>
+		<td>The value of U that is the quotient of t and u. If the result of the division is representable as a value of T, then T{(t/u)*u}==t is true. Otherwise it is unspecified if that equality holds. Additionally, t/t shall be a unique value that is representable as a value of T, and T{u*(t/t)}==u is true.</td>
+	</tr>
+	<tr>
+		<td>t/a</td>
+		<td>U</td>
+		<td>Equivalent to Q{t}/Q{a}, where Q is defined the same way as it is for t*a</td>
+	</tr>
+	<tr>
+		<td>a/t</td>
+		<td>U</td>
+		<td>Equivalent to Q{a}/Q{t}, where Q is defined the same way as it is for t*a and t/a</td>
+	</tr>
+	<tr>
+		<td>t&lt;u</td>
+		<td>bool</td>
+		<td>True if and only if the value of t is less than the value of u. If t!=u, then one of t&lt;u and u&lt;t must be true. Additionally only one of t&lt;u and u&lt;t may be true</td>
+	</tr>
+	<tr>
+		<td>t&gt;u</td>
+		<td>bool</td>
+		<td>Equivalent to u&lt;t</td>
+	</tr>
+	<tr>
+		<td>t&lt;=u</td>
+		<td>bool</td>
+		<td>Equivalent to (t&lt;u)||(t==u)</td>
+	</tr>
+	<tr>
+		<td>t&gt;=u</td>
+		<td>bool</td>
+		<td>Equivalent to (t&gt;u)||(t==u)</td>
+	</tr>
+</table>
 
 

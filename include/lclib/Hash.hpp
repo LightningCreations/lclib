@@ -9,7 +9,7 @@
 #include <utility>
 #include <array>
 #include <variant>
-#include <lclib/Vector.hpp>
+#include <lclib/BitCast.hpp>
 #include <lclib/TypeTraits.hpp>
 #include <numeric>
 #include <algorithm>
@@ -96,8 +96,8 @@ constexpr int32_t hashcode(double d){
 	}u = {d};
 	return hashcode(u.bits);
 }
-inline int32_t hashcode(const void* v){
-	return hashcode(reinterpret_cast<std::uintptr_t>(v));
+constexpr int32_t hashcode(const void* v){
+	return hashcode(bit_cast<std::uintptr_t>(v));
 }
 constexpr int32_t hashcode(std::nullptr_t n){
 	return 0;

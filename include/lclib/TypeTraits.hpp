@@ -372,4 +372,9 @@ std::conjunction<
 template<typename... Ts> constexpr bool has_common_type_v = has_common_type<Ts...>::value;
 
 
+template<template<typename...> class Cl,typename Target> struct is_specialization:std::false_type{};
+template<template<typename...> class C1,typename... Args> struct is_specialization<C1,C1<Args...>>:std::true_type{};
+
+template<template<typename...> class Cl,typename Target> constexpr bool is_specialization_v = is_specialization<Cl,Target>::value;
+
 #endif

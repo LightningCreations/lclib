@@ -1,5 +1,5 @@
 # Strings Library #
-Included with `<lclib/String>`. 
+Included with `<lclib/Strings.hpp>`. 
 
 ## Synopsis ##
 

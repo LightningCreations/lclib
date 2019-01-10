@@ -114,8 +114,7 @@ static uint8_t toByte(uint64_t t){
 }
 
 void ShadowRandom::initSeed(const unsigned char* buff,size_t s){
-    //Lock state
-    std::lock_guard<recursive_mutex> sync(lock);
+	std::lock_guard sync{lock};
     uint64_t qbuff[256];
     //Construct the fixed array
     uint8_t array[] = 
@@ -137,7 +136,6 @@ void ShadowRandom::initSeed(const unsigned char* buff,size_t s){
         0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
         0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
     };
-    Random::setSeed(1);//Reset the haveNextNextGuassian Flag
     //expand input to main array;
     for(size_t i=0;i<s;i++){
         array[i&0xff] ^= sbox[buff[i]];
@@ -154,6 +152,7 @@ void ShadowRandom::initSeed(const unsigned char* buff,size_t s){
             if(n!=i)
                 qbuff[n] ^= qbuff[i];
     }
+    is_seeded=true;
 }
 
 void ShadowRandom::seed(){
@@ -163,13 +162,14 @@ void ShadowRandom::seed(){
     for(size_t i = 0;i<16;i++)
         vals[i] = dev();
     SHA512(reinterpret_cast<const unsigned char*>(vals),sizeof(vals),reinterpret_cast<unsigned char*>(numbers));
-    SHA512(reinterpret_cast<const unsigned char*>(numbers),sizeof(vals),reinterpret_cast<unsigned char*>(numbers)+64);
+    SHA512(reinterpret_cast<const unsigned char*>(numbers),sizeof(numbers)/2,reinterpret_cast<unsigned char*>(numbers)+64);
     for(size_t j =0;j<16;j++)
         numbers[j] ^= (vals[(j-1)&0x0f]+transform(vals[j]))^ getConstant(j);
+    this->setSeed(1);
     initSeed((unsigned char*)numbers,sizeof(numbers));
 }
 
-void ShadowRandom::setSeed(uint64_t s){
+void ShadowRandom::do_setSeed(uint64_t s){
     uint64_t numbers[32];
     for(size_t j=0;j<32;j++)
         numbers[j] = s^transform(s^getConstant(j));
@@ -182,8 +182,10 @@ uint32_t ShadowRandom::next(int bits){
     return (uint32_t)(s>>(64-bits));
 }
 
-void ShadowRandom::nextBytes(uint8_t* out,size_t bytes){
+void ShadowRandom::do_nextBytes(uint8_t* out,size_t bytes){
     uint64_t block[64];
+    if(!is_seeded)
+    	seed();
     for(size_t s=0;s<32;s++)
         block[s] = transform(state[s]);
     for(size_t s=32;s<64;s++){
@@ -203,10 +205,9 @@ void ShadowRandom::nextBytes(uint8_t* out,size_t bytes){
     }
 }
 
-ShadowRandom::ShadowRandom(){
-    this->seed();
+ShadowRandom::ShadowRandom():is_seeded{false}{
 }
 
-ShadowRandom::ShadowRandom(uint64_t seed){
+ShadowRandom::ShadowRandom(uint64_t seed):is_seeded{false}{
     this->setSeed(seed);
 }

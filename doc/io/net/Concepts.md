@@ -1,18 +1,18 @@
-<h1>Networking Library Concepts</h1>
+# Networking Library Concepts #
 
 Included by `<lclib/Concepts.hpp>`<br/>
 In `namespace net`<br/>
 
 Part of the IO Library and the Networking Library.<br/>
 
-<h2>Overview</h2>
+## Overview ##
 This library provides concepts (if supported), named requirements, and type traits for various networking concepts, used by the Networking Library.  
 
-<h3>SocketAddress</h3>
+### SocketAddress ###
 
 Represents a socket address, that can be connected to. 
 
-<h4>Concept Definition</h4>
+#### Concept Definition ####
 
 ```cpp
 struct SocketAddress{
@@ -45,9 +45,9 @@ If resources are used by the address type, they are cleaned up in the assigned a
 
 
 
-<h3>SocketHandle</h3>
+### SocketHandle ###
 
-<h4>Concept Definition</h4>
+#### Concept Definition ####
 
 ```cpp
 struct SocketHandle{
@@ -62,8 +62,8 @@ SocketHandle& operator=(SocketHandle&&);
 SocketHandle(address_type&&);
 void close();
 bool isOpen();
-const address_type& getConnectedAddress()const [[expects: isOpen()]]
-native_type or cv native_type& getNative() [[expects: isOpen()]]
+const address_type& getConnectedAddress()const [[expects: isOpen()]];
+native_type or cv native_type& getNative() [[expects: isOpen()]];
 };
 ```
 

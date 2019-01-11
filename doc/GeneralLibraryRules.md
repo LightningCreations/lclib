@@ -20,3 +20,24 @@ The exception to this rule is library functions that may call functions that are
 
 If some precondition of a function is not met, the above rules do not apply. 
 
+## Class Templates ##
+
+Many class templates are defined in this library for various purposes. 
+
+These templates act upon the general rules used for the C++ Standard Template Library. 
+
+Specifically, if a program instantiates any class template with an incomplete type, unless that particular incomplete type is explicitly allowed by the template, the behavior is undefined. 
+
+If a program specializes any class template defined by lclib-c++, that class template must support user provided specializations, the type may not be an incomplete type, except for an array of an unknown bound where such an incomplete type is allowed, and must be a `user-specified type`. The behavior of program that specializes a class template defined by lclib-c++ in violation of these rules is undefined.  
+ Additionally, insantiating the primary template, or any partial specialization provided by the library, with that type must not result in the program being ill-formed or invoking undefined behavior at the point of instantiation (though it may have lead to undefined behavior, IE. in the case of ValueDiscard, specializing for a volatile qualified class type). A program that instantiates a class template defined by lclib-c++ in violation of the these rules is ill-formed, no diagnostic required. 
+
+These prohibitions are general, the rules of the specific template always supersede these prohibitions if they are in contradiction with them. 
+
+Unless otherwise specified, the results of instantiating a template with a cv-qualified
+
+Note that following, a `User-Specified type` is specified as follows:
+
+* A cv-qualified version of a `User-specified type`
+* A reference to a `User-specified type`
+* A pointer to, or an array of a `User-specified type`
+* A function type that accepts or returns a parameter of a `User-specified type`

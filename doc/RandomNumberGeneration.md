@@ -233,14 +233,29 @@ double nextDouble(); //(5)
 double nextGuassian(); //(6)
 bool nextBoolean(); //(7)
 void nextBytes(std::uint8_t* arr,std::size_t sz); //(8)
-template<typename Byte,std::size_t N> void nextBytes(Byte(&arr)[N]); //(10)
-template<typename Byte,std::size_t N> void nextBytes(std::array<Byte,N>& arr); //(11)
-template<typename Byte> void nextBytes(span<Byte> s); //(12)
+template<typename Byte,std::size_t N> void nextBytes(Byte(&arr)[N]); //(9)
+template<typename Byte,std::size_t N> void nextBytes(std::array<Byte,N>& arr); //(10)
+template<typename Byte> void nextBytes(span<Byte> arr); //(11)
 ```
 
 (1): Generates a random integer in [0,2^31) and returns it. Equivalent to next(31).  
 
-(2): Generates a random integer in [0,bound) and returns it. The algorithm is described below. 
+(2): Generates a random integer in [0,bound) and returns it. The algorithm is described below
 
-(3): Generates a random floating point number i nn0[ n
+(3): Generates a random floating point number in [0,1) and returns it. Equivalent to `(next(24)/(float)(1<<24))`. 
+
+(4): Generates a random integer in [0,2^63) and returns it. Equivalent to `((std::uint64_t)(next(31)))<<32|next(32)`.
+
+(5): Generates a random double in [0,1) and returns it. Equivalent to `(((long)next(26))<<27|next(27))/(double)(1uLL<<53)`. 
+
+(6): Generates a random double using Guassian Distribution, with Mean 0 and Standard Deviation 1. The algorithm is detailed below. 
+
+(7): Generates a random boolean value. Equivalent to `next(1)!=0`. 
+
+(8): Generates at least `sz` bytes and stores them into the buffer pointed to by arr. Calls `do_nextBytes(arr,sz)`. `[arr,arr+sz)` must be a valid range or the behavior is undefined. 
+
+(9),(10),(11): Calls `do_nextBytes(reinterpret_cast<std::uint8_t*>(std::data(arr)),std::size(arr))`. 
+These methods do not participate in overload resolution unless `is_byte_v<Byte>` is true and `std::is_const_v<Byte>` is false. 
+
+
 

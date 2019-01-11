@@ -6,6 +6,7 @@ Included from `<lclib/Vector.hpp>`
 
 ```cpp
 template<typename T> struct Vec2;
+template<typename T> struct Matrix;
 template<typename T> constexpr const Vec2<T> ORIGIN{};
 template<typename T> constexpr /*see below*/ hashcode(const Vec2<T>&);
 namespace std{
@@ -27,16 +28,18 @@ A class that represents a Point in the 2d plane, where the position on both the 
 * BytesReadable
 * BytesWritable
 
+
 ### Notes ###
 
-`NaN` values are not acceptable values for any function or constructor of Vec2. If a `NaN` value is a paramater for a constructor or method call, or an operand of any of Vec2's overload operators, the behavior is undefined. 
+`NaN` values are not acceptable values for any function or constructor of Vec2. 
+If a `NaN` value is a paramater for a constructor or method call, or an operand of any of Vec2's overload operators, or is assigned to either member of a `Vec2` object, the behavior is undefined. 
 
 
 ### Type Requirements ###
 
-`T` shall satisfy the requirements of *Numeric* or the program is ill-formed. If the semantic requires of *Numeric* are not met, the behavior is undefined. 
+`T` shall satisfy the requirements of *Numeric* or the program is ill-formed, no diagnostic required.
 
-Additionally, `T` may not be a specialization of Vec2 or the program is ill-formed. 
+If `T` is a specialization of Vec2 or of Matrix, the program is ill-formed. 
 
 ### Class Synopsis ###
 
@@ -241,6 +244,17 @@ Vec2()->Vec2<int>; //(3)
 (2): Allows you to deduce a Vector from 2 different types. This deduction guide only applies if `has_common_type_v<Q,U>` is true. 
 
 (3): Default Deduction Guide. 
+
+## class Matrix ##
+
+Implements a 2x2 Matrix of some Numeric type. 
+
+### Notes ###
+
+The Same restrictions on `NaN` values for `Vec2` specializations apply to specializations of `Matrix`. 
+
+### Class Synopsis ###
+
 
 ## struct common_type<Vec2<T>,Vec2<U>> ##
 

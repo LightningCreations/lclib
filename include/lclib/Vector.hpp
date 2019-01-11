@@ -13,19 +13,18 @@
 
 #include <lclib/BitCast.hpp>
 
-namespace detail{
-	class _pmf_base_tag{};
-	using zero_tag = _pmf_base_tag (_pmf_base_tag::*)(char,unsigned char,signed char,short,unsigned short,int,unsigned,long,unsigned long,long long,unsigned long long,float,double,long double,void*,const void*,const volatile void*,const _pmf_base_tag&,std::true_type&&)const volatile noexcept;
-	template<typename T> using detect_compare_zero = decltype(std::declval<const T>()==0);
-}
+
+
+template<typename T> struct Matrix;
 
 using std::sqrt;
 template<typename T> struct Vec2{
+	static_assert(!is_specialization_v<Vec2,T>&&!is_specialization_v<Matrix,T>,"If T is a specialization of Vec2 or of Matrix, the program is ill-formed.");
     T x,y;
     constexpr Vec2():x{},y{}{}
     constexpr Vec2(T x,T y):x{x},y{y}{}
     template<typename Q,typename U,typename=std::enable_if_t<std::is_constructible_v<T,Q>&&std::is_constructible_v<T,U>>>
-    	explicit constexpr Vec2(Q x,U y):x(x),y(y){}
+    	explicit constexpr Vec2(Q x,U y) :x(x),y(y){}
 
 
     constexpr Vec2(const Vec2&)=default;

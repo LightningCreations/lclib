@@ -85,6 +85,15 @@ template<typename Q,typename U> Vec2(Q,U)->Vec2<std::common_type_t<Q,U>>;
 Vec2()->Vec2<int>;
 ```
 
+### Fields ###
+
+```cpp
+T x; //(1)
+T y; //(2)
+```
+
+1. The x component of the vector. 
+
 ### Constructors/Operators ###
 
 The Destructor of Vec2 is implicitly declared. 
@@ -162,7 +171,7 @@ template<typename U> constexpr friend /*see below*/ operator*(const Vec2& v1,con
 
 (3),(6),(9),(10): Scales the x and y components of the vector by a factor of t. The result type is `Vec2<decltype(x*t)>`. This method only participates in overload resolution if the expression `x*t` is well formed in an unevaluated context. `t*x` must be an equalivalent to `x*t` otherwise the behavior is undefined. 
 
-(9) and (10) Additionally do not participate in overload resolution if `U` is a specialization of `Vec2`.
+(9) and (10) Additionally do not participate in overload resolution if `U` is a specialization of `Vec2` or a specialization of `Matrix`. 
 
 (4),(11): Scales the x and y components of the vector, reducing them by a factor of t. The result type is `Vec2<decltype(x/t)>`. This method only participates in overload resolution if the expression`x/t` is well formed in an unevaluated context. 
 
@@ -201,6 +210,7 @@ Both are noexcept if the expression `v1.x==v2.x` are not known to throw any exce
 constexpr /*see below*/ magnetudeSquared()const noexcept(/*see below*/); //(1)
 constexpr /*see below*/ magnetude()const noexcept(/*see below*/); //(2)
 constexpr /*see below*/ normalize()const noexcept(/*see below*/); //(3)
+constexpr /*see below*/ theta()const noexcept(/*see below*/); //(4)
 ```
 
 (1): Computes the squared magnetude of this vector. Same as `(*this)*(*this)`. This method does not participate in overload resolution if that expression is not well formed in an unevaluated context. The result type is the result type of that expression. 
@@ -208,6 +218,8 @@ constexpr /*see below*/ normalize()const noexcept(/*see below*/); //(3)
 (2): Computes the magnetude of this vector. Same as `sqrt(magnetudeSquared())` where sqrt is looked up using ADL and in namespace std. This method does not participate in overload resolution, unless `magnetudeSquared()` is well formed and returns a value of type `Q`, and overload resolution for `sqrt(Q)` succeeds, where `sqrt` is looked up using ADL and in namespace std. The result type is the return type of the method that was resolved. 
 
 (3): Normalizes the vector (reduces it to a vector with length 1). This is the same as `(*this)/magnetude()`. If that expression is not well formed, then the method does not participate in overload resolution. The result type is the result type of that expression. 
+
+(4): Returns the angle of this vector. This is the same as `atan2(x,y)` where atan2 is looked up using ADL and in namespace std. This method does not participate in overload resolution if that expression is not well-formed in an unevaluated context.  The result type is the result type of that expression. 
 
 #### Exceptions ####
 
@@ -249,18 +261,130 @@ Vec2()->Vec2<int>; //(3)
 
 Implements a 2x2 Matrix of some Numeric type. 
 
+Matrix satisfies the requirements of *Numeric*. 
+If `T` satisfies any of the following requirements, `Matrix<T>` also satisfies those requirements: 
+* *LiteralType*
+* *TriviallyCopyable*
+* *StandardLayoutType*
+* *BytesReadable*
+* *BytesWriteable*
+
 ### Notes ###
 
 The Same restrictions on `NaN` values for `Vec2` specializations apply to specializations of `Matrix`. 
 
+### Type Requirements ###
+
+`T` shall satisfy the requirements of *Numeric* or the program is ill-formed, no diagnostic required. 
+
+Additionally, `T` may not be a specialization of `Vec2` or `Matrix` or the program is ill-formed. 
+
+
 ### Class Synopsis ###
 
+```cpp
+template<typename T> struct Matrix{
+public:
+	T a,b,c,d;
+	constexpr Matrix();
+	constexpr Matrix(const Matrix&);
+	constexpr Matrix(const Vec2<T>&,const Vec2<T>&);
+	template<typename Q,typename R,typename S,typename U> constexpr EXPLICIT Matrix(const std::pair<Q,R>&,const std::pair<S,U>&);
+	template<typename U> constexpr EXPLICIT Matrix(const Matrix<U>&);
+	constexpr friend Matrix</*see below*/> operator*(const Matrix&,const Matrix&);
+	template<typename U> constexpr friend Matrix</*see below*/> operator*(const Matrix&,const Matrix<U>&);
+	template<typename U> constexpr friend Matrix</*see below*/> operator*(const Matrix&,const U&);
+	template<typename U> constexpr friend Matrix</*see below*/> operator*(const U&,const Matrix&);
+	constexpr friend Matrix</*see below*/> operator*(const T&,const Matrix&);
+	constexpr friend Matrix</*see below*/> operator*(const Matrix&,const T&);
+	constexpr friend Matrix</*see below*/> operator/(const Matrix&,const T&);
+	template<typename U> constexpr friend Matrix</*see below*/> operator/(const Matrix&,const U&);
+	constexpr friend Matrix</*see below*/> operator+(const Matrix&,const Matrix&);
+	template<typename U> constexpr friend Matrix</*see below*/> operator+(const Matrix&,const Matrix<U>&);
+	constexpr friend Matrix</*see below*/> operator-(const Matrix&,const Matrix&);
+	template<typename U> constexpr friend Matrix</*see below*/> operator-(const Matrix&,const Matrix<U>&);
+	template<typename U> constexpr friend Vec2</*see below*/> operator*(const Matrix&,const Vec2<U>&);
+	template<typename U> constexpr friend Vec2</*see below*/> operator*(const Vec2<U>&,const Matrix&);
+	constexpr friend bool operator==(const Matrix&,const Matrix&);
+	template<typename U> constexpr friend bool operator==(const Matrix&,const Matrix<U>&);
+	constexpr friend bool operator!=(const Matrix&,const Matrix&);
+	template<typename U> constexpr friend bool operator!=(const Matrix&,const Matrix<U>&);
+};
+```
 
-## struct common_type<Vec2<T>,Vec2<U>> ##
+### Fields ###
 
-Determines the common type between 2 vectors. The specialization has a member type `type` which names `Vec2<std::common_type_t<T,U>>` if and only if `has_common_type_v<Q,U>` is true. Otherwise there is no member type. 
+```cpp
+T a;
+T b;
+T c;
+T d;
+```
 
-## struct hash<Vec2<T>> ##
+A `Matrix` object with those variables set to a given value represents the 2x2 matrix of [[a,b],[c,d]]. 
+
+### Constructors ###
+
+```cpp
+constexpr Matrix(); //(1)
+constexpr Matrix(const Matrix&)=default; //(2)
+template<typename U> constexpr EXPLICIT Matrix(const Matrix<U>&); //(3)
+constexpr Matrix(const Vec2<T>& v1,const Vec2<T>& v2); //(4)
+template<typename Q,typename R,typename S,typename U> constexpr EXPLICIT Matrix(const std::pair<Q,R>& p1,const std::pair<S,U>& p2); //(5)
+```
+
+(1): Default constructor. The default matrix is [[0,0],[0,0]]. Value initializes each of the members.
+
+(2): Defaulted Copy Constructor
+
+(3): Converting Copy constructor. This constructor only participates in overload resolution if `std::is_constructible_v<T,U>` is true. This constructor is explicit if and only if `std::is_convertible_v<Vec2<U>,Vec2<T>>` is true. 
+
+(4): Constructor from 2 vectors. The resultant matrix is [[v1.x,v2.x],[v1.y,v2.y]]. 
+
+(5): Constructor from a pair of generic values. The resultant matrix is [[p1.first,p2.first],[p1.second,p2.second]]. 
+This constructor only participates in overload resolution if `std::is_constructible_v<Vec2<T>,Q,R>` and `std::is_constructible_v<Vec2<T>,S,U>`. This constructor is explicit if either of the constructors `T(Q,R)` and `T(S,U)` are explicit. 
+
+### Arithmetic Operators ###
+
+```cpp
+constexpr friend Matrix</*see below*/> operator*(const Matrix& m1,const Matrix& m2); //(1)
+template<typename U> constexpr friend Matrix</*see below*/> operator*(const Matrix& m1,const Matrix<U>& m2); //(2)
+template<typename U> constexpr friend Matrix</*see below*/> operator*(const Matrix& m,const U& v); //(3)
+template<typename U> constexpr friend Matrix</*see below*/> operator*(const U& v,const Matrix& m); //(3)
+constexpr friend Matrix</*see below*/> operator*(const T& v,const Matrix& m); //(4)
+constexpr friend Matrix</*see below*/> operator*(const Matrix& m,const T& v); //(4)
+constexpr friend Matrix</*see below*/> operator/(const Matrix& m,const T& v); //(5)
+template<typename U> constexpr friend Matrix</*see below*/> operator/(const Matrix& m,const U& v); //(6)
+constexpr friend Matrix</*see below*/> operator+(const Matrix& m1,const Matrix& m2); //(7)
+template<typename U> constexpr friend Matrix</*see below*/> operator+(const Matrix& m1,const Matrix<U>& m2); //(8)
+constexpr friend Matrix</*see below*/> operator-(const Matrix& m1,const Matrix& m2); //(9)
+template<typename U> constexpr friend Matrix</*see below*/> operator-(const Matrix& m1,const Matrix<U>& m2); //(10)
+template<typename U> constexpr friend Vec2</*see below*/> operator*(const Matrix& m,const Vec2<U>& v); //(11)
+template<typename U> constexpr friend Vec2</*see below*/> operator*(const Vec2<U>& v,const Matrix& m); //(11)
+```
+
+(1), (2): Performs Matrix Multiplication. The resultant matrix is `[[m1.a*m2.c,m1.b*m2.d],[m1.c*m2.a,m1.d*m2.b]]`. This operator only participates in overload resolution if `m1.a*m2.a` is well-formed in an unevaluated context. The result type is `Matrix<K>` where `K` is the type of the above expression (after applying decay conversions).
+
+(3), (4): Performs scalar multiplication. The resultant matrix is `[[m.a*v,m.b*v],[m.c*v,m.d*v]]`. 
+This operator only participates in overload resolution if `m1.a*v` is well-formed in an unevaluated context, and `U` is not a specialization of either `Vec2` or `Matrix`. The result type is `Matrix<K>` where `K` is the type of the above expression (after applying decay conversions). 
+
+(5), (6): Performs scalar division. The resultant matrix is `[[m.a/v,m.b/v],[m.c/v,m.d/v]]`. This operator only participates in overload resolution if `m1.a/v` is well-formed in an unevaluated context. The result type is `Matrix<K>` where `K` is the type of the above expression (after applying decay conversions). 
+
+(7), (8): Adds 2 matricies together. The resultant matrix is `[[m1.a+m2.a,m1.b+m2.b],[m1.c+m2.c,m1.d+m2.d]]`. This operator only participates in overload resolution if `m1.a+m2.a` is well-formed in an unevaluated context. The result type is `Matrix<K>` where `K` is the type of the above expression (after applying decay conversions). 
+
+(9), (10): Subtracts one matrix from annother. The resultant matrix is `[[m1.a-m2.a,m1.b-m2.b],[m1.c-m2.c,m1.d-m2.d]]`. This operator only participates in overload resolution if `m1.a-m2.a` is well-formed in an unevaluated context. The result type is `Matrix<K>` where `K` is the type of the above expression (after applying decay conversions).
+
+(11): Multiplies a matrix to a vector. The result is `Vec2{m.a*v.x,m.c*v.x}+Vec2{m.b*v.y,m.d*v.y}` This operator only participates in overload resolution if the above expression is well-formed in an unevaluated context. The result type is the result type of that expression, after applying decay conversions. The template arguments of `Vec2` are deduced as though by the Deduction Guides given above. 
+
+## struct common_type&lt;Vec2&lt;T&gt;,Vec2&lt;U&gt;&gt; ##
+
+Determines the common type between 2 vectors. The specialization has a member type `type` which names `Vec2<std::common_type_t<T,U>>` if and only if `has_common_type_v<T,U>` is true. Otherwise there is no member type. 
+
+## struct common_type&lt;Matrix&lt;T&gt;,Vec2&lt;U&gt;&gt; ##
+
+Determines the common type between 2 matricies. The specialization has a member type `type` which names `Matrix<std::common_type_t<T,U>>` if and only if `has_common_type_v<T,U>` is true. Otherwise there is no member type. 
+
+## struct hash&lt;Vec2&lt;T&gt;&gt; ##
 
 Computes the hash of a Vector.
 The result is the result of hashcode. The specialization is disabled if `hashcode(v)` is not well-formed in an unevaulated context, given that v is an object of `Vec2<T>`.  

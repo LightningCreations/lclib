@@ -8,6 +8,9 @@ Provides a Type Erased Wrapper on a polymorphic type and its subclass.
 
 ```cpp
 template<typename T> class PolymorphicWrapper;
+namespace std{
+	template<typename T,typename U> struct common_type<PolymorphicWrapper<T>,PolymorphicWrapper<U>>;
+}
 ```
 
 ## PolymorphicWrapper ##
@@ -78,6 +81,10 @@ PolymorphicWrappers can only be instantiated with class types. A program which i
 PolymorphicWrappers can only be used with polymorphic types. If `T` is not a polymorphic type the the behavior is undefined. 
 
 The behavior of a program which specializes PolymorphicWrapper is undefined. 
+
+The owned object may be allocated on the heap, through some unspecified memory resource, or in the object representation of the `PolymorphicWrapper` itself. When allocated in the object representation, this will be reffered to as *small-buffer optimization*. 
+This optimization can only take place for types which the implementation is able to ensure that the move-constructor of the type will not throw any exceptions (including types `U` for which `std::is_nothrow_move_constructible_v<U>` is true). 
+
 
 ### Member Types ###
 
@@ -154,14 +161,14 @@ template<typename U> PolymorphicWrapper& operator=(PolymorphicWrapper<U>&&) noex
 
 1. Default Constructs a Polymorphic wrapper with no owned value. The dynamic type of this wrapper is `T`. 
 2. Destroys a Polymorphic Wrapper. If the wrapper has an owned value, then the destructor of the polymorphic wrapper's dynamic type is called. If `T` does not have a virtual destructor, the behavior is undefined if the wrapper owns a value. 
-3. Move Constructor. If rhs owns a value, then constructs a PolymorphicWrapper that owns the value owned by rhs (after this, rhs ceases to own a value). If rhs does not own a value, acts as the default constructor. The dynamic type of the constructed polymorphic wrapper is the dynamic type of rhs. After the constructor the dynamic type of rhs is `T`. 
+3. Move Constructor. If rhs owns a value, then constructs a PolymorphicWrapper that owns the value owned by rhs (after this, rhs ceases to own a value). If rhs does not own a value, acts as the default constructor. The dynamic type of the constructed polymorphic wrapper is the dynamic type of rhs. After the constructor resolves, the dynamic type of rhs is `T`. No dynamic memory allocation may take place. 
 4. Deleted Copy Constructor. PolymorphicWrapper is Move Only. 
-5. Move from derived polymorphic wrapper. Acts identically to the normal move constructor. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` is true. 
-6. Constructs the owned value using the Copy Constructor of `T` with `T` as the dynamic type. This constructor only participates in overload resolution if `std::is_copy_constructible_v<T>` is true. 
-7. Constructs the owned value using the Move Constructor of `T` with `T` as the dynamic type. This constructor only participates in overload resolution if `std::is_move_constructible_v<T>` is true. 
-8. If `std::is_copy_constructible_v<U>` is true, constructs the owned value using the copy constructor of `U` with `U` as the dynamic type. Otherwise, defined as deleted. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` is true. 
-9. If `std::is_move_constructible_v<U>` is true, constructs the owned value using the move constructor of `U` with `U` as the dynamic type. Otherwise, defined as deleted. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` is true. 
-10. In-place default constructor. Constructs the owned value using the default constructor of `U` with `U` as the dynamic type. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` and `std::is_default_constructible_v<U>` are both true.
+5. Move from derived polymorphic wrapper. Acts identically to the normal move constructor. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` is true. No dynamic memory allocation may take place. 
+6. Constructs the owned value using the Copy Constructor of `T` with `T` as the dynamic type. If `std::is_copy_constructible_v<T>` is false or `std::is_abstract_v<T>` is true,  defined as deleted.
+7. Constructs the owned value using the Move Constructor of `T` with `T` as the dynamic type.  If `std::is_move_constructible_v<T>` is false or `std::is_abstract_v<T>` is true, this constructor is defined as deleted. 
+8. If `std::is_copy_constructible_v<U>` is true and `std::is_abstract_v<U>` is false, constructs the owned value using the copy constructor of `U` with `U` as the dynamic type. Otherwise, defined as deleted. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` is true. 
+9. If `std::is_move_constructible_v<U>` is true and `std::is_abstract_v<U>` is false, constructs the owned value using the move constructor of `U` with `U` as the dynamic type. Otherwise, defined as deleted. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` is true. 
+10. In-place default constructor. Constructs the owned value using the default constructor of `U` with `U` as the dynamic type. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` and `std::is_default_constructible_v<U>` are both true. If `std::is_abstract_v<U>` is true, this constructor is defined as deleted. 
 11. In-place constructor. Constructs the owned value using the default constructor of `U` with `U` as the dynamic type. This constructor only participates in overload resolution if `std::is_base_of_v<U,T>` and `std::is_constructible_v<U,Args...>` are both true. 
 12. Move Assignment Operator. Same as `swap(*this,rhs); return *this;` 
 13. Deleted Copy Assignment Operator. 
@@ -259,12 +266,13 @@ template<typename T> friend void swap(PolymorphicWrapper<T>& lhs,PolymorphicWrap
 ```
 
 Swaps lhs with rhs. If lhs owns an object, then that object will be owned by rhs after the swap, and vice-versa. If neither lhs nor rhs owns an object, then the swap has no effect. 
+No dynamic memory allocation may take place during the resolution of this method. 
 
 #### Exceptions ####
 
 noexcept
 
-## Deduction Guides ##
+### Deduction Guides ###
 
 ```cpp
 template<typename T> PolymorphicWrapper(T) -> PolymorphicWrapper<T>;
@@ -272,4 +280,13 @@ template<typename T> PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicW
 template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>,Args...) -> PolymorphicWrapper<T>;
 ```
 
+## std::common_type&lt;PolymorphicWrapper,PolymorphicWrapper&gt; ##
 
+Computes the common_type between 2 PolymorphicWrappers.
+
+The member type of `std::common_type<PolymorphicWrapper<T>,PolymorphicWrapper<U>>` is determined as follows:
+* If both `T` and `U` are (possibly cv-qualified) variants of the same type, the member type is `PolymorphicWrapper<std::remove_cv_t<T>>`. 
+* Otherwise, if `std::is_base_of_v<T,U>` is true, then the member type is `PolymorphicWrapper<std::remove_cv_t<T>>`.
+* Otherwise, if `std::is_base_of_v<U,T>` is true, then the member type is `PolymorphicWrapper<std::remove_cv_t<U>>`.
+* Otherwise, if `std::common_type_t<std::remove_cv_t<T>*,std::remove_cv_t<U>*>` is a valid type that names `K*`, and `K` is not (possibly cv-qualified) void, and both `std::is_base_of_v<K,T>` and `std::is_base_of_v<K,U>` are true, then the member type is `PolymorphicWrapper<std::remove_cv_t<K>>`. 
+* Otherwise, there is no member type. 

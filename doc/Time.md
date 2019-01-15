@@ -66,7 +66,8 @@ Since 1.3
 If defined, then the implementation supports the changes to the chrono library made in C++20. 
 While this macro is defined and `__cplusplus` is greater than 201703L, the Time Library operates in C++20 mode, otherwise the time library operates in C++17 mode. 
 
-If this macro is undefined, the implementation may still partially support the changes (for example, conversion from time_points of various clocks to Instants). 
+If this macro is undefined, the implementation may still partially support the changes (for example, conversion from `time_points` of various clocks to Instants). 
+It may also support some of these changes when this macro is defined but `__cplusplus` is not greater than 201703L.
 
 
 ## Type definitions ##
@@ -117,11 +118,16 @@ An implementation-defined specialization of `std::chrono::duration` that has the
 
 As of 1.3: The clock type used by instants. Defined as a clock for which has the date and time 1970-01-01T00:00:00.000Z (the unix epoch) as its epoch, and the minimum interval between reported instants is at least `base_duration`. 
 
-`instant_clock` shall satisfy *TrivialClock*. Specifically, it cannot alias `std::chrono::utc_clock` in C++20 mode. 
+`instant_clock` shall satisfy *Clock*. 
 
-In C++20 mode, this shall alias `std::chrono:system_clock` or have a conversion to `std::chrono::system_clock`.
+In C++20 mode, The expression `std::chrono::clock_cast<std::chrono::system_clock>(tp)` shall be well-formed when treated as an unevaluated operand, where `tp` is a value of `std::chrono::time_point<instant_clock,Dur>` for `Dur` being any specialization of `std::chrono::duration`. 
+Additionally, the expression `std::chrono::clock_cast<instant_clock>(stp)` shall also be well-formed when treated as an unevalauted operand where stp is a specialization of `std::chrono::system_time`. 
+The conversion sequence `std::chrono::clock_cast<instant_clock>(std::chrono::clock_cast<std::chrono::system_clock>(tp))` shall result in the instant that is equal to tp. 
 
-Until 1.3: Defined as `std::chrono::system_clock`. If `std::chrono::system_clock::epoch()` does not represent the unix epoch the behavior of calling any methods of Instant which involve this clock, including the now factory method and the now constructor, is undefined. In C++20 mode, this is guaranteed by the standard. 
+
+Until 1.3: Defined as `std::chrono::system_clock`. If `std::chrono::system_clock::epoch()` does not represent the unix epoch the behavior of calling any clock sensitive methods of Instant, including the now factory method and the now constructor, is undefined. In C++20 mode, this is guaranteed by the standard. 
+
+If `instant_clock` satisfies *TrivialClock*, then the now constructor and now factory methods of Instant are noexcept. 
 
 ### enum class ChronoUnit ###
 
@@ -192,7 +198,8 @@ public:
 	constexpr friend bool operator<(const Duration& d1,const Duration& d2);
 	/* OTHER RELATIONAL OPERATORS */
 	template<typename T> constexpr static T&& wait(const Duration& d,T&& t);
-	template<typename Duration> constexpr explicit operator Duration()const;
+	template<typename duration> constexpr explicit operator duration()const;
+	constexpr explicit operator bool()const;
 };
 ```
 
@@ -301,3 +308,140 @@ constexpr friend bool operator<(const Duration& d1,const Duration& d2)const noex
 
 The other Comparison operators are provided, as though they used the definitions provided from inheriting privately from `RelOps<Duration>` and `StrictOrdering<Duration>`. 
 
+#### Conversion Operators ####
+
+```cpp
+template<typename duration> constexpr explicit operator duration()const; //(1)
+constexpr explicit operator bool()const;
+```
+
+(1): Converts a Duration to a `std::chrono::duration`. This conversion operator only participates in overload resolution if `duration` is a specialization of `std::chrono::duration`. 
+Additionally, it is only guaranteed that this method participates in overload resolution if `std::is_constructible_v<base_duration,duration>` is true, however implementations may choose to still have it participate. 
+
+This operator, like other function templates is not required to be provided as a template. In particular, this can be provided as a single conversion operator to `base_duration`. 
+
+(2): Converts to false if and only if *this represents zero (`Duration{}`).
+
+#### waitFor ####
+
+```cpp
+template<typename T> static T&& waitFor(T&& t,const Duration& d);
+```
+
+Causes the current thread of execution to wait for the period of time specified by d, then returns the argument, forwarded. 
+The period of time which is waited for is only a hint, it may wait for a shorter or longer period of time. In particular, this may be truncated to `base_duration` for the use in `std::this_thread::sleep_for`. 
+
+This method forwards its 1st parameter so that this can be used inline, for example, it can be used in the middle of printing to delay the execution, without having to split the `operator<<` chain. (Appropriate sequencing may be required to be established). 
+
+### class Instant ###
+
+Represents an instant in time, in a similar Manner to `Duration`.
+
+Durations and Instants can be related to each other. In particular every Instant `i` can be represented as a Duration `d`, such that `Instant{}+d==i` is true. 
+
+Instant satisfies *TriviallyCopyable*, *LiteralType*, and *StandardLayoutType*. 
+(Until 1.3): Instant also satisfies *BytesReadable* and *BytesWriteable*. 
+(As of 1.3): Instant does not satisfy the requirements for *Numeric*, as Instants do not define addition between 2 instants. 
+
+
+#### Class Synopsis ####
+
+```cpp
+class Instant{
+public:
+	constexpr Instant();
+	explicit Instant(now_t)NOEXCEPT;
+	constexpr Instant(const Instant&)=default;
+	constexpr Instant(Instant&&)=default;
+	constexpr explicit Instant(seconds_t seconds,nanos_t nanos=0);
+	template<typename time_point> EXPLICIT Instant(const time_point&);
+	constexpr Instant& operator=(const Instant&)=default;
+	constexpr Instant& operator=(Instant&&)=default;
+	static Instant now()NOEXCEPT;
+	static constexpr Instant fromEpoch(const Duration&);
+	constexpr Duration toEpoch();
+	constexpr Instant subtract(const Duration&);
+	constexpr Instant add(const Duration&);
+	constexpr Instant truncateTo(ChronoUnit);
+	constexpr bool isBefore(const Instant&);
+	constexpr bool isAfter(const Instant&);
+	constexpr /*unspecified*/ compareTo(const Instant&);
+	constexpr friend bool operator<(const Instant&,const Instant&);
+	/*RELATIONAL OPERATORS*/
+	constexpr friend Instant operator+(const Instant&,const Duration&);
+	constexpr friend Instant operator-(const Instant&,const Duration&);
+	constexpr friend Duration operator-(const Instant&,const Instant&);
+	constexpr seconds_t toEpochSeconds()const;
+	constexpr nanos_t getNanos()const;
+	constexpr chrono_val_t get(ChronoUnit)const;
+	constexpr int32_t hashCode()const;
+	template<typename time_point> explicit operator time_point()const;
+	explicit operator bool()const;
+};
+```
+
+#### Constructors/Operators ####
+
+```cpp
+constexpr Instant(); //(1)
+explicit Instant(now_t)noexcept(/*see below*/); //(2)
+constexpr explicit Instant(seconds_t seconds,nanos_t nanos=0); //(3)
+template<typename time_point> EXPLICIT Instant(const time_point& tp);//(4)
+constexpr Instant(const Instant&)=default; //(5)
+constexpr Instant(Instant&&)=default; //(6)
+constexpr Instant& operator=(const Instant&)=default; //(7)
+constexpr Instant& operator=(Instant&&)=default; //(8)
+```
+
+1. Default Constructor. The default constructed instant refers to the EPOCH.
+
+2. Tag Constructor to construct the current Instant in time. This constructor is noexcept if and only if `instant_clock` satisfies the requirements of *TrivialClock*. 
+(Until 1.3): This is a clock sensitive method. If the epoch of `std::chrono::system_clock` is not the unix epoch, the behavior is undefined. 
+
+If the (incredibly unlikely) case occurs, where the current period in time is beyond the point that is validly representable by an Instant, the behavior is undefined. (The Maximum time point that an instant supports is 1000000000-12-31 at 23:59:59.999999999Z) 
+
+3. Constructs an instant from a given number of seconds and nanoseconds. Specifically, the resultant instant can be represented by `Duration{seconds,nanos}`. (This constructor behaves as though that instance of `Duration` is constructed as such)
+
+4. Constructs an instant from a time point. This constructor only participates in overload resolution if `time_point` is a specialization of `std::chrono::time_point`. 
+If `time_point` is `std::chrono::time_point<Clock,Dur>`, then the constructor is only guaranteed to participate in overload resolution if `Clock` is `instant_clock` or (in C++20 mode) the expression `std::chrono::clock_cast<instant_clock>(tp)` is well formed when treated as an unevalauted operand, is not known to throw any exceptions, and `std::is_constructible_v<Duration,Dur>` is true. 
+The constructor is explicit if `std::is_convertible_v<Dur,Duration>` is false or if `Clock` is not `instant_clock`. 
+
+The resultant instant can be represented by the duration `Duration{d}`, where d is an object of some unspecified specialization of `std::chrono::duration` which is at least as precise of the lesser of `Dur` and `base_duration`, that is obtained by converting `tp` to `std::chrono::time_point<instant_clock,Dur>` through any combination of calls to `std::chrono::time_point_cast`, (in C++20 mode) `std::chrono::clock_cast`, or some other equivalent but unspecified conversion sequence then calling `time_since_epoch` on the result of that conversion. 
+
+(C++20 Mode Only): If `Clock` is `std::chrono::local_t` this method is conditionally supported. If unsupported, the method is defined as deleted. Otherwise the method cannot be evaluated in a constant expression. The result is `Instant{stp}`, where `stp` is the result of `tp`
+
+(Until 1.3): This is a clock sensitive method. If the epoch of `std::chrono::system_clock` is not the unix epoch, the behavior is undefined. 
+
+(5), (6), (7), (8): Trivial Copy/Move Construction/Assignment.
+
+##### Exceptions #####
+
+(3), (4): These constructors behave as though the appropriate constructor of `Duration` which yeilds the duration that the resultant instant can be represented by is invoked. Any exceptions which would be thrown by those methods are also thrown by this method as though that constructor is invoked. 
+
+(C++20 Mode Only): (4): If the conversion from `tp` to `std::chrono::instant<instant_clock,Dur>` would result in an exception being thrown, that exception is propagated by the constructor. 
+In particular, when `Clock` is `std::chrono::local_t`, the conversion may result in a `std::runtime_error` being thrown. 
+If `Clock` is `instant_clock`, then no exceptions may result from this. 
+
+(2): If a call to `instant_clock::now()` would throw an exception, then that exception is propagated. 
+Otherwise this method does not throw any exceptions (note that this precludes the (incredibly unlikely) possibility that this particular constructor will be invoked passed the maximum length of a Duration, and therefore an Instant). 
+
+
+#### Factory Methods/Explicit Conversion to Duration ####
+
+```cpp
+static Instant now()noexcept(/*see below*/); //(1)
+constexpr static Instant fromEpoch(Duration d)noexcept; //(2)
+constexpr Duration toEpoch()const noexcept; //(3)
+```
+
+1. Same as the result of the `now_t` constructor Overload. This method is noexcept if and only if `instant_clock` satisfies *TrivialClock*. 
+
+2. Constructs the instant which can be represented by `d`. 
+
+3. If this instant can be represented by the Duration `d`, returns that duration. 
+
+#### Truncation/Field Access ####
+
+```cpp
+
+```

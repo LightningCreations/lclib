@@ -348,6 +348,8 @@ public:
     constexpr Instant(seconds_t s,nanos_t n=0):seconds{s},nanos{n}{
     	while(nanos>NANOS_PER_SECOND)
     		(nanos -= NANOS_PER_SECOND),seconds++;
+    	if(seconds<-31556889864401400||seconds>=31556889864401400)
+    	    throw std::out_of_range("A Duration shall fall in the range [-31556889864401400s,31556889864401400s)");
     }
 
     /*
@@ -362,27 +364,28 @@ public:
     	const auto d{tp.time_since_epoch()};
     	seconds = std::chrono::duration_cast<std::chrono::seconds>(d).count();
     	nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(d%1000000000s).count();
+    	if(seconds<-31556889864401400||seconds>=31556889864401400)
+    	    throw std::out_of_range("A Duration shall fall in the range [-31556889864401400s,31556889864401400s)");
     }
     /*
      * Constructs an instant from the current system time inline.
      * Same as the now() factory method.
      * This is a clock sensitive constructor.
      */
-    Instant(now_t);
+    Instant(now_t)noexcept;
     ~Instant()=default;
     constexpr Instant(const Instant&)=default;
     constexpr Instant(Instant&&)=default;
-    Instant(const Instant&&)=delete;
     constexpr Instant& operator=(const Instant&)=default;
     constexpr Instant& operator=(Instant&&)=default;
-    Instant& operator=(const Instant&&)=delete;
+
     /*
         Obtains an Instant from the current system clock. This method should attempt to produce the most accurate result possible.
         This factory method can produce Inaccurate Instants, depending on the accuracy of the system clock.
         The accuracy of the resultant instant is the lesser of the accuracy of the system clock and nanosecond accuracy.
     	This is a clock sensitive Factory Method.
     */
-    static Instant now();
+    static Instant now()noexcept;
 
     static constexpr Instant toEpoch(const Duration& d){
     	return Instant{d.getSeconds(),d.getNanos()};
@@ -478,15 +481,29 @@ public:
     /*
         Obtains the Nano field of this Instant, ranging from 0 inclusive to 1000000000 exclusive
     */
-    constexpr int     getNanos() const{
+    constexpr nanos_t   getNanos() const{
     	return nanos;
     }
     /*
         Obtains the value of this instant, as a number of the given ChronoUnit since the Epoch.
         The resulting value is equivalent to the one produced from this instant, Truncated to that unit.
     */
-    constexpr seconds_t get(ChronoUnit u)const{
-    	return ::truncateTo(seconds,nanos,u);
+    constexpr chrono_val_t get(ChronoUnit u)const{
+    	switch(u){
+    	case ChronoUnit::NANOSECONDS:
+    		return seconds*100000000+nanos;
+    	case ChronoUnit::MICROSECONDS:
+    		return seconds*1000000+nanos/1000;
+    	case ChronoUnit::MILISECONDS:
+    		return seconds*1000+nanos/1000000;
+    	case ChronoUnit::SECONDS:
+    		return seconds;
+    	case ChronoUnit::MINUTES:
+    		return seconds/60;
+    	case ChronoUnit::HOURS:
+    		return seconds/3600;
+    	}
+    	return 0;
     }
 
     /*

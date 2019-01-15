@@ -138,36 +138,31 @@ Equals `is_complete<T>::value`
 
 ### struct `can_contain` ###
 
-If `U` can contain a `T` in its object representation, then inherits from `std::true_type`. Otherwise inherits from `std::false_type`. 
-A Type `U` can contain a `T` if any of the following is true:
-<ul>
-<li>`U` is `T`, or a more or less cv-qualified version of `T` or a type which can contain `T`</li>
-<li>`U` is an array with a known, non-zero bound of `T` or a type which can contain `T`</li>
-<li>`U` is an instantiation of std::array, with a non-zero bound, and the type is `T` or a type which can contain `T`</li>
-<li>`U` is a std::variant and at least one variant member is `T` or a type which can contain `T`</li>
-<li>The trait `std::tuple_size_v<U>` is valid, a non-zero number, and at least one `std::tuple_element_t<U,I>` is `T` or a type which can contain `T`, where `I` is a `std::size_t` in the range `(0,std::tuple_size_v<U>]`. </li>
-<li>`U` is a std::optional of `T` or a type which can contain a `T`</li>
-</ul>
+If `U` reports that objects of its type can contain an object of type `T`, then inherits from `std::true_type`, otherwise inherits from `std::false_type`.
 
-`can_contain` may be specialized on either `U` or `T` if at least one of `U` or `T` is a user defined type or a type which depends on a user defined type, however this is not required if `std::tuple_size` and `std::tuple_element` are specialized, as it will have a partial specialization provided for these "tuple-like types". `U` may not be a scalar type or array type when specialized. 
+Both `T` and `U` shall be complete types, (possibly) cv-qualified void, or an array of unknown bound, or the behavior is undefined. 
 
+If `T` or `U` is a reference type, a function type, or (possibly) cv-qualified void, the program is ill-formed. 
 
-If a program specializes `can_contain` for `T` and `U`, then `U` must be a non-abstract, complete type that satisfies at least one of the following semantic requirements. The behavior of a program that specializes `can_contain` in violation of these rules is undefined:
-* A complete object of type `U` must have at least one subobject which has `T` as its type or a type which can contain a `T`. 
-* A complete object of type `U` has at least one subobject of a (possibly cv-qualified) array type of `B` where `B` satisfies `Byte`, that is aligned at least as strictly as is required of objects of `T`, and that the extent of that array is at least sizeof(`T`). Additionally at least one Initialization or Reinitialization function (see below) must be defined to construct an instance of `T` or a type which can contain a `T` to the storage provided by the array (such as by a placement new expression)
-* `U` is a union type, and `U` declares at least one variant member of a type which can contain a `T`. 
-* Or, `U` has at least one subobject of a union type that declares a variant member as above. 
+An object of type `U` "can contain" an object of type `U` if at least one of the following is true:
+1. `T` and `U` are (possibly cv-qualified) variants of the same type.
+2. `T` is a cv-qualified variant of some type `V`, and an object of type `U` can contain an object of type `V`
+3. `U` is a cv-qualified variant of some type `V`, and an object of type `V` can contain an object of type `T`.
+4. If `U` is an array of some type `V` (with a known or unknown bound), and an object of type `V` can contain an object of type `T`.
+5. If `U` is a specialization of `std::optional` for some type `V`, and an object of type `V` can contain an object of type `U`.
+6. If `U` is a specialization of `std::variant` for some list of types `Vs...` which contains at least once some type `V` for which objects of type `V` can contain an object of type `T`.
+7. If `std::tuple_size<U>` extends `std::integral_constant<std::size_t,N>`, and if `Vs...` is the expansion of `std::tuple_element<U,Is...>` where `Is...` is `0,1,2,...,N`, and `Vs...` contains at least once, some type `V` for which objects of type `V` can contain an object of type `T`. 
+8. `U` is a non-union class type which has some non-static data member of some type `V`, for which objects of type `V` can contain an object of type `T`. 
+9. `U` is a union type, and at least one of its variant members has some type `V`, for which objects of type `V` can contain an object of type `T`.
 
-Additionally, if a given complete object of `U` does contain an object of (possibly cv-qualified) `T`, then that subobject must be accessible.  
+A type `U` reports that objects of its type can contain an object of type `T`, if it satisfies at least one of the requirements from (1-7), except that for the purposes of those requirements, only types that report that they "can contain" a `T` are considered to be able to; or `can_contain` is specialized for that type.
 
-An Initialization function is a constructor or factory function that returns the appropriate type, and initializes the result object.  
+The parameter `K` is provided solely for the purposes of specializing `can_contain`. If `can_contain` is instantiated with this parameter, that parameter must be `void` exactly or the program is ill-formed. 
 
-A Reinitialization function is a function that discards the present state of the object, and initializes the it to a new state. Assignment operators usually count as a Reinitialization function. 
+A program may specialize `can_contain` for some types `T` and `U`, provided that `std::decay_t<T>` and `std::decay_t<U>` is the identity transformation, and at least one of `T` and `U` is a user-defined type, or is a user-provided type that is a full, user-provided specialization of a template. Additionally, `U` must be specified such that,   If these rules (and the general rules for specializing types) are not met, the behavior is undefined. 
 
-A type `U` "can contain" a `T`, reguardless of specialization of this template, if ignoring the user defined specializations `can_contain<T,U>` inherits from `std::true_type`, or if it meets the semantic requirements as above. 
+If a program specializes `can_contain` for its `K` parameter, `K` must be `void` or the behavior is undefined. 
 
-For the purposes of specializing `can_contain`, an additional, defaulted template parameter called `K` is defined. A program that instantiates `can_contain` with any 3rd template parameter aside from (possibly cv-qualified) void, is ill-formed. 
-If this template argument is specialized, it must either be specialized for (possibly cv-qualfied) void or some type alias (such as `std::void_t<...>` or `std::enable_if_t<bool>`) that is equal to (possibly cv-qualified) void. The behavior of a program that specializes `can_contain` on its 3rd argument in violation of these rules is undefined. 3
 
 #### constexpr bool `can_contain_v` ####
 

@@ -54,10 +54,12 @@ static const char releaseDate[]; //(3)
 static const char releaseTime[]; //(4)
 ``` 
 
+
 1. The Present version of LCLib supported by the implementation. The present version this specification defines is 1.3
 2. The patch version of the implementation. This is an implementation defined version constant. 
 3. The date that this implementation was built. 
 4. The time that this implementation was built. 
+
 
 ### Provider Information ###
 

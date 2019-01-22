@@ -132,31 +132,24 @@ template<size_t N> size_t read(int8_t(&arr)[N]); //(4)
 template<size_t N> size_t read(std::byte(&arr)[N]); //(5)
 ```
 
-(1): read(void* ptr,size_t size)<br/>
+(1): read(void* ptr,size_t size)
+
 Reads size bytes from the stream and places it in the buffer pointed to by ptr, then returns the number of bytes read.
-If there exists a complete (that is, well-formed object) at the address given by ptr, then that object, and all of its sub-objects must satisfy the following requirements or the behavior is undefined:
-<ul>
-<li>The object must satisfy TriviallyCopyable</li>
-<li>The object must not a pointer (including pointer to function or pointer to member) and may not have any pointer non-static members</li>
-<li>The object must not have any virtual or duplicate (direct or indirect) base classes</li>
-<li>The object must not have any virtual functions or destructors</li>
-<li>The object must not have any reference non-static data members</li>
-<li>The object must not have any cv-qualified non-static data members</li>
-</ul>
-Further, if the object or any of its sub-objects are a multibyte scalar data-type, the byte order of those values is unspecified. If the byte-order 
-In addition, subclasses of InputStream may impose other restrictions on objects which can be written. If a subclass imposes additional restrictions, they must be clearly detailed including the result of violating such a restriction, whether it be undefined, unspecified, implementation defined, or it results in an exception.
-If the number of bytes read is less then size, this will be indicated in the return value. If an unexpected number of bytes was read, the object is invalidated, and using the object is undefined behavior (except for assignment operators and destructors), unless the object is char, unsigned char, signed char, or std::byte or an array there of, or the object is an array. 
-If the object is an array of any type except for char, unsigned char, signed char, or std::byte, then the total number of valid elements in the array is the number of complete elements read, and using elements passed this point in any way except the above is undefined behavior. 
-If the object is an array of char, unsigned char, signed char, or std::byte, then all elements of the array are valid, and the elements passed the end of the read retain the value which they held before the call to read. 
-If 0 or EOF is returned, no objects were modified and all are valid.  
-If there is not a complete object at the address given by ptr, then ptr must refer to a pointer returned from an allocation function (such as operator new, malloc, calloc, etc.), which was allocated with at least size bytes, or the behavior is undefined. Passing a null pointer to read is undefined behavior.
-If the size of the object indicated by ptr is not at least size, the behavior is undefined. 
-<br/><br/>
+If there exists a valid object `o` at `ptr`, the type of `o` shall satisfy *BytesReadable*. Additionally, if `size` is greater than the size of `o`, then there shall exist some object `k`, which the size of `k` is greater than `size`, the type of `k` satisfies *BytesReadable*, and `k` is *pointer-interconvertible* with `o`. Otherwise the behavior is undefined. 
+
+If there is not a valid object at `ptr`, then `ptr` shall be the result of a call to a memory-allocation function, where the size of the allocated memory is at least `size`, or the behavior is undefined. 
+If this is case, let `n` be the value that would be returned from the function. If `n` is greater than 0, and not `EOF` then an object of type `unsigned char[n]` is constructed at `ptr`, then the read occurs as though `ptr` pointed to that object. 
+
+The read method reads up to `size` bytes from the stream (the number that can be successfully read is `n`), and writes them to the first `n` bytes of the object at `ptr`, or the smallest object which is at least `size` bytes large that is *pointer-interconvertible* with the object at `ptr`.
+
+If `size` bytes cannot be read from the stream without blocking, it is unspecified if the function blocks or reads the maximum number of bytes which can be read successfully, however, in this case, at least one byte shall be read, or the end-of-stream must be reached. 
+Implementations may also throw an exception if it cannot successfully complete a request read without blocking. 
 
 If `size` is 0 it is unspecified if a read actually occurs. If the stream has reached the end of file, it is unspecified if 0 is returned or EOF is returned. Additionally, it is unspecified if any exceptions that may result from reading from the stream still occur. 
 
 (2): int read()<br/>
-Reads a single byte from the stream and returns it. If EOF is reached returns EOF instead.
+Reads a single byte from the stream and returns it. If EOF is reached returns EOF instead. 
+This method blocks until at least one byte can be read from the stream, EOF is reached, or an exception is thrown. 
 <br/><br/>
 
 (3),(4),(5): Reads N bytes from the stream into arr. Effectively read(arr,N);
@@ -177,7 +170,8 @@ bool operator!()const noexcept(true); //(4)
 (1),(4): Checks if an error is on stream. If there is an error the stream should not be used (may be closed or moved). (4) is implemented in terms of (1).<br/> 
 (3): opposite of checkError(), IE. checks if the stream is OK.<br/>
 (2): Clears any error which may be on stream. Has no effect if there is no error, or the error cannot be cleared.
-<h5>Exceptions</h5>
+
+##### Exceptions #####
 All are non-throwing.
 
 
@@ -193,11 +187,12 @@ Extends (public) InputStream
 
 ```cpp
 FilterInputStream(InputStream&); //(1)
-~FilterInputStream()=0; //(2)
+protected:
+~FilterInputStream(); //(2)
 ```
 
 (1): Constructs a FilterInputStream binding it to the specific InputStream.
-(2): Virtual Destructor to prevent direct Construction of FilterInputStreams
+(2): Protected destructor to prevent direct construction. 
 
 #### Read Methods ####
 
@@ -480,21 +475,8 @@ template<typename Byte,std::size_t N> ByteArrayInputStream(const Byte(&arr)[N]);
 template<typename Byte,std::ptrdiff_t extent> ByteArrayInputStream(const span<Byte,extent>& s); //(3)
 template<typename Byte> ByteArrayInputStream(const span<Byte,dynamic_extent>& s); //(4)
 ```
-(1): Constructs a new ByteArrayInputStream over the given buffer. (Until 1.3): The behavior is undefined if buff is a null pointer, an invalid pointer, or points to an object which is not TriviallyCopyable, or either the object or any subobject meets any of the following conditions:
-<ul>
-<li>Is a volatile object</li>
-<li>Is a Pointer type (including Pointer to member and Function Pointer types)</li>
-<li>Is a Reference type</li>
-</ul>
-The requirements are effectively the same as for OutputStream.write(const void*,std::size_t). `buff` may not point passed the end of an object. If `buff` points to the first element of an array, then `blen` may be at most the size of that array. Otherwise, `blen` may be at most the size of the object pointed to by `buff` or the behavior is undefined.<br/>
-(As of 1.3): The behavior is undefined if `buff` is a null pointer does not point to a valid object. Additionally the object pointed to by `buff` shall be of a type that satisfies BytesWriteable. `buff` may point passed the end of any element of an array (except the last element of that array), in which case `buff` is treated as though it points to the next element in that array. If `buff` points passed the end of any other object, the behavior is undefined 
-`blen` must be at most the size given by the following algorithm, given that `o` is the object pointed to by `buff` and its type is `T`. If `blen` is greater than this size then the behavior is undefined:
-* If there exists some object `u` of type `U`, such that the object pointed to by `buff` is the first subobject of `o`, and `u` and `o` are pointer-interconvertible and `U` satisfies BytesWriteable, and `u` is the most complete object which all of these contrainsts are satisified, then `blen` may be at most the size of `u`. If `u` is an element of an array, then `u` is promoted to an array as specified below. 
-* If `o` is the first element of an array `a`, then enclosing objects are checked as above for `a`. If no such enclosing object exists, then `blen` may be at most the size of `a`. 
-* If `o` is the nth element of an array `a` with length k, then `blen` may be at most the size of the array `b`, for which, the first element of `b` is `o`, and the last element of `b` is the kth-1 element of `a`. Enclosing objects are not checked for this subarray.
-* Otherwise, `blen` may be at most the size of `o`. 
-
-If `blen` exceeds the value defined as above, then the behavior is undefined. 
+(1): Constructs a new ByteArrayInputStream over the given buffer. The behavior is undefined if the combiniation of `buff` and `blen` cannot be validly passed to the `write(const void*,std::size_t)` method of OutputStream. 
+ 
 
 This method does not participate in overload resolution unless `is_byte_v<Byte>` is true. 
 (2): Constructs a new ByteArrayInputStream over the given array, with total size N. This method does not participate in Overload resolution unless `is_byte_v<Byte>` is true. This method is identical to (1), called with &arr[0] as `buff` and N as `blen`. 
@@ -507,7 +489,10 @@ std::size_t read(void* ptr,std::size_t sz); //(1)
 int read(); //(2)
 ```
 (1): reads sz bytes from the buffer to ptr. If there are no bytes remaining in the buffer, returns EOF. 
-Otherwise, if there is n bytes remaining in buffer, where n is less than sz, then n bytes are copied from the buffer to ptr, the buffer is advanced to the end, and n is returned. This may invalidate objects at ptr as specified in InputStream.read(void*,std::size_t). Otherwise, sz bytes are copied to ptr, the buffer is advanced by sz bytes, and sz is returned<br/>
+Otherwise, if there is n bytes remaining in buffer, where n is less than sz, then n bytes are copied from the buffer to ptr, the buffer is advanced to the end, and n is returned. This may invalidate objects at ptr as specified in InputStream.read(void*,std::size_t). Otherwise, sz bytes are copied to ptr, the buffer is advanced by sz bytes, and sz is returned
+
+The ranges of `[buff,buff+blen)` and `[ptr,ptr+sz)` must not overlap, or the behavior is undefined. 
+
 (2): reads a single byte from the stream. If there are no bytes remaining in the buffer, returns EOF. 
 Otherwise, returns the byte at the current position of the buffer, and advances the buffer by 1.
 

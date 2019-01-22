@@ -4,11 +4,11 @@
 extern "C"{
 #include <openssl/sha.h>
 };
-LIBLCHIDE uint64_t lrotate(uint64_t t,size_t s){
+static uint64_t lrotate(uint64_t t,size_t s){
     s &=0x3f;
     return t<<s|(t>>(64-s));
 }
-LIBLCHIDE uint64_t rrotate(uint64_t t,size_t s){
+static uint64_t rrotate(uint64_t t,size_t s){
     s &=0x3f;
     return t>>s|(t<<(64-s));
 }
@@ -40,7 +40,7 @@ const size_t rotations[] = {
 uint64_t ShadowRandom::getConstant(size_t s){
     size_t idx = s%12;
     size_t modifier = (2uLL<<((s/12)&0x3f))-1;
-    return lrotate(ctable[idx]*modifier,13);
+    return lrotate(ctable[idx]+modifier,13);
 }
 
 uint64_t ShadowRandom::transform(uint64_t u){

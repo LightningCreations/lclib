@@ -159,7 +159,8 @@ There is a full specialization for void that can be assigned from any type.
 
 A program may specialize ValueDiscard for a `User-specified type` as long as that type is a (possibly cv-qualified) class type, provided that the specialization is assignable from a (possibly const-qualified) lvalue of that type, the destructor is trivial, and the default constructor can be called in a constant expression. 
 The assignment operator must not throw any exceptions unless `T` is volatile-qualified, and evaluating the argument results in an exception. 
-The assignment operator of a user-provided specialization of `ValueDiscard` is permitted to evaluate its argument even if the type is not volatile-qualified, but such an evaluation may not throw any exceptions (unless the type is volatile-qualified). This permits specializations for user-provided types that emulate volatile (reading them itself is observeable behavior) to fully emulate the behavior of volatile.  
+The assignment operator of a user-provided specialization of `ValueDiscard` is permitted to evaluate its argument even if the type is not volatile-qualified, but such an evaluation may not throw any exceptions (unless the type is volatile-qualified). 
+This permits specializations for user-provided types that emulate volatile (reading them itself is observeable behavior) to fully emulate the behavior of volatile.  
 
 If `ValueDiscard<T>` is a user-provided specialization and `ValueDiscard<const T>` is not, then assigning to the `ValueDiscard<const T>` has the same result as assigning to `ValueDiscard<T>`. 
 
@@ -183,7 +184,7 @@ public:
 
 ```cpp
 constexpr ValueDiscard& operator=(const T&); //Member of Primary Template, (1)
-template<typename T> constexpr ValueDiscard& operator=(const T&); //Member of specialization for void
+template<typename T> constexpr ValueDiscard& operator=(const T&); //Member of specialization for void, (2)
 ```
 
 (1): Performs no operation, effectively discarding the value of the right-hand side. 
@@ -264,11 +265,11 @@ Provides an *LegacyOutputIterator* that splits writes between 2 *LegacyOutputIte
 `Predicate` shall have the signature `bool operator()(const T1& t)const`. 
 Note that the parameter does not have to be `const&`, but the predicate must not modify the parameter.  
 
-Additionally, There shall be at least one type `T`, which makes the following expressions well-formed, given `t` is a value of type (possibly const-qualified) `T`, itr1 is an lvalue of Iterator1, itr2 is an lvalue of Iterator2, and pred is a possibly const-qualified value of Predicate.:
+Additionally, There shall be at least one type `T`, which makes the following expressions well-formed, given `t` is an lvalue of type `T`, itr1 is an lvalue of Iterator1, itr2 is an lvalue of Iterator2, and pred is a possibly const-qualified value of Predicate.:
 
-* `pred(t)`, which results in a `bool` or a value of a type which is contextually convertable to `bool`. 
-* `*(itr1++) = t`
-* `*(itr2++) = t`
+* `std::invoke(pred,t)`, which results in a `bool` or a value of a type which is contextually convertable to `bool`,  
+* `*(itr1++) = std::move(t)`
+* `*(itr2++) = std::move(t)`
 
 If a program instantiates `split<Iterator1,Iterator2,Predicate>`, and no such valid type `T` is available to the program, the that program is ill-formed, no diagnostic required. 
 
@@ -332,12 +333,11 @@ template<typename T> constexpr void operator=(T&& t); //(2)
 
 (1): All are no-ops that simply return `*this`.
 
-(2): If calling the stored predicate function on t (which is an lvalue even if T is not a reference type), results in a value that when contextually converted to bool results in true, increments and dereferences itr1 and assigns `std::forward<T>(t)` to it. Otherwise increments and dereferences itr2 and assigns `std::forward<T>(t)` to it. 
+(2): If the result of the expression `std::invoke(pred,t)`, contextually converted to bool, is true, increments and dereferences itr1 and assigns `std::forward<T>(t)` to it. Otherwise increments and dereferences itr2 and assigns `std::forward<T>(t)` to it. 
 
-The predicate shall be called as if by `pred(t)`, assigning to itr1 should be done as if by `(*itr1++) = std::forward<T>(t)`, assigning itr2 should be done as if by `(*itr2++) = std::forward<T>(t)`. 
+The predicate shall be called as if by `std::invoke(pred,t)`, assigning to itr1 should be done as if by `(*itr1++) = std::forward<T>(t)`, assigning itr2 should be done as if by `(*itr2++) = std::forward<T>(t)`. 
 
-
-This method does not participate in overload resolution unless pred is callable with an lvalue of `T`, and both `itr1` and `itr2` can be referenced and the result assigned with an xvalue of `T` (if `T` is not a reference type), or an lvalue of `std::remove_reference_t<T>` (if `T` is an lvalue reference type). 
+This method does not participate in overload resolution unless pred is Callable with an lvalue of `T`, and both `itr1` and `itr2` can be referenced and the result assigned with an xvalue of `T` (if `T` is not a reference type), or an lvalue of `std::remove_reference_t<T>` (if `T` is an lvalue reference type). 
 
 #### Exceptions ####
 
@@ -374,7 +374,8 @@ public:
 	using low_constant = std::integral_constant<T,min>;
 	using high_constant = std::integral_constant<T,max>;
 	constexpr explicit numeric_range()=default;
-	oonstexpr explicit numeric_range(low_constant,high_constant=high_constant());c	constexpr numeric_range(const numeric_range&)=default;
+	oonstexpr explicit numeric_range(low_constant,high_constant=high_constant());c
+	constexpr numeric_range(const numeric_range&)=default;
 	constexpr numeric_range& operator=(const numeric_range&)=default;
 	~numeric_range()=default;
 	constexpr iterator begin() const;
@@ -390,4 +391,4 @@ public:
 };
 ```
 
-`
+

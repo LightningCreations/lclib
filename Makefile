@@ -1,5 +1,5 @@
-CC := gcc-8
-CXX := g++-8
+CC := gcc
+CXX := g++
 INCLUDE_PATH := include
 
 CXXHEAD := $(foreach ipath,$(INCLUDE_PATH),$(wildcard $(ipath)/**/*.hpp) $(wildcard $(ipath)/**/*.inl))
@@ -25,7 +25,7 @@ CC_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -fpic $(CC_DIALEC
 COMPILE_FLAGS = -g -fvisibility-inlines-hidden -fvisibility=default -fpic $(CXX_DIALECT) -w -fpermissive -fwrapv
 LINKER_FLAGS = -static-libstdc++ -shared -flinker-output=dyn -pthread -fpic
 LIBS = -lssl -lcrypto
-OUTPUT = liblc.so
+OUTPUT = liblc-cxx.so
 INCLUDE = $(foreach ipath,$(INCLUDE_PATH),-I$(ipath))
 DEFINES = -DLCLIB_CXX_DEFINITION
 
@@ -101,7 +101,7 @@ rebuild:
 out/%.o: src/%.cpp $$(D@) $(CXXHEAD:%.hpp=%.hpp.gch) $(CCHEAD:%.h=%.h.gch)
 	$(CXX) $(COMPILE_FLAGS) $(DEFINES) -c $(INCLUDE) -o $@ $<
 
-out/%.o: src/%.cpp $$(D@) $(CCHEAD:%.h=%.h.gch)
+out/%.o: src/%.c $$(D@) $(CCHEAD:%.h=%.h.gch)
 	$(CC) $(COMPILE_FLAGS) $(DEFINES) -c $(INCLUDE) -o $@ $<
 
 $(LINFO_OBJ): $(LINFO_OBJ:out/%.o=src/%.cpp) out/ $(OBJECT_FILES)

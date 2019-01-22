@@ -8,12 +8,12 @@ Various macros can be defined here, if supported. Implementations may choose to 
 
 Additionally, a class is defined with a bunch of static members. These members indicate traits about the library and the provider. 
 
-## struct liblc_cxx ##
-A special type defined with a set static data members. These members are guaranteed constant initialization, and are const objects. 
-
-### Synopsis ###
+## Synopsis ##
 
 ```cpp
+
+#define HAS_CXX20_CLOCK
+
 struct liblc_cxx{
 	static const char name[];
 	static const char copyright[];
@@ -27,7 +27,11 @@ struct liblc_cxx{
 };
 ```
 
-### Library Name ###
+## HAS_CXX20_CLOCK Macro ##
+
+(Since 1.3): Defined by the implementation here or in `<lclib/JTime.hpp>` if and only if the implementation supports C++20 mode for the Time API. 
+
+## Library Name ##
 
 ```cpp
 static const char name[];
@@ -35,7 +39,7 @@ static const char name[];
 
 Returns the Name of the library. Always the String literal "LCLib C++". 
 
-### Copyright Information ###
+## Copyright Information ##
 
 ```cpp
 static const char copyright[]; //(1)
@@ -45,7 +49,7 @@ static const char license[]; //(2)
 1. A line describing the copyright of the library implementation. The official implementation has this presently defined as "(c) 2018, Connor Horman and Lightning Creations". 
 2. The License that applies to the implementation. The official implementation uses the GNU Lesser General Public License at Version 3, and therefore defines this as "GNU LGPLv3". 
 
-### Library Version Information ###
+## Library Version Information ##
 
 ```cpp
 static const Version ver; //(1)
@@ -61,7 +65,7 @@ static const char releaseTime[]; //(4)
 4. The time that this implementation was built. 
 
 
-### Provider Information ###
+## Provider Information ##
 
 ```cpp
 static const char providerName[]; //(1)

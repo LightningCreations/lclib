@@ -13,17 +13,17 @@
 #include <tuple>
 #include <lclib/TypeTraits.hpp>
 
-template<typename T,bool=true> struct _va_promote:type_identity<T>{};
+template<typename T,bool=std::is_enum_v<T>> struct _va_promote:type_identity<T>{};
 template<> struct _va_promote<float>:type_identity<double>{};
 template<> struct _va_promote<unsigned char>:type_identity<unsigned>{};
 template<> struct _va_promote<signed char>:type_identity<int>{};
 template<> struct _va_promote<char>:std::conditional<std::is_signed_v<char>,int,unsigned>{};
 template<> struct _va_promote<short>:type_identity<int>{};
 template<> struct _va_promote<unsigned short>:type_identity<unsigned>{};
-template<typename T> struct _va_promote<const T>:_va_promote<T>{};
-template<typename T> struct _va_promote<volatile T>:_va_promote<T>{};
-template<typename T> struct _va_promote<const volatile T>:_va_promote<T>{};
-template<typename E> struct _va_promote<E,std::is_enum_v<E>>:
+template<typename T> struct _va_promote<const T,false>:_va_promote<T>{};
+template<typename T> struct _va_promote<volatile T,false>:_va_promote<T>{};
+template<typename T> struct _va_promote<const volatile T,false>:_va_promote<T>{};
+template<typename E> struct _va_promote<E,true>:
 	std::conditional<std::is_convertible_v<E,std::underlying_type_t<E>>,typename _va_promote<std::underlying_type_t<E>>::type,E>{};
 
 template<typename T> using _va_promote_t = typename _va_promote<T>::type;

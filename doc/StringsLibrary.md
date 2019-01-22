@@ -18,7 +18,8 @@ template<typename PredicateFn> struct case_insensitive_order<void,PredicateFn>;
 template<typename CharT> constexpr CharT* strend(CharT* str)noexcept;
 ```
 
-Given str is a pointer to a C-style string, returns str+n, where n is the smallest positive value of type `std::ptrdiff_t` such that `*(str+n)` is equal to CharT{}. Equalivalent to `const_cast<CharT*>(&*(std::basic_string_view<std::remove_cv_t<CharT>>{str}.end()))`. 
+Given str is a pointer to a C-style string, returns str+n, where n is the smallest positive value of type `std::ptrdiff_t` such that `*(str+n)` is equal to CharT{}. 
+Equalivalent to `const_cast<CharT*>(&*(std::basic_string_view<std::remove_cv_t<CharT>>{str}.end()))`. 
 The behavior is undefined if [str,str+n) is not a valid range. 
 
 This method only participates in overload resolution if `is_cstring_v<CharT*>` is true. 
@@ -85,7 +86,7 @@ Given:
 (1) throws anything that the call to `toupper` throws, or that calling predicate on `toupper` 
 
 
-#### case\_insensitive\_order&lt;void&gt; ####
+#### case_\insensitive\_order&lt;void&gt; ####
 Specialization of `case_insensitive_order` for generic types. 
 
 `std::is_default_constructible_v<PredicateFn>` must be true or the program is ill-formed. 

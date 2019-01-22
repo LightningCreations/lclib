@@ -102,14 +102,14 @@ namespace detail{
 /**
  * Returns a function of x, which is equivalent to (df/dx).
  * If adl lookup finds a definition of d for Fn, returns the result of that.
- * Otherwise, if Fn has a member function d()
+ * Otherwise, if Fn has a member function d() returns the result of calling f.d()
  * Otherwise, returns g(x) where g(x)=lim[h->0+](f(x+h)-f(x))/(h)
  *
  * Requires: Fn is Differentiable
  */
 template<typename Fn> constexpr auto differentiate(Fn&& f){
 	using detail::d;
-	return d(f);
+	return d(std::forward<Fn>(f));
 }
 
 

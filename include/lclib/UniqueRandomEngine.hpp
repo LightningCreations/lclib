@@ -26,11 +26,12 @@ private:
 	static uint64_t classSeedGenerator(){
 		return detail::seedGenHelper(hashcode(typeid(T)));
 	}
-public:
+protected:
+	~UniqueRandomProvider()=default;
 	static Random& rand(){
-		static Random r{classSeedGenerator()};
-		return r;
-	}
+			static Random r{classSeedGenerator()};
+			return r;
+		}
 };
 
 

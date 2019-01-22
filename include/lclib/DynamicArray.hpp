@@ -39,7 +39,7 @@ namespace detail{
 template<typename T,typename Allocator=std::allocator<T>>
 struct DynamicArray {
 public:
-	using allocator = Allocator;
+	using allocator_type = Allocator;
 	using value_type = T;
 	using pointer = typename std::allocator_traits<Allocator>::pointer;
 	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
@@ -54,7 +54,7 @@ public:
 private:
 	pointer p;
 	size_type sz;
-	allocator a;
+	allocator_type a;
 public:
 	DynamicArray(const DynamicArray& o) :
 		a{ std::allocator_traits<Allocator>::select_on_container_copy_construction(o.a) } {
@@ -66,7 +66,7 @@ public:
 	}
 
 	DynamicArray(DynamicArray&& o)
-		noexcept(std::is_nothrow_move_constructible_v<allocator>) :a{ std::move(o.a) },
+		noexcept(std::is_nothrow_move_constructible_v<allocator_type>) :a{ std::move(o.a) },
 		p{ std::exchange(o.p,nullptr) }, sz{ o.sz }{}
 	~DynamicArray() {
 		if (p != nullptr) {
@@ -81,30 +81,66 @@ public:
 	}
 
 	friend void swap(DynamicArray& arr1, DynamicArray& arr2)
-		noexcept(noexcept(swap(arr1.a, arr2.a))) {
+		noexcept(std::allocator_traits<Allocator>::propagate_on_container_swap::value||noexcept(swap(arr1.a, arr2.a))) {
 		using std::swap;
 		swap(arr1.p, arr2.p);
 		swap(arr1.sz, arr2.sz);
-		swap(arr1.a, arr2.a);
+		if constexpr(std::allocator_traits<Allocator>::propagate_on_container_swap::value)
+			swap(arr1.a, arr2.a);
+	}
+
+	void swap(DynamicArray& arr) noexcept(noexcept(swap(*this,arr))){
+		swap(*this,arr);
 	}
 
 	DynamicArray()noexcept(true) :p{ nullptr }, sz{ 0 }{}
-	explicit DynamicArray(allocator a)noexcept(std::is_nothrow_move_constructible_v<T>) :p{ nullptr }, sz{ 0 }, a{ std::move(a) }{}
 
-	template<typename = std::enable_if_t<std::is_default_constructible_v<T>&&std::is_default_constructible_v<Allocator>>>
-	explicit DynamicArray(size_type sz) :sz{ sz } {
+	template< typename = std::enable_if_t<std::is_default_constructible_v<T>&&std::is_default_constructible_v<Allocator>>>
+	explicit DynamicArray(size_type sz) noexcept(std::is_nothrow_default_constructible_v<T>&&std::is_nothrow_default_constructible_v<Allocator>) :sz{ sz } {
 		p = std::allocator_traits<Allocator>::allocate(a, sz);
 		for (std::size_t n = 0; n < sz; n++)
 			std::allocator_traits<Allocator>::construct(a, &p[n]);
 		p = std::launder(p);
 	}
+
+	template<typename Fn,std::enable_if_t<std::is_default_constructible_v<Allocator>&&std::is_constructible_v<T,std::invoke_result_t<Fn&&>>>* = 0>
+		explicit DynamicArray(size_type sz,Fn&& fn) :sz{sz}{
+			p = std::allocator_traits<Allocator>::allocate(a,sz);
+			for(size_type n = 0;n<sz;n++)
+				std::allocator_traits<Allocator>::construct(a,&p[n],std::invoke(std::forward<Fn>(fn)));
+			p = std::launder(p);
+		}
+	template<typename Fn,std::enable_if_t<std::is_default_constructible_v<Allocator>&&std::is_constructible_v<T,std::invoke_result_t<Fn&&,size_type>>&&!std::is_invocable_v<Fn&&>>* = 0>
+		explicit DynamicArray(size_type sz,Fn&& fn) :sz{sz}{
+			p = std::allocator_traits<Allocator>::allocate(a,sz);
+			for(size_type n = 0;n<sz;n++)
+				std::allocator_traits<Allocator>::construct(a,&p[n],std::invoke(std::forward<Fn>(fn),n));
+			p = std::launder(p);
+		}
+
 	template<typename = std::enable_if_t<std::is_default_constructible_v<T>>>
-	explicit DynamicArray(size_type sz, allocator a) :sz{ sz }, a{ std::move(a) }{
+	explicit DynamicArray(size_type sz, allocator_type a) :sz{ sz }, a{ std::move(a) }{
 		p = std::allocator_traits<Allocator>::allocate(a, sz);
 		for (std::size_t n = 0; n < sz; n++)
 			std::allocator_traits<Allocator>::construct(a, &p[n]);
 		p = std::launder(p);
 	}
+
+	template<typename Fn,std::enable_if_t<std::is_constructible_v<T,std::invoke_result_t<Fn&&>>>* = 0>
+		explicit DynamicArray(size_type sz,Fn&& fn,allocator_type a) :sz{sz},a{std::move(a)}{
+			p = std::allocator_traits<Allocator>::allocate(a,sz);
+			for(size_type n = 0;n<sz;n++)
+				std::allocator_traits<Allocator>::construct(a,&p[n],std::invoke(std::forward<Fn>(fn)));
+			p = std::launder(p);
+		}
+	template<typename Fn,std::enable_if_t<std::is_constructible_v<T,std::invoke_result_t<Fn&&,size_type>>&&!std::is_invocable_v<Fn&&>>* = 0>
+		explicit DynamicArray(size_type sz,Fn&& fn,allocator_type a) :sz{sz},a{std::move(a)}{
+			p = std::allocator_traits<Allocator>::allocate(a,sz);
+			for(size_type n = 0;n<sz;n++)
+				std::allocator_traits<Allocator>::construct(a,&p[n],std::invoke(std::forward<Fn>(fn),n));
+			p = std::launder(p);
+		}
+
 	template<typename U, typename = std::enable_if_t<std::is_constructible_v<T, const U&>&&std::is_default_constructible_v<Allocator>>>
 	explicit DynamicArray(const std::initializer_list<U>& il) :
 		sz{ a.size() } {
@@ -125,15 +161,14 @@ public:
 	template<typename Container,
 		std::enable_if_t<
 		std::is_constructible_v<DynamicArray, typename Container::const_iterator, typename Container::const_iterator>&&
-		std::is_convertible_v<typename Container::value_type, T>>* = 0>
+		std::is_convertible_v<typename Container::value_type, T>&&std::is_default_constructible_v<Allocator>>* = 0>
 		DynamicArray(const Container& c) :DynamicArray(c.cbegin(), c.cend()) {}
 
 	template<typename Container,
 		std::enable_if_t<
 		std::is_constructible_v<DynamicArray, typename Container::const_iterator, typename Container::const_iterator> &&
-		!std::is_convertible_v<typename Container::value_type, T>>* = 0>
+		!std::is_convertible_v<typename Container::value_type, T>&&std::is_default_constructible_v<Allocator>>* = 0>
 		explicit DynamicArray(const Container& c) :DynamicArray(c.cbegin(), c.cend()) {}
-
 	template<typename... Tuple,
 		typename = std::enable_if_t<std::conjunction_v<std::is_default_constructible<Allocator>, is_detected<detail::detect_constructible, T, Tuple>...>>
 	>
@@ -166,15 +201,6 @@ public:
 
 	const_reference operator()(size_type i)const{
 		return p[i];
-	}
-
-	template<typename U>
-	auto operator()(size_type i, U&& t)->decltype(p[i][std::forward(t)]) {
-		return p[i][std::forward<U>(t)];
-	}
-	template<typename U>
-	auto operator()(size_type i, U&& t)const->decltype(const_cast<const T*>(p)[i][std::forward<U>(t)]) {
-		return const_cast<const T*>(p)[i][std::forward<U>(t)];
 	}
 
 	iterator begin(){

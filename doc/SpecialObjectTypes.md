@@ -17,71 +17,53 @@ In addition: No comparison operators may be user supplied. In C++20 mode, the ty
 
 BytesWriteable concept defines types which can have there raw byte representation written to a stream.
 For a Type to satisfy BytesWriteable Concept, objects of that type, and all subobjects of such an object must:
-<ul>
-<li>Have all of Copy-Constructor, Move-Constructor, Copy-Assignment Operator, or Move-assignment operator trivial or deleted</li>
-<li>(As of 1.3) Have a trivial, constexpr, or deleted Default Constructor</li>
-<li>Have a trivial, non-deleted, and non-virtual destructor.</li>
-<li>Have at least one of Copy-Constructor, Move-Constructor, Copy-Assignment Operator, or Move-Assignment Operator non-deleted</li>
-<li>(Until 1.3)Not have any virtual member functions. (As of 1.3) glvalues of the type of that object may not be Polymorphic</li>
-<li>Not be a volatile object</li>
-<li>Not be of a Pointer, Pointer to Member, or Pointer to Function type</li>
-<li>Not have any Reference non-static data members</li>
-<li>May not have duplicate (direct or indirect) base classes, or a virtual base class type</li>
-<li>(As of 1.3) Have no private or protected data members or base classes</li>
-</ul>
 
-Or must be one of the following:
-<ul>
-<li>A union object with all variant members satisfying BytesWriteable</li>
-<li>A std::variant with all variant members satisfying BytesWriteable</li>
-<li>A std::tuple or std::pair with each tuple element satisfying BytesWriteable</li>
-<li>A std::optional of a BytesWriteable Type.</li>
-</ul>
-All Scalar types except for pointers satisfy this concept. All class types that are TriviallyCopyable and StandardLayout that do not have any pointer members also satisfy this concept. All const qualified versions of types which satisfy BytesWriteable 
-In general, BytesWriteable is a less strict version of Plain-old-data type. Because of this, Most POD Types also satisfy BytesWriteable. 
-The differences between Plain-old-datatype and BytesWriteable are as follows: 
-<ul>
-<li>POD Types mandates Trivial Default Constructor, BytesWriteable does not</li>
-<li>POD Types allow Pointer members and include Pointer types, BytesWriteable does not</li>
-</ul>
+* Have all of Copy-Constructor, Move-Constructor, Copy-Assignment Operator, or Move-assignment operator trivial or deleted
+* (As of 1.3) Have a trivial, constexpr, or deleted Default Constructor
+* Have a trivial, non-deleted, and non-virtual destructor.
+* Have at least one of Copy-Constructor, Move-Constructor, Copy-Assignment Operator, or Move-Assignment Operator non-deleted
+* Not have any virtual member functions. 
+* Not be a volatile object
+* Not be of a Pointer, Pointer to Member, or Pointer to Function type
+* Not have any Reference non-static data members
+* May not have duplicate (direct or indirect) base classes, or a virtual base class type
+* (As of 1.3) Have no private or protected data members or base classes
+* (As of 1.3) May not be *over-aligned*
+
+Or shall be one of the follow:
+* An array of a component type which 
+
+All Scalar types except for pointers satisfy this concept. All class types that are TriviallyCopyable and StandardLayout that do not have any pointer members also satisfy this concept. 
+
+Except as noted below, all base classes and non-static data members of a type which satisfies *BytesWriteable* shall also satisfy *BytesWriteable*. 
+
 The decision to define a BytesWriteable concept was for Complete Target Independence. In most cases, TriviallyCopyable (and Potentially StandardLayout) is suitable for reading from the byte representation of a type. 
 BytesWriteable types are suitable to be written to a file, and read into a Compatible BytesReadable type by similar implementations, which may not even be written in C++. (Hense why pointer types aren't BytesWriteable). 
 It should also be noted, that multibyte scalar types, while satisfying BytesWriteable, may not be suited for IO, due to varying Endianess of systems and implementation. 
 (Until 1.3) It should be noted that despite fwrite/fread only specifying TriviallyCopyable, they should only be used with BytesWriteable types and BytesReadable types respectively. 
 
+No class types defined by the C++ Standard Template Library satisfy these requirements, due to implementation differences. 
+
+No type in LCLib-C++ satisfy these requirements, unless explicitly stated. 
+Note that some types in LCLib-C++ do not satisfy these requirements, but do not prevent types that inherit from them from satisfying these requirements.
+
+*BytesWriteable* implies *TriviallyCopyable* and (as of 1.3) *StandardLayoutType*. 
+
 ## BytesReadable ##
 
 BytesReadable types are types which are suitable for having there byte representation read from a byte stream. 
-For a type to satisfy BytesReadable, objects of that type, and all subobjects of such an object must:
-<ul>
-<li>(As of 1.3) Have a trivial, constexpr, or deleted Default Constructor</li>
-<li>Have a trivial, non-deleted, and non-virtual destructor.</li>
-<li>Have at least one of Copy-Constructor, Move-Constructor, Copy-Assignment Operator, or Move-Assignment Operator non-deleted</li>
-<li>(Until 1.3)Not have any virtual member functions. (As of 1.3) glvalues of the type of that object may not be Polymorphic</li>
-<li>Not be a const object or a volatile object</li>
-<li>Not be of a Pointer, Pointer to Member, or Pointer to Function type.</li>
-<li>May not have any reference non-static members</li>
-<li>May not have duplicate (direct or indirect) base classes, or a virtual base class type</li>
-</ul>
 
-Or must be one of the following:
-<ul>
-<li>A union object with all variant members satisfying BytesReadable</li>
-<li>A std::variant with all variant members satisfying BytesReadable</li>
-<li>A std::tuple or std::pair with each tuple element satisfying BytesReadable</li>
-<li>A std::optional of a BytesReadable Type.</li>
-</ul>
-In general, BytesReadable  is a strict subset of BytesWriteable. 
-Specifically any type which satisfies BytesReadble satisfies BytesWriteable, and any type which satisfies BytesWriteable, is not const-qualified, and has no const subobjects also satisfies BytesReadable. 
-
+A type satisfies *BytesReadable* if it satisfies *BytesWriteable*, is not const-qualified, and has no const subobjects. 
 
 ## CharacterType ##
 
 The CharacterType concept is defined for Types which use Strings or Characters. A CharacterType is any type T for which `is_char_v<T>` defined in `<lclib/TypeTraits.hpp>` is true. 
-This trait has explicit specializations for `char`, `wchar_t`, `char16_t`, and `char32_t`. The trait may be specialized the user defined type `T`. Additionally, in C++20 mode, if `__cpp_char8_t` is defined, and is at least 201811L, then this trait is explicitly specialized for `char8_t`. 
-If it is, then `std::char_traits` must be specialized for `T` given that the specialization satisfies `CharTraits`. 
-In addition, type aliases for `std::basic_string<T>` and `std::basic_string_view<T>` should be provided. 
-They may use a custom CharTraits type, and a custom allocator. It may also be prudent to alias `security::basic_string<T>` (defined in `<lclib/security/SecureAllocator.hpp>`), with the same rules. 
+This trait has explicit specializations for `char`, `wchar_t`, `char16_t`, and `char32_t`. The trait may be specialized the user defined type `T`. 
+Additionally if `__cpp_char8_t` is defined, and is at least 201811L, then this trait is explicitly specialized for `char8_t`. 
+
+If it is, then `std::char_traits` must be specialized for `T` given that the specialization satisfies *CharTraits*. 
+
+
 
 ## CString ##
 
@@ -111,7 +93,7 @@ Given:
 * `i`, Some value for which `t*i` is a well formed expression and the result is equal to `t`
 * `z`, the null/empty/zero value for `T`, where `t+z==t` is true. 
 * `a`, a value of any type in a potentially constrained set of types which satisfy *Numeric*. May be distinct values of distinct types depending on the expression. 
-* `U`,`Q`, some other type that satisfies *Numeric* (may be `T`), which are as standins for a Generic type. `Q{t}` and `Q{a}` must both be well formed expressions, and may not result in narrowing conversions (that is, `Q` must be able to completely represent all possible values of `T` and of the type of a.) 
+* `U`,`Q`, some other types that satisfies *Numeric* (may be `T`), which are as standins for a Generic type. `Q{t}` and `Q{a}` must both be well formed expressions, and may not result in narrowing conversions (that is, `Q` must be able to completely represent all possible values of `T` and of the type of a.) 
 
 `T` must satisfy the following requirements (note that where Brace Construction is used, it either means Brace Construction or Parenthesis Construction, and which one it means in the context is unspecified):
 

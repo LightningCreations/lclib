@@ -81,7 +81,7 @@ public:
 		std::lock_guard<std::recursive_mutex> sync(*lock);
 		ssize_t retSize;
 		if((retSize =send(socket,ptr,size,0))<0)
-			err=true,throw ConnectionException();
+			(err=true),throw ConnectionException();
 		return retSize;
 	}
 	void write(uint8_t b){

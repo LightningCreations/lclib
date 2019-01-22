@@ -14,15 +14,6 @@
 #include <type_traits>
 #include <lclib/Detectors.hpp>
 
-namespace detail{
-	template<typename T,typename IntegralConstant> using detect_representable = decltype(T{IntegralConstant::value});
-	template<typename Range> using detect_reverse_iterator = typename Range::reverse_iterator;
-	template<typename Range> using detect_const_reverse_iterator = typename Range::const_reverse_iterator;
-	template<typename Range> using detect_rbegin = decltype(std::declval<Range>().rbegin());
-	template<typename Range> using detect_crbegin = decltype(std::declval<Range>().crbegin());
-}
-
-
 template<typename T,T low=std::numeric_limits<T>::min(),T high=std::numeric_limits<T>::max()> struct numeric_range{
 public:
 	static_assert(low<high,"low must be less than high");
@@ -80,7 +71,7 @@ public:
 		constexpr bool operator==(const iterator& i)const{
 			return value==i.value;
 		}
-		constexpr friend bool operator!=(const iterator& i1,const iterator& i2)const{
+		constexpr friend bool operator!=(const iterator& i1,const iterator& i2){
 			return !(i1==i2);
 		}
 		constexpr value_type operator[](difference_type t)const{
@@ -118,7 +109,7 @@ public:
 	constexpr const_reverse_iterator crend()const{
 		return const_reverse_iterator{cbegin()};
 	}
-	constexpr iterator::difference_type size()const{
+	constexpr typename iterator::difference_type size()const{
 		return high-low;
 	}
 	constexpr bool empty()const{
@@ -132,106 +123,6 @@ template<typename T,T high,T low,typename=std::enable_if_t<low<high>>
 template<typename T,T low> explicit numeric_range(std::integral_constant<T,low>)->numeric_range<T,low,std::numeric_limits<T>::max()>;
 
 
-template<typename Range> struct reverse{
-private:
-	template<bool> struct select_existing_reverse_iterator{
-		using reverse_iterator = typename Range::reverse_iterator;
-	};
-	template<bool> struct select_existing_const_reverse_iterator{
-		using const_reverse_iterator = typename Range::const_reverse_iterator;
-	};
-	template<> struct select_existing_reverse_iterator<false>{
-		using reverse_iterator = std::reverse_iterator<typename Range::iterator>;
-	};
-	template<> struct select_existing_const_reverse_iterator<false>{
-		using const_reverse_iterator = std::reverse_iterator<typename Range::const_iterator>;
-	};
-public:
-	using value_type = typename Range::value_type;
-
-private:
-	Range r;
-	auto can_reverse(std::bidirectional_iterator_tag)->std::true_type;
-	auto can_reverse(...)->std::false_type;
-
-
-	static_assert(decltype(can_reverse(typename std::iterator_traits<typename Range::iterator>::iterator_category{}))::value,"");
-public:
-	explicit constexpr reverse(Range&& r):r{std::forward<Range>(r)}{}
-	template<std::enable_if_t<is_detected_v<detail::detect_rbegin,Range>>* =0>
-		constexpr decltype(auto) begin() noexcept(noexcept(r.rbegin())){
-		return r.rbegin();
-	}
-	template<std::enable_if_t<is_detected_v<detail::detect_rbegin,const Range>>* =0>
-		decltype(auto) begin() const noexcept(noexcept(r.rbegin())){
-		return r.rbegin();
-	}
-	template<std::enable_if_t<is_detected_v<detail::detect_rbegin,Range>>* =0>
-	constexpr decltype(auto) cbegin() const noexcept(noexcept(r.crbegin())){
-		return r.rbegin();
-	}
-	template<std::enable_if_t<!is_detected_v<detail::detect_rbegin,Range>>* =0>
-	constexpr decltype(auto) begin() noexcept(noexcept(std::reverse_iterator{r.end()})){
-		return std::reverse_iterator{r.end()};
-	}
-	template<std::enable_if_t<!is_detected_v<detail::detect_rbegin,const Range>>* =0>
-	constexpr decltype(auto) begin() const noexcept(noexcept(std::reverse_iterator{r.end()})){
-		return std::reverse_iterator{r.end()};
-	}
-	template<std::enable_if_t<!is_detected_v<detail::detect_rbegin,Range>>* =0>
-	constexpr decltype(auto) cbegin() const noexcept(noexcept(std::reverse_iterator{r.cend()})){
-		return std::reverse_iterator{r.cend()};
-	}
-	template<std::enable_if_t<is_detected_v<detail::detect_rbegin,Range>>* =0>
-	constexpr decltype(auto) end() noexcept(noexcept(r.rend())){
-		return r.rend();
-	}
-	template<std::enable_if_t<is_detected_v<detail::detect_rbegin,const Range>>* =0>
-	constexpr decltype(auto) end() const noexcept(noexcept(r.rend())){
-		return r.rend();
-	}
-	template<std::enable_if_t<is_detected_v<detail::detect_rbegin,Range>>* =0>
-	constexpr decltype(auto) cend() const noexcept(noexcept(r.crend())){
-		return r.rbend();
-	}
-	template<std::enable_if_t<!is_detected_v<detail::detect_rbegin,Range>>* =0>
-	constexpr decltype(auto) end() noexcept(noexcept(std::reverse_iterator{r.begin()})){
-		return std::reverse_iterator{r.begin()};
-	}
-	template<std::enable_if_t<!is_detected_v<detail::detect_rbegin,const Range>>* =0>
-	constexpr decltype(auto) end() const noexcept(noexcept(std::reverse_iterator{r.begin()})){
-		return std::reverse_iterator{r.begin()};
-	}
-	template<std::enable_if_t<!is_detected_v<detail::detect_rbegin,Range>>* =0>
-	constexpr decltype(auto) cend() const noexcept(noexcept(std::reverse_iterator{r.cbegin()})){
-		return std::reverse_iterator{r.cbegin()};
-	}
-	constexpr decltype(auto) rbegin()noexcept(noexcept(r.begin())){
-		return r.begin();
-	}
-	constexpr decltype(auto) rbegin()const noexcept(noexcept(r.begin())){
-		return r.begin();
-	}
-	constexpr decltype(auto) crbegin()const noexcept(noexcept(r.cbegin())){
-		return r.cbegin();
-	}
-	constexpr decltype(auto) rend()noexcept(noexcept(r.end())){
-		return r.begin();
-	}
-	constexpr decltype(auto) rend()const noexcept(noexcept(r.end())){
-		return r.begin();
-	}
-	constexpr decltype(auto) crend()const noexcept(noexcept(r.cend())){
-		return r.cbegin();
-	}
-	using iterator = decltype(std::declval<reverse>().begin());
-	using const_iterator = decltype(std::declval<const reverse>().cbegin());
-	using reverse_iterator = decltype(std::declval<reverse>().rbegin());
-	using const_reverse_iterator = decltype(std::declval<const reverse>().crbegin());
-};
-
-template<typename Range> reverse(Range)->reverse<Range>;
-template<typename Range> reverse(Range&)->reverse<Range&>;
 
 
 #endif /* INCLUDE_LCLIB_RANGES_HPP__2018_12_354_08_55_35 */

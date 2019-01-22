@@ -82,8 +82,12 @@ PolymorphicWrappers can only be used with polymorphic types. If `T` is not a pol
 
 The behavior of a program which specializes PolymorphicWrapper is undefined. 
 
-The owned object may be allocated on the heap, through some unspecified memory resource, or in the object representation of the `PolymorphicWrapper` itself. When allocated in the object representation, this will be reffered to as *small-buffer optimization*. 
+The owned object may be allocated on the heap, through some unspecified memory resource, or in the object representation of the `PolymorphicWrapper` itself. When allocated in the object representation, this will be referred to as *small-buffer optimization*. 
 This optimization can only take place for types which the implementation is able to ensure that the move-constructor of the type will not throw any exceptions (including types `U` for which `std::is_nothrow_move_constructible_v<U>` is true). 
+
+If `T` is an over-aligned type, then use as a template parameter for `PolymorphicWrapper` is conditionally-supported. The rules that apply when over-aligned types are supported are documented in the `Constructors` section. If over-aligned types are not supported, then the behavior of instantiating `PolymorphicWrapper` with an over-aligned type is undefined. 
+
+`T` shall be a complete-type, (possibly cv-qualified) void, or an array of an unknown bound, or the behavior is undefined. 
 
 
 ### Member Types ###
@@ -140,6 +144,7 @@ If `U` is the same type as `T`, defined as the current instantiation.
 Otherwise, given the type `Q` which is `std::remove_cv_t<U>`, if `std::is_base_of_v<T,Q>` is true, defined as `PolymorphicWrapper<Q>`. 
 Otherwise undefined.<br/>
 
+
 ### Constructors/Destructor/Assignment Operators ###
 
 ```cpp
@@ -173,6 +178,15 @@ template<typename U> PolymorphicWrapper& operator=(PolymorphicWrapper<U>&&) noex
 12. Move Assignment Operator. Same as `swap(*this,rhs); return *this;` 
 13. Deleted Copy Assignment Operator. 
 14. Move Assign from Derived Polymorphic Wrapper. Effectively the same as `return *this=PolymorphicWrapper{rhs};`. 
+
+#### Over Aligned Types ####
+
+For the Constructors that have a template parameter `U`, if `U` is an over-aligned type, then calling the constructor for that type is conditionally-supported. 
+
+For any constructor that has a template parameter `U`, if any alignment requirements are not met for the type `U`, the behavior of a program that calls that constructor for that type `U` is undefined. 
+
+Support of over-aligned types may be limited, even if provided. For example, there may be a hard, maximum alignment limit. 
+
 
 #### Noexcept Specification ####
 
@@ -248,10 +262,28 @@ template<typename U> explicit operator const U&()const&; //(3)
 template<typename U> explicit operator U&&()&&; //(4)
 ```
 
-1. Same as (`**this`).
-2. If the dynamic type of this object is `U`, then given v which equals `this->operator->()`, returns the result of `*static_cast<U*>(dynamic_cast<void*>(v))`. Otherwise, if the dynamic type of this object, `D` is a public and unambiguous subclass of `U`, then returns the result of `*dynamic_cast<U*>(static_cast<D*>(dynamic_cast<void*>(v)))`. Otherwise, throws an exception which matches a handler of type `std::bad_cast`. Does not participate in overload resolution unless `std::is_base_of_v<U,T>` is true. 
-3. Returns `const_cast<const U&>(static_cast<U&>(const_cast<PolymorphicWrapper<T>&>(*this))`. 
-4. Returns `std::move(static_cast<U&>(*this))` given that *this is an lvalue.
+(1) Same as `**this`.
+
+If there is no owned object, the behavior is undefined
+
+(2):
+
+If there is no owned object, the behavior is undefined.
+
+Otherwise casts `*this` to `U`, returning the result if the cast is valid, otherwise throws `std::bad_cast`. 
+
+Given that v is a pointer to the `T` subobject of the owned object:
+
+If the dynamic type of the owned object is `U`, then returns `*static_cast<U*>(dynamic_cast<void*>(v))`.
+
+Otherwise, if the dynamic type of the owned object is `D`, `U` is a public, unambiguous, base-class of `D`, then returns `*dynamic_cast<U*>(static_cast<D*>(dynamic_cast<void*>(v)))`. 
+
+Otherwise, an exception of a type which matches a handler of type `std::bad_cast` is thrown. 
+
+
+(3): Returns `const_cast<const U&>(static_cast<U&>(const_cast<PolymorphicWrapper&>(*this)))`
+
+(4) Returns `std::move(static_cast<U&>(*this))` given that *this is an lvalue.
 
 #### Exceptions ####
 

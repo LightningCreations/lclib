@@ -24,7 +24,9 @@ bool operator>(const span<T1,E1>& s1,const span<T2,E2>& s2)noexcept;
 
 The `<lclib/Span.hpp>` header provides a span implementation, based of the span type in the C++2a Working Draft. 
 A span is a view to a contiguous container of some size, or part of such a container. 
-By default, a span has a dynamic extent. A static extent can be specified by a Positive or Zero `std::ptrdiff_t` in the second argument. In addition, a dynamic extent can be explicitly specified by passing `dynamic_extent` as the extent template parameter (this is default). The behavior is undefined if a negative extent is specified, and the extent is not dynamic_extent.
+By default, a span has a dynamic extent. A static extent can be specified by a Positive or Zero `std::ptrdiff_t` in the second template parameter. In addition, a dynamic extent can be explicitly specified by passing `dynamic_extent` as the extent template parameter (this is default). If a negative extent, except `dynamic_extent` is specified, the program is ill-formed. 
+
+Spans with both a static extent or a dynamic extent satisfy *LiteralType*, *TriviallyCopyable* and *StandardLayoutType*.
 
 ### Notes ###
 The definition of span used is from https://en.cppreference.com/w/cpp/container/span.

@@ -6,6 +6,8 @@
 #include <typeindex>
 #include <lclib/TypeTraits.hpp>
 
+#include <cstddef>
+
 
 /**
  * PolymorphicWrapper is a Type Erased Pointer-like type that can allocate,
@@ -23,10 +25,12 @@
  *  as it constrains the types of objects it can own to T and its subtypes.
  * PolymorphicWrapper is also better than std::variant,
  *  as PolymorphicWrapper can be used even when the set of potential value types is unknown.
+ *
+ * This implementation of PolymorphicWrapper does not support Over-aligned types.
  */
 template<typename T> class PolymorphicWrapper{
 public:
-	static_assert(std::is_class_v<T>,"PolymorphicWrapper requires a class-type");
+	static_assert(std::is_class_v<T>,"PolymorphicWrapper requires a class type");
 
 	using value_type = std::remove_cv_t<T>;
 	using pointer = value_type*;
@@ -93,10 +97,6 @@ public:
      */
     PolymorphicWrapper(value_type&& t,move_base=false)noexcept(std::is_nothrow_move_constructible_v<value_type>):val(new value_type(t)){}
 
-    /**
-     * Delete move from const
-     */
-    PolymorphicWrapper(move_from_const_base)=delete;
     /**
      * Constructs a new PolymorphicWrapper.
      * The owned object is allocated and constructed using the copy constructor of U, with U as its dynamic type
@@ -293,14 +293,14 @@ template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>
 
 namespace _detail{
 	template<typename T,typename U,typename,bool,bool> struct common_type_helper:std::enable_if<std::is_same_v<std::remove_cv_t<T>,std::remove_cv_t<U>>,PolymorphicWrapper<std::remove_cv_t<T>>>{};
-	template<typename T,typename U> struct common_type_helper<T,U,void,true,false>:type_identity<PolymorphicWrapper<std::remove_cv_t<T>>{};
-	template<typename T,typename U> struct common_type_helper<T,U,void,false,true>:type_identity<PolymorphicWrapper<std::remove_cv_t<T>>{};
+	template<typename T,typename U> struct common_type_helper<T,U,void,true,false>:type_identity<PolymorphicWrapper<std::remove_cv_t<T>>>{};
+	template<typename T,typename U> struct common_type_helper<T,U,void,false,true>:type_identity<PolymorphicWrapper<std::remove_cv_t<T>>>{};
 	template<typename T,typename U> struct common_type_helper<T,U,std::enable_if_t<has_common_type_v<T*,U*>&&
 		!std::is_void_v<std::remove_pointer_t<std::common_type_t<T*,U*>>>>,false,false>:type_identity<PolymorphicWrapper<std::remove_cv_t<std::remove_pointer_t<std::common_type_t<T*,U*>>>>>{};
 }
 
 namespace std{
-	template<typename T,typename U> struct common_type<PolymorphicWrapper<T>,PolymorphicWrapper<U>>:_detail::common_type_helper<T,U,std::is_base_of_v<T,U>,std::is_base_of_v<U,T>>{};
+	template<typename T,typename U> struct common_type<PolymorphicWrapper<T>,PolymorphicWrapper<U>>:_detail::common_type_helper<T,U,void,std::is_base_of_v<T,U>,std::is_base_of_v<U,T>>{};
 }
 
 

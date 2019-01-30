@@ -2,18 +2,13 @@
 #include <lclib/JTime.hpp>
 
 
-const extern int32_t hashPrime;
-
 const int NANO_BOUND = 1000000000;
 
-
-
-
-Instant Instant::now(){
+Instant Instant::now()noexcept{
 	return Instant(instant_clock::now());
 }
 
-Instant::Instant(now_t):Instant(instant_clock::now()){}
+Instant::Instant(now_t)noexcept:Instant(instant_clock::now()){}
 
 
 

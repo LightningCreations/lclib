@@ -14,6 +14,7 @@
 #include <tuple>
 #include <lclib/Detectors.hpp>
 #include <type_traits>
+#include <functional>
 
 namespace detail{
 	template<typename T,typename Tuple> using detect_constructible =
@@ -81,7 +82,7 @@ public:
 	}
 
 	friend void swap(DynamicArray& arr1, DynamicArray& arr2)
-		noexcept(std::allocator_traits<Allocator>::propagate_on_container_swap::value||noexcept(swap(arr1.a, arr2.a))) {
+		noexcept(std::allocator_traits<Allocator>::propagate_on_container_swap::value||std::is_nothrow_swappable_v<Allocator>) {
 		using std::swap;
 		swap(arr1.p, arr2.p);
 		swap(arr1.sz, arr2.sz);
@@ -89,7 +90,7 @@ public:
 			swap(arr1.a, arr2.a);
 	}
 
-	void swap(DynamicArray& arr) noexcept(noexcept(swap(*this,arr))){
+	void swap(DynamicArray& arr) noexcept(std::allocator_traits<Allocator>::propagate_on_container_swap::value||std::is_nothrow_swappable_v<Allocator>){
 		swap(*this,arr);
 	}
 

@@ -5,6 +5,7 @@
 #include <string>
 #include <lclib/Version.hpp>
 #include <lclib/UUID.hpp>
+#include <utility>
 #include <exception>
 #include <stdexcept>
 #include <cstddef>
@@ -451,6 +452,11 @@ public:
     }
 };
 
+template<typename Data,typename=decltype(std::declval<DataInputStream&>() >> std::declval<Data&>())>
+	DataInputStream&& operator>>(DataInputStream&& din,Data& d){
+		return std::move(din>>d);
+	}
+
 /**
  * Base class for Binary Output Streams.
  * The class uses the RAII model for streams (and is therefore Move-only),
@@ -772,12 +778,19 @@ public:
      DataOutputStream& operator<<(Version);
      DataOutputStream& operator<<(float);
      DataOutputStream& operator<<(double);
-    template<typename E> DataOutputStream& operator<<(E e){
+    template<typename E,typename=std::enable_if_t<std::is_enum_v<E>>> DataOutputStream& operator<<(E e){
     	return *this << static_cast<std::underlying_type_t<E>>(e);
     }
 
 
 };
+
+template<typename Data,typename=decltype(std::declval<DataOutputStream&>() << std::declval<Data>())>
+	DataOutputStream&& operator<<(DataOutputStream&& din,Data&& d){
+		return std::move(din<<std::forward<Data>(d));
+	}
+
+
 
 class LIBLCAPI ByteArrayInputStream final:public InputStream{ // @suppress("Class has a virtual method and non-virtual destructor")
 private:

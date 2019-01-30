@@ -7,10 +7,10 @@ CCHEAD := $(foreach ipath,$(INCLUDE_PATH),$(wildcard $(ipath)/**/*.h))
 
 
 
-OBJECT_FILES := out/impl/linux/LinuxSocketImpl.o out/impl/linux/LinuxTerminal.o
+OBJECT_FILES := out/impl/linux/LinuxTerminal.o
 OBJECT_FILES += out/Hash.o out/IOWrapper.o out/JTime.o
 OBJECT_FILES += out/Menu.o out/Random.o out/ShadowRandom.o
-OBJECT_FILES += out/SocketCommon.o out/Terminal.o
+OBJECT_FILES += out/Terminal.o
 OBJECT_FILES += out/TextComponent.o out/UUID.o out/Version.o
 OBJECT_FILES += out/UI/GraphicsBase.o out/UI/Shape.o
 OBJECT_FILES += out/Database.o out/ThreadLocalRandom.o

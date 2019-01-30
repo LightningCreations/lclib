@@ -21,7 +21,6 @@ struct discard;
 template<typename Itr1,typename Itr2,typename Predicate> struct split;
 //In <lclib/Ranges.hpp>
 template<typename T,T min=std::numeric_limits<T>::min(),T max=std::numeric_limits<T>::max()> struct numeric_range;
-template<typename Range> struct reverse;
 ```
 
 ## NotCopyable/NotMoveable/NotAssignable/Disable ##

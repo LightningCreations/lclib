@@ -14,6 +14,6 @@ uint64_t detail::seedGenHelper(uint64_t clSalt){
 	static std::atomic<uint64_t> prime{242102480888143};
 	uint64_t val{prime.load()};
 	while(prime.compare_exchange_strong(val,val*cprime+1));
-	return val*tp+clSalt;
+	return val*tp.time_since_epoch().count()+clSalt;
 }
 

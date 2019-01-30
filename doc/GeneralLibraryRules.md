@@ -25,6 +25,13 @@ If some precondition of a function is not met (thus resulting in undefined behav
 
 The conditions which a library function may throw an exception are limited to conditions which are not documented by 
 
+## Functions ##
+
+Functions defined by lclib-c++ do not need to be defined exactly as specified, provided that all sets of arguments which can be passed to the function as though it were defined as written in this specification are valid argument sets for the definition of that function, and all sets of arguments which cannot be passed to the function are not passed. (This include template parameters which are explicitly specified) 
+This applies to member functions, non-member functions, and overloaded operators, as well as both template and non-template functions. 
+
+The behavior of a program that attempts to take the address of any function defined by lclib-c++, implicitly or explicitly, is undefined. 
+
 ## Class Templates ##
 
 Many class templates are defined in this library for various purposes. 
@@ -87,3 +94,16 @@ Any template parameter which is not deduced is specified.
 Implementations may add additional, defaulted template parameters, to any function template that has deduced template parameters. 
 
 Deduced template parameters do not need to be provided as is, or even exist. These template parameters are defined by the specification to encapsilate an overload set. 
+
+The behavior of a program that explicitly instantiates a function template defined by lclib-c++, or attempts to specialize such a function template is undefined. 
+
+## Operators Overloads ##
+
+Several class types overload various operators. These operators may be stated as defined in one way or another, however this is not guaranteed. 
+
+Specifically, these operator functions may be declared in any way which they would be selected by overload resolution for that operator. 
+This includes providing them as friend definitions, declared at namespace scope, class scope, or as non-static member functions. 
+Note that the overload is always guaranteed to be available to the program when all arguments are of appropriate types. 
+
+The same applies to any non-member function named `swap` defined by lclib-c++ (that is, the swap functions are guaranteed to be available for argument-dependent lookup, however they are not guaranteed to be made available for any particular scoped resolution). 
+

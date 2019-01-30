@@ -3,6 +3,15 @@
 
 #include <lclib/TypeTraits.hpp>
 
+#if defined(__cpp_impl_three_way_comparison)&&__cpp_impl_three_way_comparison>=201711L
+
+#if __has_include(<compare>)
+#include <compare>
+#define LIBLC_CXX_HAS_THREEWAY_COMPARE
+#endif
+
+#endif
+
 class NotCopyable{
 private:
     NotCopyable(const NotCopyable&)=delete;
@@ -43,6 +52,7 @@ private:
 };
 
 template<typename T> class RelOps{
+public:
 	constexpr friend bool operator<=(const T& lhs,const T& rhs){
 		return (lhs<rhs)||(lhs==rhs);
 	}
@@ -58,6 +68,7 @@ template<typename T> class RelOps{
 };
 
 template<typename T> class StrictOrder{
+public:
 	constexpr friend bool operator==(const T& lhs,const T& rhs){
 		return !(lhs<rhs)&&!(rhs<lhs);
 	}

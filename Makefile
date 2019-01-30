@@ -47,7 +47,7 @@ endef
 .DEFAULT: all
 .PRECIOUS: Makefile $(DIRS)
 .SECONDEXPANSION:
-
+.SECONDARY: $(CXXHEAD:%.hpp=%.hpp.gch) $(CCHEAD:%.h=%.h.gch) $(LINFO_OBJ:out/%.o=src/%.cpp)
 
 all: $(DIRS) $(OUTPUT)
 

@@ -1,5 +1,5 @@
 # Special Object Types #
-LCLib C++ Defines a set of special Object types, which have special privileges in LCLib.
+LCLib C++ Defines a set of Concepts, which have special privileges in LCLib. 
 
 ## Byte Types ##
 
@@ -22,16 +22,17 @@ For a Type to satisfy BytesWriteable Concept, objects of that type, and all subo
 * (As of 1.3) Have a trivial, constexpr, or deleted Default Constructor
 * Have a trivial, non-deleted, and non-virtual destructor.
 * Have at least one of Copy-Constructor, Move-Constructor, Copy-Assignment Operator, or Move-Assignment Operator non-deleted
-* Not have any virtual member functions. 
+* May not declare or inherit any virtual member functions
 * Not be a volatile object
 * Not be of a Pointer, Pointer to Member, or Pointer to Function type
 * Not have any Reference non-static data members
 * May not have duplicate (direct or indirect) base classes, or a virtual base class type
-* (As of 1.3) Have no private or protected data members or base classes
+* (As of 1.3) Have no private or protected data members or base classes, except for empty base classes.
 * (As of 1.3) May not be *over-aligned*
 
 Or shall be one of the follow:
-* An array of a component type which 
+* An array of a component type which satisfies *BytesWriteable*, including an array of an unknown bound
+* 
 
 All Scalar types except for pointers satisfy this concept. All class types that are TriviallyCopyable and StandardLayout that do not have any pointer members also satisfy this concept. 
 

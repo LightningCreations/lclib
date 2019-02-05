@@ -10,6 +10,7 @@
 #include <lclib/TypeTraits.hpp>
 #include <lclib/Detectors.hpp>
 #include <tuple>
+#include <functional>
 
 #include <lclib/BitCast.hpp>
 
@@ -19,7 +20,7 @@ template<typename T> struct Matrix;
 
 using std::sqrt;
 template<typename T> struct Vec2{
-	static_assert(!is_specialization_v<Vec2,T>&&!is_specialization_v<Matrix,T>,"If T is a specialization of Vec2 or of Matrix, the program is ill-formed.");
+	static_assert(!is_specialization_v<Vec2,T>&&!is_specialization_v<Matrix,T>,"T may not be a specialization of Vec2 or Matrix");
     T x,y;
     constexpr Vec2():x{},y{}{}
     constexpr Vec2(T x,T y):x{x},y{y}{}
@@ -123,6 +124,13 @@ template<typename T> constexpr int32_t hashcode(const Vec2<T>& v){
 template<typename T> Vec2(T,T) -> Vec2<T>;
 template<typename Q,typename U> Vec2(Q,U) -> Vec2<std::common_type_t<Q,U>>;
 Vec2() -> Vec2<int>;
+
+template<typename T> struct Matrix{
+public:
+	static_assert(!is_specialization_v<Vec2,T>&&!is_specialization_v<Matrix,T>,"T may not be a specialization of Vec2 or Matrix");
+	T a,b,c,d;
+
+};
 
 namespace std{
     template<typename T> struct hash<Vec2<T>>{

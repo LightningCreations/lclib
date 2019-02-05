@@ -107,3 +107,14 @@ Note that the overload is always guaranteed to be available to the program when 
 
 The same applies to any non-member function named `swap` defined by lclib-c++ (that is, the swap functions are guaranteed to be available for argument-dependent lookup, however they are not guaranteed to be made available for any particular scoped resolution). 
 
+## Return Types ##
+
+The return types of functions documented by lclib-c++ are not fixed, but may be any type which follows the following rules with respect to the documented return type, `RT`:
+* The type may be used in any context where `RT` may be used
+* The type can be implicitly converted to any type defined by the C++ Core Language, The C++ Standard Library, or lclib-c++ which `RT` may be converted to, and additionally, if template parameters of a templated-entity are used to define implicit conversions to user-provided types, the type can implicitly convert to those types as well. 
+* The type can be explicitly converted to any type which the documented type can be, including user-provided unrelated types. 
+* The type has an implicit conversion to the documented return type (or to `std::decay_t<RT>`, if `RT` is a reference type, with one exception documented below).
+* If the documented return type is a non-const lvalue reference type, then the actual return type must be assignable from all types which can be assigned to lvalues of the documented return type.
+* If the documented return type is an rvalue reference type or a const lvalue reference type (where the referenced type, with cv-qualifiers dropped is `RT`), then the returned type may not have an implicit conversion to a non-reference type `RT`. That is, the function may not return a prvalue if it would otherwise not (but may return an xvalue or lvalue when it otherwise would return a prvalue). 
+* If the documented return type is an lvalue reference type, the result may not drop cv-qualified from the reference type. Additionally, the actual return type may not be a volatile-qualified lvalue reference, unless the original referenced type was volatile-qualified. 
+

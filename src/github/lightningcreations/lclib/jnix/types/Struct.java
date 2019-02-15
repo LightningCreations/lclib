@@ -9,7 +9,7 @@ import github.lightningcreations.lclib.jnix.annotations.StructDecl;
 public abstract class Struct {
 	private static native void registerNatives();
 	static {
-		System.loadLibrary("lclib-jni");
+		System.loadLibrary("lc-jni");
 		registerNatives();
 	}
 	private long obj;

@@ -134,29 +134,41 @@ template<size_t N> size_t read(std::byte(&arr)[N]); //(5)
 
 (1): read(void* ptr,size_t size)
 
-Reads size bytes from the stream and places it in the buffer pointed to by ptr, then returns the number of bytes read.
-If there exists a valid object `o` at `ptr`, the type of `o` shall satisfy *BytesReadable*. Additionally, if `size` is greater than the size of `o`, then there shall exist some object `k`, which the size of `k` is greater than `size`, the type of `k` satisfies *BytesReadable*, and `k` is *pointer-interconvertible* with `o`. Otherwise the behavior is undefined. 
+Reads size bytes from the stream and places it in the buffer pointed to by ptr, then returns the number of bytes read. 
+If there exists a valid object `o` at `ptr`, the type of `o` shall satisfy *BytesReadable*. 
+Additionally, if `size` is greater than the size of `o`, then there shall exist some object `k`, which the size of `k` is greater than `size`, the type of `k` satisfies *BytesReadable*, and `k` is *pointer-interconvertible* with `o`. 
+Otherwise the behavior is undefined. 
 
 If there is not a valid object at `ptr`, then `ptr` shall be the result of a call to a memory-allocation function, where the size of the allocated memory is at least `size`, or the behavior is undefined. 
-If this is case, let `n` be the value that would be returned from the function. If `n` is greater than 0, and not `EOF` then an object of type `unsigned char[n]` is constructed at `ptr`, then the read occurs as though `ptr` pointed to that object. 
+If this is case, let `n` be the value that would be returned from the function. 
+If `n` is greater than 0, and not `EOF` then an object of type `unsigned char[n]` is constructed at `ptr`, then the read occurs as though `ptr` pointed to that object. 
 
 The read method reads up to `size` bytes from the stream (the number that can be successfully read is `n`), and writes them to the first `n` bytes of the object at `ptr`, or the smallest object which is at least `size` bytes large that is *pointer-interconvertible* with the object at `ptr`.
 
 If `size` bytes cannot be read from the stream without blocking, it is unspecified if the function blocks or reads the maximum number of bytes which can be read successfully, however, in this case, at least one byte shall be read, or the end-of-stream must be reached. 
 Implementations may also throw an exception if it cannot successfully complete a request read without blocking. 
 
-If `size` is 0 it is unspecified if a read actually occurs. If the stream has reached the end of file, it is unspecified if 0 is returned or EOF is returned. Additionally, it is unspecified if any exceptions that may result from reading from the stream still occur. 
+If `size` is 0 it is unspecified if a read actually occurs. 
+If the stream has reached the end of file, it is unspecified if 0 is returned or EOF is returned. 
+Additionally, it is unspecified if any exceptions that may result from reading from the stream still occur. 
+
+
+If `size` is EOF the behavior is undefined. 
 
 (2): int read()<br/>
 Reads a single byte from the stream and returns it. If EOF is reached returns EOF instead. 
+
 This method blocks until at least one byte can be read from the stream, EOF is reached, or an exception is thrown. 
 <br/><br/>
 
 (3),(4),(5): Reads N bytes from the stream into arr. Effectively read(arr,N);
 
 <h5>Exceptions</h5>
-(1): Any subclass of InputStream may throw any Exception from the read method. If a subclass can throw an exception, it must be clearly detailed which exceptions can be thrown and in what cases they are. If an exception is thrown by the read method, the object being read is invalidated, and using in any way (except for assignment operators/destructors) is undefined behavior.
-(2),(3),(4),(5): Same as (1). 
+(1),(3),(4),(5): Any subclass of InputStream may throw any Exception from the read method. 
+If a subclass can throw an exception, it must be clearly detailed which exceptions can be thrown and in what cases they are. 
+If an exception is thrown by the read method, the object being read is invalidated, and using in any way (except for assignment operators/destructors) is undefined behavior.
+
+(2): Same as (1). As no object is being read to, the point about object invalidation is not applicable. 
 
 #### Stream Error Analysis ####
 
@@ -217,7 +229,8 @@ void clearError()noexcept(true); //(2)
 Represents a InputStream that reads from a raw C File Handle. The handle is owned and usually opened by the input stream. Additionally the file is closed in its destructor. 
 
 If multiple FileInputStreams are open to the same resource, (Until 1.3): the behavior is undefined (As of 1.3): the files read from the resource independently of each other. 
-If a FileOutputStream is open to the same resource as a FileInputStream it is unspecified if calls to write affect calls to read. 
+
+If any the lifetime of any `FileInputStream` objects overlaps the lifetime of a `FileOutputStream` and both are opened to the same File resource, the behavior is undefined. 
 
 #### Base Class</h4> ####
 Extends (public) InputStream
@@ -262,7 +275,9 @@ size_t read(void* ptr,size_t size); //(1)
 int read(); //(2)
 ```
 
-(1): Reads size bytes from the underlying file into the object pointed to by ptr. ptr must satisfy the same requirements as specified by InputStream::read
+(1): Reads size bytes from the underlying file into the object pointed to by ptr. ptr must satisfy the same requirements as specified by InputStream::read 
+
+
 (2): Reads a single byte from the underlying file and returns it or EOF if the file has reached the end of file.
 
 ##### Exception Guarantee #####
@@ -509,7 +524,13 @@ void clearError()noexcept(true); //(2)
 (2): Clears any error on the stream. This method has no effect as the only error is unsuppressable (end of stream).
 
 ### class OutputStream ###
-OutputStream is the abstract base class of the output portion of the IOWrapper Library, mirroring InputStream. Like InputStreams, OutputStreams have ownership of any resources they use, and aquires and releases those resources during construction and destruction respectively. Subclasses of OutputStream may buffer output before commiting writes in the stream. If a subclass does, it must override the flush method to flush the internal buffer and commiting previous writes to the resource. In addition the buffer must be flushed when the stream is destroyed or reassigned.  If flush is not called it is unspecified when writes are reflected in the underlying resource. If the OutputStream does not buffer input then writes are immediately reflected in the underlying resource, and flushing the stream has no effect. 
+OutputStream is the abstract base class of the output portion of the IOWrapper Library, mirroring InputStream. 
+Like InputStreams, OutputStreams have ownership of any resources they use, and aquires and releases those resources during construction and destruction respectively. 
+Subclasses of OutputStream may buffer output before commiting writes in the stream. 
+If a subclass does, it must override the flush method to flush the internal buffer and commiting all previous writes to the resource if they have not already been written. 
+In addition the buffer must be flushed when the stream is destroyed or reassigned.  
+If flush is not called it is unspecified when writes are reflected in the underlying resource. 
+If the OutputStream does not buffer input then writes are immediately reflected in the underlying resource, and flushing the stream has no effect. 
 OutputStreams are not inheritly thread safe. The effects of using a single OutputStream across multiple threads is unspecified, and may be undefined. 
 
 (Until 1.3): Objects of types that derive from `OutputStream` shall not be deleteable through a pointer to base. 
@@ -548,23 +569,16 @@ template<size_t N> size_t write(uint8_t(&arr)[N]); //(3)
 template<size_t N> size_t write(int8_t(&arr)[N]); //(4)
 template<size_t N> size_t write(std::byte(&arr)[N]); //(5)
 ```
-(1): writes size bytes from the object pointed to by ptr to the stream, and returns the total number of bytes written. The behavior is undefined if ptr is null or does not point to a complete object. In addition, if ptr points to a complete object, the behavior is undefined unless all of the objects and all subobjects meet the following conditions:
-<ul>
-<li>The Object must be TriviallyCopyable</li>
-<li>The Object may not be a pointer (including pointer to function or pointer to member), or have any pointer non-static data members</li>
-<li>The Object must not have virtual or duplicate (direct or indirect) base classes</li>
-<li>The Object must not have virtual methods or destructors</li>
-<li>The Object must not have any reference members</li>
-<li>The object must not be volatile or have any volatile members</li>
-</ul>
-In addition if the object or any of its subobjects are of multibyte scalar types the byte order which they are written to the stream is unspecified. 
-In general, the requirements of the object passed to write mirrors those for objects passed to InputStream's read method, except that they may have const qualified members. 
-Note that because it is intended that reads an writes are mirrored, if the type has any const qualfied members it would be undefined behavior to read to an object of such a type. 
-In general, read objects should have the same (possibly less cv-qualfied) type as the written object, though this is not enforced. It is mearly enough that the read and written objects are of a Layout compatible type. If this is not the case the behavior is undefined.
-If objects are intended for persistance accross platforms, languages, or even compilers, the object should be StandardLayout in addition to the above, as non-StandardLayout types may not be Layout Compatible with the same type on a different compiler. If Long Term Persistance is required, or the layout of the data is required to be fixed, DataOutputStream is a better utility then a raw OutputStream.
+(1): writes size bytes from the object pointed to by ptr to the stream, and returns the total number of bytes written. 
+`ptr` shall be a pointer to a complete object which is of a type which satsifies *BytesWriteable*. 
+Additionally, the object at `ptr` must either be at least `size` bytes or there shall exist an object `o` which is *pointer-interconvertible* with the object at `ptr` which is at least `size` bytes and the type of `o` satisfies *BytesWriteable* otherwise the behavior is undefined. 
+
 Like InputStream::read, subclasses may impose other restrictions on what objects may be passed to the write method. Those subclasses must detail these additional restrictions and the effects of violating them if they exist.
 
+If the subclass buffers writes it is unspecified if the previous buffer, if any, is flushed partially or completely, or if any part of the new buffer is flushed. 
+
 (2): writes a single byte to the stream. 
+
 (3),(4),(5): writes an array of `uint8_t`, `int8_t`, or `std::byte` to the stream. Effectively read(arr,N);
 
 ##### Exceptions #####
@@ -658,10 +672,11 @@ If the pointer passed to the FileInputStream is stored, it should not be used in
 
 (2),(3),(4): Constructs a new FileOutputStream from the given path name. 
 This constructor acts as if by `FileOutputStream(fopen(c,"wb"))`, `FileOutputStream(fopen(str.c_str(),"wb"))`, or `FileOutputStream(fopen(p.c_str(),"wb"))`. The behavior is undefined if the argument to (2) is a null pointer.
-(5),(6),(7): Disambugation Constructors for opening in append mode. Same as (2),(3),(4) respectively, except that the stream is opened in "ab" mode instead of "wb" mode.
+(5),(6),(7): Disambugation Constructors for opening in append mode. Same as (2),(3),(4) respectively, except that the stream is opened in "ab" mode instead of "wb" mode. 
+If the file does not exist, then the effect is the same as (2),(3), or (4) respectively. 
 (8): Move Constructor. Control of the underlying file object of out is moved to the new object
 (9): Destructor. If control of the underlying file has not been moved from this object, the underlying file is closed. If the underlying file buffers writes, it is also flushed.
-(10): Move Assignment Operator. If control of the underlying file has not been from this object it is closed and potentially flushed. Then control of the underlying file of out is moved to this object.
+(10): Move Assignment Operator. If control of the underlying file has not been moved from this object it is closed and potentially flushed. Then control of the underlying file of out is moved to this object.
 
 ##### Exceptions #####
 (1): If the passed file is a null pointer, the constructor throws a FileNotFoundException

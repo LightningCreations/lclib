@@ -309,7 +309,9 @@ public:
 /**
  * The type which represents the clock used by Instants.
  */
+
 using instant_clock = std::chrono::system_clock;
+
 
 /**
  * Tag type for Constructing an instant inline from the system time (rather then using the factory method).

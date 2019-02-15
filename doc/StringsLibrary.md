@@ -74,7 +74,8 @@ bool operator()(const CharT* s1,const CharT* s2) const; //(6)
 5. Same as (2)
 6. Calls `std::lexicographical_compare(s1,strend(s1),s2,strend(s2))`. 
 
-The program is ill-formed, no diagnostic required, if CharT does not satisfy the following requirements:
+The program is ill-formed, no diagnostic required, if CharT does not satisfy the following requirements: 
+
 Given:
 * `c`, a value of type CharT
 * `l`, a value of type std::locale

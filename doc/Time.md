@@ -25,7 +25,7 @@ constexpr nanos_t toNanos(chrono_val_t,ChronoUnit);
 constexpr nanos_t toNanos(unsigned long long,ChronoUnit);
 constexpr chrono_value_t truncateTo(seconds_t,nanos_t,ChronoUnit);
 constexpr nanos_t NANOS_PER_SECOND;
-using instant_clock = std::chrono::system_clock;
+using instant_clock = /*implementation-defined*/;
 struct now_t;
 const now_t now;
 class Duration;
@@ -55,7 +55,8 @@ namespace std{
 
 The Time Library, along with the STL `<chrono>` library, is provided to interact with time. 
 
-Note that the Time library is primarily for Interoperation. The standard implementation should be used in most circumstances. 
+Note that the Time library is primarily for Interoperation. 
+The standard chrono library should be used in most circumstances. 
 
 ## Macros ##
 
@@ -95,11 +96,15 @@ A signed integer type that is at least 64-bit.
 
 ### seconds_duration ###
 
-A specialization of `std::chrono::duration` that can store any valid seconds field of a Duration. 
+An implementation-defined specialization of `std::chrono::duration` that can store any valid seconds field of a Duration. 
+
+`std::chrono::treat_as_floating_point_v<seconds_duration::rep>` must be false.
 
 ### nanos_duration ###
 
-A specialization of `std::chrono::duration` that can store any valid nanos field of a Duration. 
+An implementation-defined specialization of `std::chrono::duration` that can store any valid nanos field of a Duration. 
+
+`std::chrono::treat_as_floating_point_v<nanos_duration::rep>` must be false.
 
 ### base_duration ###
 
@@ -111,12 +116,14 @@ It is also guaranteed that a value of type `base_duration` can store any valid v
 
 ### max_duration ###
 
-An implementation-defined specialization of `std::chrono::duration` that has the best period the implementation can deal with, represented using `chrono_val_t`. Guaranteed to be at least as precise as `base_duration`. 
+An implementation-defined specialization of `std::chrono::duration` that has the best period the implementation can deal with, represented using `chrono_val_t`. 
+Guaranteed to be at least as precise as `base_duration`. 
 
+`std::chrono::treat_as_floating_point_v<max_duration::rep>` must be false. 
 
 ### instant_clock ###
 
-As of 1.3: The clock type used by instants. Defined as a clock for which has the date and time 1970-01-01T00:00:00.000Z (the unix epoch) as its epoch, and the minimum interval between reported instants is at least `base_duration`. 
+As of 1.3: The clock type used by instants. Defined as a clock for which has the date and time 1970-01-01T00:00:00.000Z (the unix epoch) as its epoch, and the minimum interval between reported instants is at least `base_duration`. The type of `instant_clock` shall be implementation-defined.  
 
 `instant_clock` shall satisfy *Clock*. 
 
@@ -125,9 +132,9 @@ Additionally, the expression `std::chrono::clock_cast<instant_clock>(stp)` shall
 The conversion sequence `std::chrono::clock_cast<instant_clock>(std::chrono::clock_cast<std::chrono::system_clock>(tp))` shall result in the instant that is equal to tp. 
 
 
-Until 1.3: Defined as `std::chrono::system_clock`. If `std::chrono::system_clock::epoch()` does not represent the unix epoch the behavior of calling any clock sensitive methods of Instant, including the now factory method and the now constructor, is undefined. In C++20 mode, this is guaranteed by the standard. 
+Until 1.3: Defined as `std::chrono::system_clock`. If the epoch of `std::chrono::system_clock` does not represent the unix epoch the behavior of calling any clock sensitive methods of Instant, including the now factory method and the now constructor, is undefined. As of C++20 this is guaranteed by the standard. 
 
-If `instant_clock` satisfies *TrivialClock*, then the now constructor and now factory methods of Instant are noexcept. 
+If `instant_clock` satisfies *TrivialClock*, then the now constructor and now factory methods of Instant are declared noexcept(true). 
 
 ### enum class ChronoUnit ###
 
@@ -150,8 +157,8 @@ enum class ChronoUnit{
 ```
 
 Note: Only `SECONDS`, `MINUTE`, and `HOURS` are required. 
-`MILISECONDS`, `MICROSECONDS`, and `NANOSECONDS` are only required if the period of `max_duration` is at least as precise as `std::ratio<1,1000>`, `std::ratio<1,1000000>`, and `std::ratio<1,1000000000>` respectively. 
-Other implementation defined units may be supported by the implementation.  
+`MILISECONDS`, `MICROSECONDS`, and `NANOSECONDS` are only guaranteed if the period of `max_duration` is at least as precise as `std::ratio<1,1000>`, `std::ratio<1,1000000>`, and `std::ratio<1,1000000000>` respectively. 
+Other implementation defined units may be supported. The associated precision shall be specified. 
 
 ### struct now_t ###
 
@@ -159,11 +166,12 @@ A Tag type that specifies to construct Instants from the current wall clock time
 
 ### class Duration ###
 
-A class that represents a Duration of time.  The Duration is stored as a `seconds_t` number of seconds and a `nanos_t` number of additional nanoseconds. 
+A class that represents a Duration of time. The Duration is stored as a `seconds_t` number of seconds and a `nanos_t` number of additional nanoseconds. 
 
 The Maximum range of a Duration is [-31556889864401400s,31556889864401400s), which is the same as the minimum range for `seconds_t`, except fractions of a second may be stored, down to nanosecond resolution. 
 
-Duration satisfies *TriviallyCopyable*, *StandardLayoutType*, *LiteralType*, and *Numeric* (as of 1.3). Duration additionally satisfies *BytesReadable* and *BytesWriteable*, until the requirements changed in 1.3 to forbidden private/protected members. 
+Duration satisfies *TriviallyCopyable*, *StandardLayoutType*, *LiteralType*, and *Numeric* (as of 1.3). 
+Duration additionally satisfied *BytesReadable* and *BytesWriteable*, until the requirements changed in 1.3 to forbidden private/protected members. 
 
 Duration overloads all comparison operators (even though the definition only contains operator<) as though it inherits privately from but `RelOps<Duration>` and `StrictOrder<Duration>`. 
 The comparison operators form a strict, total order with all valid duration values, where longer positive durations are greater than shorter positive durations, longer negative durations are lesser than shorter negative durations, and positive durations are greater than negative durations. 
@@ -200,6 +208,7 @@ public:
 	template<typename T> constexpr static T&& wait(const Duration& d,T&& t);
 	template<typename duration> constexpr explicit operator duration()const;
 	constexpr explicit operator bool()const;
+	constexpr std::uint32_t hashCode()const;
 };
 ```
 
@@ -316,11 +325,19 @@ constexpr explicit operator bool()const;
 ```
 
 (1): Converts a Duration to a `std::chrono::duration`. This conversion operator only participates in overload resolution if `duration` is a specialization of `std::chrono::duration`. 
-Additionally, it is only guaranteed that this method participates in overload resolution if `std::is_constructible_v<base_duration,duration>` is true, however implementations may choose to still have it participate. 
+Additionally, it is only guaranteed that this method participates in overload resolution if `std::is_constructible_v<base_duration,duration>` is true. 
 
 This operator, like other function templates is not required to be provided as a template. In particular, this can be provided as a single conversion operator to `base_duration`. 
 
 (2): Converts to false if and only if *this represents zero (`Duration{}`).
+
+### hashCode ###
+
+```cpp
+constexpr std::uint32_t hashCode()const;
+```
+
+Returns `hashcode(getSeconds())*31+hashcode(getNanos())`
 
 #### waitFor ####
 
@@ -338,6 +355,7 @@ This method forwards its 1st parameter so that this can be used inline, for exam
 Represents an instant in time, in a similar Manner to `Duration`.
 
 Durations and Instants can be related to each other. In particular every Instant `i` can be represented as a Duration `d`, such that `Instant{}+d==i` is true. 
+Additionally, `Instant{d.getSeconds(),d.getNanos()}==i` is true. 
 
 Instant satisfies *TriviallyCopyable*, *LiteralType*, and *StandardLayoutType*. 
 (Until 1.3): Instant also satisfies *BytesReadable* and *BytesWriteable*. 
@@ -359,13 +377,13 @@ public:
 	constexpr Instant& operator=(Instant&&)=default;
 	static Instant now()NOEXCEPT;
 	static constexpr Instant fromEpoch(const Duration&);
-	constexpr Duration toEpoch();
-	constexpr Instant subtract(const Duration&);
-	constexpr Instant add(const Duration&);
-	constexpr Instant truncateTo(ChronoUnit);
-	constexpr bool isBefore(const Instant&);
-	constexpr bool isAfter(const Instant&);
-	constexpr /*unspecified*/ compareTo(const Instant&);
+	constexpr Duration toEpoch()const;
+	constexpr Instant subtract(const Duration&)const;
+	constexpr Instant add(const Duration&)const;
+	constexpr Instant truncateTo(ChronoUnit)const;
+	constexpr bool isBefore(const Instant&)const;
+	constexpr bool isAfter(const Instant&)const;
+	constexpr /*unspecified*/ compareTo(const Instant&)const;
 	constexpr friend bool operator<(const Instant&,const Instant&);
 	/*RELATIONAL OPERATORS*/
 	constexpr friend Instant operator+(const Instant&,const Duration&);
@@ -374,7 +392,7 @@ public:
 	constexpr seconds_t toEpochSeconds()const;
 	constexpr nanos_t getNanos()const;
 	constexpr chrono_val_t get(ChronoUnit)const;
-	constexpr int32_t hashCode()const;
+	constexpr std::uint32_t hashCode()const;
 	template<typename time_point> explicit operator time_point()const;
 	explicit operator bool()const;
 };
@@ -395,7 +413,9 @@ constexpr Instant& operator=(Instant&&)=default; //(8)
 
 1. Default Constructor. The default constructed instant refers to the EPOCH.
 
-2. Tag Constructor to construct the current Instant in time. This constructor is noexcept if and only if `instant_clock` satisfies the requirements of *TrivialClock*. 
+2. Tag Constructor to construct the current Instant in time. 
+This constructor is noexcept if and only if `instant_clock` satisfies the requirements of *TrivialClock*. 
+
 (Until 1.3): This is a clock sensitive method. If the epoch of `std::chrono::system_clock` is not the unix epoch, the behavior is undefined. 
 
 If the (incredibly unlikely) case occurs, where the current period in time is beyond the point that is validly representable by an Instant, the behavior is undefined. (The Maximum time point that an instant supports is 1000000000-12-31 at 23:59:59.999999999Z) 
@@ -443,5 +463,111 @@ constexpr Duration toEpoch()const noexcept; //(3)
 #### Truncation/Field Access ####
 
 ```cpp
-
+constexpr seconds_t toEpochSeconds()const; //(1)
+constexpr nanos_t getNanos()const; //(2)
+constexpr chrono_val_t get(ChronoUnit u)const; //(3)
+constexpr Instant truncateTo(ChronoUnit u)const; //(4)
 ```
+
+(1): Returns the number of seconds since the epoch which this Instant represents.
+
+(2): Returns the number of nanos of the current second which this Instant Represents.
+
+(3): Truncates this instant to a given unit, and returns the time since the epoch this Instant Represents in that unit. 
+If u is not a valid `ChronoUnit` enumeration, the result is 0. 
+
+(4): Truncates this instant to the given unit. 
+If this instant can be represted by `d`, then returns the instant `i` which can be represented by `d.truncateTo(u)`. 
+
+#### Legacy Named Operators ####
+
+Deprecated as of 1.3, these named operators will be removed in a future version of lclib-c++. 
+
+```cpp
+constexpr Instant subtract(const Duration& d)const; //(1)
+constexpr Instant add(const Duration& d)const; //(2)
+constexpr bool isBefore(const Instant& i)const; //(3)
+constexpr bool isAfter(const Instant& i)const; //(4)
+constexpr /*unspecified*/ compareTo(const Instant& i)const; //(5)
+```
+
+(1): Subtracts the duration `d` from this instant in time and returns the new instant. If this instant can be represented by `u`, returns the instant that can be represented by `u-d`. 
+
+(2): Adds the duration `d` to this instant in time and returns the new instant. If this instant can be represented by `u`, returns the instant that can be represented by `u+d`.
+
+(3): If this instant represents an earlier point in time than i, then returns true, otherwise returns false. 
+
+(4): If this instant represents a later point in time than i, then returns true, otherwise returns false. 
+
+(5): Returns a value of an unspecified type which can be compared with the integer literal `0`. 
+If this instant represents an earlier point in time then `i`, then `this->compareTo(i) < 0` is true.
+Otherwise, if this instant represets a later point in time then `i`, then `this->compareTo(i) > 0` is true.
+Otherwise, `this->compareTo(i) == 0` is true.
+
+If a program compares the result of compareTo with any value, except the integer literal `0`, the behavior is undefined. 
+
+#### Overloaded Operators ####
+
+```cpp
+constexpr friend bool operator<(const Instant& i1,const Instant& i2); //(1)
+/*RELATIONAL OPERATORS*/
+constexpr friend Instant operator+(const Instant& i,const Duration& d); //(2)
+constexpr friend Instant operator-(const Instant& i,const Duration& d); //(3)
+constexpr friend Duration operator-(const Instant& i1,const Instant& i2); //(4)
+```
+
+(1): Compares 2 instants. Returns `i1.isBefore(i2)`
+The other relational operators are also provided, as though `Instant` inherits privately from `RelOps<Instant>` and `StrictOrder<Instant>`. 
+
+(2): Adds `d` to `i`. Returns the result of `i.add(d)`
+
+(3): Subtracts `d` from `i`. Returns the result of `i.subtract(d)`
+
+(4): Returns the Duration between `i1` and `i2`. 
+If `i1` is the Epoch, and `i2` can be represented by `d`, then returns `d`. 
+Otherwise, computes the period of time between 2 instants. 
+
+#### Conversion Operators ####
+
+```cpp
+template<typename time_point> constexpr explicit operator time_point()const; //(1)
+constexpr explicit operator bool()const;
+```
+
+(1): Converts this instant into an appropriate time point. This method only participates in overload resoltuion if `time_point` is a specialization of `std::chrono::time_point`. 
+Additionally, this method is only guaranteed to participate in overload resolution if `time_point` is `std::chrono::time_point<Clock,Dur>`, where `Clock` is `instant_clock` or (in C++20 mode), given `tp`, an object of type `std::chrono::time_point<instant_clock,Dur>`, the expression `std::chrono::clock_cast<Clock>(tp)` is well formed in an unevaluated context, and it is possible to explicitly convert `Duration` to `Dur`. 
+
+Returns `tp`, an object of `std::chrono::time_point<instant_clock,D2>`, where `D2` is an unspecified specialization of `std::chrono::duration` which is at least as precise as the lesser of `base_duration` and `D2`, after an unspecified conversion sequence from `std::chrono::time_point<instant_clock,D2>` to `time_point`, which may include calls to `std::chrono::time_point_cast` and (in C++20 mode) `std::chrono::clock_cast`. 
+
+
+(In C++20 Mode) If `Clock` is `std::local_t`, then this conversion function is conditionally supported. 
+If unsupported, the conversion is defined as deleted. 
+Otherwise this function cannot be evaluated in a constant expression. 
+
+#### Hashcode Function ####
+
+```cpp
+constexpr std::uint32_t hashCode()const; 
+```
+
+Computes the hashcode of the Instant. The hashcode of the Instant `i` is `hashcode(i->toEpochSeconds())*31+hashcode(i->getNanos())`
+
+### Hashcode Functions ###
+
+All of the following functions are guaranteed to be available using unqualified lookup. 
+
+```cpp
+constexpr std::uint32_t hashcode(seconds_t s); //(1)
+constexpr std::uint32_t hashcode(nanos_t n); //(2)
+constexpr std::uint32_t hashcode(const Duration& d); //(3)
+constexpr std::uint32_t hashcode(const Instant& i); //(4)
+```
+
+(1): Computes the hashcode of an ammount of seconds. Equivalent to `hashcode(static_cast<std::int64_t>(s))`.
+
+(2): Computes the hashcode of an ammount of nanoseconds. Equivalent to `hashcode(static_cast<std::uint32_t>(n))`
+
+(3): Returns `d.hashCode()`
+
+(4): Returns `i.hashCode()`. 
+

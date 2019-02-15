@@ -4,7 +4,11 @@
 
 Unspecified Behavior is behavior that operates under a set of conditions, but is otherwise unbound in how the implementation chooses to operate. An example of unspecified behavior is passing a NaN value to DataOutputStream.writeFloat(), where it was unspecified if the NaN bit representation was preserved or if its collapsed to a single NaN (until 1.3, where it became undefined behavior to conform to LCLib Requirements). 
 
-Unspecified Behavior may not result in exceptional behavior, or behavior that is otherwise forbidden by this specification. However, until 1.3 some behavior was documented as Unspecified (and may be Undefined). This means that implementations may choose to treat this as undefined behavior. As of 1.3 all of these were defined or collapsed into either pure unspecified behavior or pure undefined behavior. If an implementation chooses to treat it as undefined behavior, they may act exceptionally in that case. 
+Unspecified Behavior may not result in exceptional behavior, or behavior that is otherwise forbidden by this specification. 
+However, until 1.3 some behavior was documented as Unspecified (and may be Undefined). 
+This means that implementations may choose to treat this as undefined behavior. 
+As of 1.3 all of these were defined or collapsed into either pure unspecified behavior or pure undefined behavior. 
+If an implementation chooses to treat it as undefined behavior, they may act exceptionally in that case. 
 
 ## Implementation-Defined Behavior ##
 
@@ -19,11 +23,12 @@ This will be explicilty documented.
 ## Exceptions ##
 
 Unless a Library function or constructor is marked noexcept or otherwise stated in the documentation, calls to that library function may indicate an exceptional condition in an implementiation-defined set of circumstances, by throwing any unspecified exception that matches a handler of type `std::exception` and that's copy-constructor does not throw any exceptions. 
-The exception to this rule is library functions that may call functions that are not defined by the library, in which case, they are allowed to throw any exception thrown by the called function, in addition to any function permitted above. This will be documented as "Throws any exception that *some function* throws". 
+The exception to this rule is library functions that may call functions that are not defined by the library, in which case, they are allowed to throw any exception thrown by the called function, in addition to any function permitted above. 
+This will be documented as "Throws any exception that *some function* throws". 
 
 If some precondition of a function is not met (thus resulting in undefined behavior), the above rules do not apply. 
 
-The conditions which a library function may throw an exception are limited to conditions which are not documented by 
+The conditions which a library function may throw an exception are limited to conditions which are documented by lclib-c++
 
 ## Functions ##
 
@@ -40,16 +45,18 @@ These templates act upon the general rules used for the C++ Standard Template Li
 
 Specifically, if a program instantiates any class template with an incomplete type, unless that particular incomplete type is explicitly allowed by the template, the behavior is undefined. 
 
-If a program specializes any class template defined by lclib-c++, that class template must support user provided specializations, the type may not be an incomplete type, except for an array of an unknown bound where such an incomplete type is allowed, and must be a `user-specified type`. The behavior of program that specializes a class template defined by lclib-c++ in violation of these rules is undefined.  
- Additionally, instantiating the primary template, or any partial specialization provided by the library, with that type must not result in the program being ill-formed or invoking undefined behavior at the point of instantiation (though it may have lead to undefined behavior, IE. in the case of ValueDiscard, specializing for a volatile qualified class type). A program that instantiates a class template defined by lclib-c++ in violation of the these rules is ill-formed, no diagnostic required. 
+If a program specializes any class template defined by lclib-c++, that class template must support user provided specializations, the type may not be an incomplete type, except for an array of an unknown bound where such an incomplete type is allowed, and must be a `user-specified type`. 
+The behavior of program that specializes a class template defined by lclib-c++ in violation of these rules is undefined.  
+ Additionally, instantiating the primary template, or any partial specialization provided by the library, with that type must not result in the program being ill-formed or invoking undefined behavior at the point of instantiation (though it may have lead to undefined behavior, IE. in the case of ValueDiscard, specializing for a volatile qualified class type). 
+ A program that instantiates a class template defined by lclib-c++ in violation of the these rules is ill-formed, no diagnostic required. 
 
 These prohibitions are general, the rules of the specific template always supersede these prohibitions if they are in contradiction with them. 
 
-Unless otherwise specified, the results of instantiating a template with a cv-qualified
+Unless otherwise specified, the behavior of a program which instantiates a template with a cv-qualified type is undefined. 
 
 Note that following, a `User-Specified type` is specified as follows:
 
-* A User-defined type
+* A class or enumeration type which is not defined by the C++ Core Language, C++ Standard Library, or lclib-c++. 
 * A cv-qualified version of a `User-specified type`
 * A reference to a `User-specified type`
 * A pointer to, or an array of a `User-specified type`, including an array of an unknown bound
@@ -58,18 +65,20 @@ Note that following, a `User-Specified type` is specified as follows:
 * A user-defined, explicit specialization of some class template, including a full specialization or a partial specialization.
 * A Specialization of any other template, provided that at least one of the template parameters is a `user-specified type`
 
-Library implementations may choose to provide explicit specializations of class templates which are not defined by LCLib, both partial and full, to conform to the rules defined by this library. These specializations shall be treated as though they were instantiations of the primary template. 
+Library implementations may choose to provide explicit specializations of class templates which are not defined by LCLib, both partial and full, to conform to the rules defined by this library. 
+These specializations shall be treated as though they were instantiations of the primary template. 
 
 (For example, an implementation of `ValueDiscard` may specialize on `volatile T` to provide the explicit volatile requirements of `ValueDiscard`.) 
 
-LCLib may define explicit specializations in its specification. These explicit specializations are specified by LCLib, and are exempt from these rules. 
+LCLib may define explicit specializations in its specification. 
+These explicit specializations are specified by LCLib, and are exempt from these rules. 
 
 ## Special Cases ##
 
 There are certain conditions which are not covered by this specification explicitly, and in which case, some guarantee is made by this specification that is not met. 
 These either refer to exceptional cases, which no recovery may be possible, or incredibly unlikely cases which are simply not covered. 
 
-The behavior of the library in these specific cases is undefined. 
+The behavior of the library in these special cases is undefined. 
 
 The 2 special cases are as follows:
 
@@ -78,8 +87,10 @@ The 2 special cases are as follows:
 
 ## Function Templates ##
 
-LCLib also defines several function templates. These templates may have both deduced and specified template parameters. 
-Only specified template parameters may be explicitly provided. The behavior of a program that explicitly specifies one or more deduced template parameters when instantiating a function template is undefined. 
+LCLib also defines several function templates.
+ These templates may have both deduced and specified template parameters. 
+Only specified template parameters may be explicitly provided. 
+The behavior of a program that explicitly specifies one or more deduced template parameters when instantiating a function template is undefined. 
 
 Function templates defined by LCLib may not be specialized. 
 
@@ -93,7 +104,8 @@ Any template parameter which is not deduced is specified.
 
 Implementations may add additional, defaulted template parameters, to any function template that has deduced template parameters. 
 
-Deduced template parameters do not need to be provided as is, or even exist. These template parameters are defined by the specification to encapsilate an overload set. 
+Deduced template parameters do not need to be provided as is, or even exist. 
+These template parameters are defined by the specification to encapsilate an overload set. 
 
 The behavior of a program that explicitly instantiates a function template defined by lclib-c++, or attempts to specialize such a function template is undefined. 
 
@@ -115,6 +127,6 @@ The return types of functions documented by lclib-c++ are not fixed, but may be 
 * The type can be explicitly converted to any type which the documented type can be, including user-provided unrelated types. 
 * The type has an implicit conversion to the documented return type (or to `std::decay_t<RT>`, if `RT` is a reference type, with one exception documented below).
 * If the documented return type is a non-const lvalue reference type, then the actual return type must be assignable from all types which can be assigned to lvalues of the documented return type.
-* If the documented return type is an rvalue reference type or a const lvalue reference type (where the referenced type, with cv-qualifiers dropped is `RT`), then the returned type may not have an implicit conversion to a non-reference type `RT`. That is, the function may not return a prvalue if it would otherwise not (but may return an xvalue or lvalue when it otherwise would return a prvalue). 
+* If the documented return type is an rvalue reference type or a const lvalue reference type (where the referenced type, with cv-qualifiers dropped is `RT`) , then the returned type may not have an direct, user-defined conversion to a non-reference type `RT`. That is, the function may not return a prvalue if it would otherwise not (but may return an xvalue or lvalue when it otherwise would return a prvalue). 
 * If the documented return type is an lvalue reference type, the result may not drop cv-qualified from the reference type. Additionally, the actual return type may not be a volatile-qualified lvalue reference, unless the original referenced type was volatile-qualified. 
 

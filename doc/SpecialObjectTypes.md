@@ -7,10 +7,10 @@ Byte types are special case of scalar types which have sizeof(T)==1. Byte types 
 The C++ Standard only specifies 4 byte types, which are char, unsigned char, signed char, and std::byte (and does not officially name this Concept). LCLib C++ Extends this definition to encompass more types.<br/>
 Byte types (and arrays of such) are considered layout compatible with all Standard Structure Types of the same size. (See below)<br/>
 A Byte type must be one of the following:
-<ul>
-<li>char, unsigned char, or signed char</li>
-<li>A enum type with one of the above as its underlying type, and no enumerators (including std::byte)</li>
-</ul>
+
+* char, unsigned char, or signed char
+* A enum type with one of the above as its underlying type
+
 In addition: No comparison operators may be user supplied. In C++20 mode, the type shall have strong structural ordering. 
 
 ## BytesWriteable ##
@@ -29,10 +29,12 @@ For a Type to satisfy BytesWriteable Concept, objects of that type, and all subo
 * May not have duplicate (direct or indirect) base classes, or a virtual base class type
 * (As of 1.3) Have no private or protected data members or base classes, except for empty base classes.
 * (As of 1.3) May not be *over-aligned*
+* All base classes that declare non-static data members and non-static data members must satisfy *BytesWriteable*. 
 
 Or shall be one of the follow:
 * An array of a component type which satisfies *BytesWriteable*, including an array of an unknown bound
-* 
+* A union, for which all non-static data members satisfy *BytesWriteable*
+* A Standard-Layout, Aggregate Structure-type for which all data members satisfy *BytesWriteable*
 
 All Scalar types except for pointers satisfy this concept. All class types that are TriviallyCopyable and StandardLayout that do not have any pointer members also satisfy this concept. 
 
@@ -71,13 +73,12 @@ If it is, then `std::char_traits` must be specialized for `T` given that the spe
 The CString concept is defined for types which can model Null-terminated strings. Unlike other concepts, only specific types satisfy this concept. 
 
 A type `T` satisfies CString if and only if it is one of the following: 
-<ul>
-<li>An array of a type `U`, such that `U` satisfies CharacterType</li>
-<li>A pointer to such an array</li>
-<li>A pointer to a type `U` which satisfies CharacterType</li>
-<li>A const-qualified, volatile-qualified, or const volatile-qualified variation of the above</li>
-<li>A reference to any of the above</li>
-</ul>
+
+* An array of a type `U`, such that `U` satisfies CharacterType
+* A pointer to a type `U` which satisfies CharacterType
+* A const-qualified, volatile-qualified, or const volatile-qualified variation of the above
+* A reference to any of the above
+
 
 ## Numeric ##
 
@@ -152,27 +153,12 @@ Given:
 	<tr>
 		<td>t==u</td>
 		<td>bool</td>
-		<td>True if and only if t and u have the same value. t==t shall be true, and if t==u is true, then t==v shall be true if and only if u==v</td>
-	</tr>
-	<tr>
-		<td>t==a (optional)</td>
-		<td>bool</td>
-		<td>If the value of a is representable as a value of T, same as T{a}==t, otherwise false</td>
+		<td>True if and only if t and u have the same value. t==t shall be true, and if t==u is true, then u==t shall be true, and t==v shall be true if and only if u==v</td>
 	</tr>
 	<tr>
 		<td>t!=u</td>
 		<td>bool</td>
 		<td>!(t==u)</td>
-	</tr>
-	<tr>
-		<td>t!=a (optional)</td>
-		<td>bool</td>
-		<td>!(t==a)</td>
-	</tr>
-	<tr>
-		<td>bool{t} (optional)</td>
-		<td>bool</td>
-		<td>Same as t!=T{}</td>
 	</tr>
 </table>
 
@@ -180,6 +166,21 @@ Additionally, the following expressions may be optionally supported, but if they
 
 
 <table>
+	<tr>
+		<td>t==a</td>
+		<td>bool</td>
+		<td>If the value of a is representable as a value of T, same as T{a}==t, otherwise false</td>
+	</tr>
+	<tr>
+		<td>t!=a</td>
+		<td>bool</td>
+		<td>!(t==a)</td>
+	</tr>
+	<tr>
+		<td>bool{t}</td>
+		<td>bool</td>
+		<td>Same as t!=T{}</td>
+	</tr>
 	<tr>
 		<td>t+a</td>
 		<td>U</td>
@@ -248,7 +249,7 @@ Additionally, the following expressions may be optionally supported, but if they
 	<tr>
 		<td>a&gt;t</td>
 		<td>bool</td>
-		<td>Equivalent to U{t}&lt;U{a}</td>
+		<td>Equivalent to Q{t}&lt;Q{a}</td>
 	</tr>
 	<tr>
 		<td>t&lt;=u</td>
@@ -258,11 +259,16 @@ Additionally, the following expressions may be optionally supported, but if they
 	<tr>
 		<td>t&lt;=a</td>
 		<td>bool</td>
-		<td>Equivalent to U{t}&lt;
+		<td>Equivalent to Q{t}&lt;=Q{a}</td>
 	<tr>
 		<td>t&gt;=u</td>
 		<td>bool</td>
 		<td>Equivalent to (t&gt;u)||(t==u)</td>
+	</tr>
+	<tr>
+		<td>t&gt;=a</td>
+		<td>bool</td>
+		<td>Equivalent to Q{t}&gt;=Q{a}</td>
 	</tr>
 </table>
 
@@ -288,17 +294,19 @@ The expression `a/t` is equivalent to at least one of the following, unless the 
 
 
 Additionally, T may not be abstract and may not be `bool`. All of the operations defined above may not throw any exceptions. 
-If T satisfies *LiteralType*, any expression that applys any of the above operators to one or more values of (possibly const-qualified) T and no other values, except the assignment operator, shall be a valid constant expression if all of its operands are a valid rvalue constant expression. 
+If T satisfies *LiteralType*, any expression that applies any of the above operators to one or more values of (possibly const-qualified) T and no other values, except the assignment operator, shall be a valid constant expression if all of its operands are a valid rvalue constant expression. 
 
 If `operator<` is overloaded, then all relational operators for a type must be defined and form a strict, total-order with `operator<`. 
 This order must be consistent and deterministic. If `T{}<u` is true, then `t+u<t` is true, unless the result of `t+u` cannot be represented fully as a value of `T` (however, it may still be true even when that is the case). 
 Comparisons do not need to form a strong order (there can be distinct values of the type which compare equals). 
 
-Note that for the purposes of determining what is an is not a value of the type, the special NaN values are not considered valid values. `NaN` values are therefore exempt from all the semantic rules defined above. This allows that x!=x is true when x is a `NaN` value. 
+Note that for the purposes of determining what is an is not a value of the type, the special NaN values are not considered valid values. 
+`NaN` values are therefore exempt from all the semantic rules defined above. This allows that x!=x is true when x is a `NaN` value. 
 
 If `T` satisfies *Numeric*, then all of `const T`, `volatile T`, and `const volatile T` also satisfy *Numeric*. 
 
-All arithmetic types satisfy these requirements. Additionally, due to integral promotion rules, `bool` would if it was not explicitly excluded by the requirements. 
+All arithmetic types satisfy these requirements. 
+Additionally, due to integral promotion rules, `bool` would if it was not explicitly excluded by the requirements. 
 
 Default Constructing (`T t;`) a value of a type that satisfies *Numeric* does not need to have well-defined results, provided that value-constructing `T{}` a value of such a type does. 
 Default construction is optionally supported. If it is supported, then the result shall be the same as `T{}`. 
@@ -309,6 +317,8 @@ The value of `t` is used whenever `t`:
 * is used as an operand of any of the operators defined here, except on the left-hand-side of an assignment operator
 * is converted to any type, explicitly or implicitly, or is passed to the copy/move-constructor of `T`
 * Is swapped with any other lvalue of `T`. 
+
+
 
 ## StrictNumeric ##
 
@@ -363,7 +373,8 @@ Given:
 	</tr>
 </table>
 
-Additionally, it must be possible to implicitly convert `c` to a value of `T`. The result of all arithmetic operations involving only values of `T` shall be `T`. 
+Additionally, it must be possible to implicitly convert `c` to a value of `T`. 
+The result of all arithmetic operations involving only values of `T` shall be `T`. 
 
 If `T{a}` (as specified by *Numeric*) is supported and is syntactically non-narrowing, that is `T` can completely represent all values of the type of `a`, named `K`, then this conversion can be done implicitly, and is required to be equality preserving in all cases (That is, `T{a}==T{a}` shall be true, as should `K{T{a}}==a`) and it shall be possible to perform this conversion implicity. 
 Otherwise, the expression is only required to be equality preserving if the value of `a` can be represented as a value of `T`, and it is unspecified if this conversion can be done implicitly. 
@@ -380,10 +391,12 @@ The fact that the 3-way comparison operator must be consistent with the relation
 Additionally, all of `t<a`, `a<t`, `t>a`, `a>t`, `a==t`, `t==a`, `t!=a`, `a!=t`, `t<=a`, `a<=t`, `t>=a`, `a>=t`, `(t<=>a)` shall all be supported if `T{a}` is a well-formed expression (otherwise they are optionally supported). 
 The comparison operators shall form a strong order if all values of the type of a can be represented as a value of `T`, otherwise it may form a week order, or even a partial order (for example, if `a` has a floating-point type that supports NaN values). 
 
-Finally, the results of arithmetic operations should be consistent. That is, if `u` is positive, `t+u>t` should be true, unless the result of `t+u` cannot be represented as a value of type `t`. 
+Finally, the results of arithmetic operations should be consistent. 
+That is, if `u` is positive, `t+u>t` should be true, unless the result of `t+u` cannot be represented as a value of type `t`. 
 
-If the result of any of the following expressions is not representable as a value of `T`, the expression is optionally-supported and it is implementation-defined 
+If the result of any of the expressions is not representable as a value of `T`, the expression is optionally-supported and the result is implementation-defined. 
 
 All integral types, except bool satisfy this constraint. 
 
-If all operands to any of the operators defined by either *StrictNumeric* and *Numeric* are constant expressions, then the operator shall be a constant expression. 
+If all operands to any of the operators, aside from an assignment operator, defined by either *StrictNumeric* and *Numeric* are constant expressions, then the operator shall be a constant expression. 
+

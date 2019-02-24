@@ -5,12 +5,22 @@ Part of the io library and the Networking Library<br/>
 
 ## Deprecation ##
 
+Deprecated as of 1.3
+
 This library is deprecated for the new Template Based Networking Library. 
 
 This library was based heavily on having a single implementation, using a Service Provider Interface system, and runtime polymorphism. 
 
 The New Networking Library uses Template based SPIs, and static polymorphism to implement generic services, which is generally more efficient than dynamic (runtime) polymorphism. It also supports extended socket interfaces, such as Datagram Sockets, and Non IP Based Sockets. 
 
+### Removal ###
+
+Set for Removal in Version 1.4 (upcoming)
+
+This header and all features documented within are set for removal in an upcoming version of lclib-c++. 
+Therefore use of this header and its features are extremely discouraged, as the use will not be compatible with that version. 
+
+Use of these headers and features is AT YOUR OWN RISK, and you acknowledge that in the future, any code which uses it will cease to work. Neither Lightning Creations nor the library vendor may be held liable for any damage caused by this removal.
 
 
 ## Synopsis ##

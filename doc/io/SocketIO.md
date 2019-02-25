@@ -20,7 +20,6 @@ Set for Removal in Version 1.4 (upcoming)
 This header and all features documented within are set for removal in an upcoming version of lclib-c++. 
 Therefore use of this header and its features are extremely discouraged, as the use will not be compatible with that version. 
 
-Use of these headers and features is AT YOUR OWN RISK, and you acknowledge that in the future, any code which uses it will cease to work. Neither Lightning Creations nor the library vendor may be held liable for any damage caused by this removal.
 
 
 ## Synopsis ##

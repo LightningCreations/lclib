@@ -29,10 +29,10 @@ template<typename T,T min=std::numeric_limits<T>::min(),T max=std::numeric_limit
 
 Classes which define a specific set of special member functions as deleted (and define every other special member function as default). Used to explicitly disable a certain implicit operations. 
 
-Disable defines all special members as deleted. This effectively makes classes that inherit from it (or Disable itself) unusable (as of course the Destructor is defined as deleted). This can be useful for selectively disabling certain instantiations of a template. However, in most cases, use of `static_assert` is preferred to indicate that certain template parameters are invalid. 
+`Disable` defines all special members as deleted. This effectively makes classes that inherit from it (or Disable itself) unusable (as of course the Destructor is defined as deleted). This can be useful for selectively disabling certain instantiations of a template. However, in most cases, use of `static_assert` is preferred to indicate that certain template parameters are invalid. 
 A conditional version of this template may be provided in the future. 
 
-The classes (except Disable) are deprecated as of 1.3 and will be removed in a future version. 
+The classes (except Disable) are deprecated as of 1.3 and will be removed in version 1.4 (upcoming). 
 
 
 ```cpp
@@ -81,6 +81,8 @@ For example, Disable can disable the constructors by inheriting from NotCopyable
 
 All of these types shall be empty types and satisfy *StandardLayoutType*. Additionally all of these types, except Disable, shall satisfy *TrivialType* and *LiteralType*.
 
+A type which inherits from any of these templates (except `Disable` or both `NonCopyable` and `NonMovable`) is not disqualified from satisfying *BytesWritable* or *BytesReadable*. 
+
 ## RelOps/StrictOrder ##
 
 RelOps and StrictOrdering are template types which provide default definitions for most relational operators for a given type, given that a minimum set is provided by the that type. 
@@ -93,7 +95,7 @@ If a program specializes RelOps or StrictOrdering, the behavior is undefined.
 
 Specializations of RelOps and StrictOrdering are empty types, and satisfy all of *TrivialType*, *StandardLayoutType*, and *LiteralType*. Inheriting from an Specialization of RelOps or StrictOrdering will not disqualify a type from satisfying *BytesWriteable* or *BytesReadable*. 
 
-If RelOps or StrictOrdering is instantiated for some `T`, where for some values `t1` and `t2` which are of type (possibly const-qualified) `T`, the expression `t1<t2` is not well-formed in an unevaluated context, the program is ill-formed, no diagnostic required. Given those values:
+If RelOps or StrictOrdering is instantiated for some `T`, where for some values `t1` and `t2` which are of type (possibly const-qualified) `T`. If the expression `t1<t2` is not well-formed in an unevaluated context, the program is ill-formed, no diagnostic required. Given those values:
 
 * `t1<t1` must be false, 
 * At most one of `t1<t2` and `t2<t1` may be true, and
@@ -107,7 +109,7 @@ A objects of a type that inherits from a specialization RelOps or StrictOrdering
 ```cpp
 template<typename T> struct RelOps{
 protected:
-	~RelOps();
+	~RelOps()=default;
 public:
 	constexpr RelOps()=default;
 	constexpr RelOps(const RelOps&)=default;
@@ -119,7 +121,7 @@ public:
 };
 template<typename T> struct StrictOrder{
 protected:
-	~StrictOrder();
+	~StrictOrder()=default;
 public:
 	constexpr StrictOrder()=default;
 	constexpr StrictOrder(const StrictOrder&)=default;
@@ -157,7 +159,7 @@ ValueDiscard is a class that can be assigned from any value of `T`. The assignme
 There is a full specialization for void that can be assigned from any type. 
 
 A program may specialize ValueDiscard for a `User-specified type` as long as that type is a (possibly cv-qualified) class type, provided that the specialization is assignable from a (possibly const-qualified) lvalue of that type, the destructor is trivial, and the default constructor can be called in a constant expression. 
-The assignment operator must not throw any exceptions unless `T` is volatile-qualified, and evaluating the argument results in an exception. 
+The assignment operator must not throw any exceptions unless `T` is volatile-qualified. 
 The assignment operator of a user-provided specialization of `ValueDiscard` is permitted to evaluate its argument even if the type is not volatile-qualified, but such an evaluation may not throw any exceptions (unless the type is volatile-qualified). 
 This permits specializations for user-provided types that emulate volatile (reading them itself is observeable behavior) to fully emulate the behavior of volatile.  
 
@@ -170,12 +172,12 @@ A program that instantiates ValueDiscard with a reference type, a function-type,
 template<typename T=void> struct ValueDiscard{
 public:
 	constexpr ValueDiscard()=default;
-	constexpr ValueDiscard& operator=(const T&);
+	constexpr ValueDiscard& operator=(const T&) noexcept;
 };
 template<> struct ValueDiscard<void>{
 public:
 	constexpr ValueDiscard()=default;
-	template<typename T> constexpr ValueDiscard& operator=(T&&);
+	template<typename T> constexpr ValueDiscard& operator=(T&&)noexcept(/*see below*/);
 };
 ```
 
@@ -194,16 +196,18 @@ If `T` is not a volatile-qualified type, then the parameter is guaranteed not to
 If `T` is a volatile-qualified type, then the assignment operator is not required to be constexpr (this permits implementations to provide this operator in the form of a partial specialization). 
 
 (2):
-Generic version of (1) for the void specialization. If `ValueDiscard<T>` is not a user-provided specialization of `ValueDiscard`, then it performs the operations defined above. Otherwise, default constructs an instance of the specialization and invokes the assignment operator on the instance with the parameter. 
+Generic version of (1) for the void specialization. If `ValueDiscard<std::remove_reference_t<T>>` is not a user-provided specialization of `ValueDiscard`, then it performs the operations defined above. Otherwise, default constructs an instance of the specialization and invokes the assignment operator on the instance with the parameter. 
 
-As above, if `T` is a volatile-qualified type, then the assignment operator is not required to be constexpr (this permits implementations to provide this operator as an overload set).
+As above, if `std::remove_reference_t<T>` is a volatile-qualified type, then the assignment operator is not required to be constexpr (this permits implementations to provide this operator as an overload set).
 
 ### Exceptions ###
 
 (1): The primary template performs no operation (except for the possible evaluation of volatile-qualified scalar types), and therefore will not throw an exception. 
+Declared `noexcept(true)`. 
 Specializations for volatile-qualified types may throw an exception if evaluating the volatile object results in an exception, but otherwise they must not throw any exceptions. 
 
-(2): If `T` is a volatile qualified class-type for which `ValueDiscard<T>` is a user-provided specialization of `ValueDiscard`, then 
+(2): If `std::remove_reference_t<T>` is a volatile qualified class-type for which `ValueDiscard<std::remove_reference_t<T>>` is a user-provided specialization of `ValueDiscard`, then it may throw any exceptions thrown by by assignment operator of the specialization. 
+If `std::remove_reference_t<T>` is a volatile qualified class-type then the operator is `noexcept(true)` if and only if assigning an instance of `ValueDiscard<std::remove_reference_t<T>>` with an lvalue of type `T` is  known not to throw any exceptions. 
 
 
 ## struct discard ##

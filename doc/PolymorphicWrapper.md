@@ -187,6 +187,9 @@ For any constructor that has a template parameter `U`, if any alignment requirem
 
 Support of over-aligned types may be limited, even if provided. For example, there may be a hard, maximum alignment limit. 
 
+#### Inaccessible Base Classess ####
+
+For the constructors that have a template parameter `U`, then `T` shall be a public and unambigous base class of `U` or the program is ill-formed. 
 
 #### Noexcept Specification ####
 
@@ -277,6 +280,7 @@ Given that v is a pointer to the `T` subobject of the owned object:
 If the dynamic type of the owned object is `U`, then returns `*static_cast<U*>(dynamic_cast<void*>(v))`.
 
 Otherwise, if the dynamic type of the owned object is `D`, `U` is a public, unambiguous, base-class of `D`, then returns `*dynamic_cast<U*>(static_cast<D*>(dynamic_cast<void*>(v)))`. 
+If `U` is a protected, private, or ambigous base class of `D`, then the behavior is undefined. 
 
 Otherwise, an exception of a type which matches a handler of type `std::bad_cast` is thrown. 
 
@@ -308,7 +312,7 @@ noexcept
 
 ```cpp
 template<typename T> PolymorphicWrapper(T) -> PolymorphicWrapper<T>;
-template<typename T> PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicWrapper<T>;
+template<typename T> explicit PolymorphicWrapper(std::in_place_type_t<T>) -> PolymorphicWrapper<T>;
 template<typename T,typename... Args> PolymorphicWrapper(std::in_place_type_t<T>,Args...) -> PolymorphicWrapper<T>;
 ```
 
@@ -318,7 +322,7 @@ Computes the common_type between 2 PolymorphicWrappers.
 
 The member type of `std::common_type<PolymorphicWrapper<T>,PolymorphicWrapper<U>>` is determined as follows:
 * If both `T` and `U` are (possibly cv-qualified) variants of the same type, the member type is `PolymorphicWrapper<std::remove_cv_t<T>>`. 
-* Otherwise, if `std::is_base_of_v<T,U>` is true, then the member type is `PolymorphicWrapper<std::remove_cv_t<T>>`.
+* Otherwise, if `std::is_base_of_v<T,U>` is true, then the member type is `PolymorphicWrapper<std::remove_cv_t<T>>`. 
 * Otherwise, if `std::is_base_of_v<U,T>` is true, then the member type is `PolymorphicWrapper<std::remove_cv_t<U>>`.
 * Otherwise, if `std::common_type_t<std::remove_cv_t<T>*,std::remove_cv_t<U>*>` is a valid type that names `K*`, and `K` is not (possibly cv-qualified) void, and both `std::is_base_of_v<K,T>` and `std::is_base_of_v<K,U>` are true, then the member type is `PolymorphicWrapper<std::remove_cv_t<K>>`. 
 * Otherwise, there is no member type. 

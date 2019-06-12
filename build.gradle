@@ -1,0 +1,9 @@
+apply plugin: "java"
+apply plugin: "eclipse"
+apply plugin: "maven"
+
+sourceCompatibility = targetCompatibility = "11"
+
+group = "github.lightningcreations"
+archivesBaseName = "lclib-java"
+version = "1.0"

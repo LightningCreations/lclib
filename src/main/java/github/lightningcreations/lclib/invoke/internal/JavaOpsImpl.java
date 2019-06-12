@@ -2,6 +2,8 @@ package github.lightningcreations.lclib.invoke.internal;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public final class JavaOpsImpl {
 
@@ -9,7 +11,7 @@ public final class JavaOpsImpl {
 		// TODO Auto-generated constructor stub
 	}
 	
-	private static class LoadDynamicInt{
+	private static class LoadDynamicInt implements IntSupplier{
 		private boolean hasLoaded;
 		private int value;
 		private final MethodHandle bootstrap;
@@ -22,7 +24,8 @@ public final class JavaOpsImpl {
 			this.name = name;
 			this.lookup = lookup;
 		}
-		public int getValue() throws Throwable {
+		public int getAsInt() {
+			try {
 			if(!hasLoaded)
 				synchronized(this) {
 					if(!hasLoaded) {
@@ -31,6 +34,11 @@ public final class JavaOpsImpl {
 						hasLoaded = true;
 					}
 				}
+			}catch(Error|RuntimeException e) {
+				throw e;
+			}catch(Throwable t) {
+				throw new RuntimeException(t);
+			}
 			return value;
 		}
 	}

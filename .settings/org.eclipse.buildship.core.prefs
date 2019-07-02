@@ -10,4 +10,4 @@ jvm.arguments=
 offline.mode=false
 override.workspace.settings=true
 show.console.view=false
-show.executions.view=false
+show.executions.view=true
